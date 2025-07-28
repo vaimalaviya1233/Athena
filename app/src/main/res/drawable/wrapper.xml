@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Blob layer at the bottom -->
+
+    <item>
+        <inset
+            android:drawable="@drawable/logo"
+            android:insetLeft="45dp"
+            android:insetRight="45dp"
+            android:insetTop="45dp"
+            android:insetBottom="45dp" />
+    </item>
+</layer-list>

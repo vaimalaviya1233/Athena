@@ -1,0 +1,236 @@
+<resources>
+    <!-- General App Information -->
+    <string name="app_name">Athena</string>
+    <string name="search">Search</string>
+    <string name="version">Version</string>
+    <string name="permissions">Permissions</string>
+    <string name="installation_time">Installation Time</string>
+    <string name="last_updated_time">Last Updated Time</string>
+    <string name="logs">Logs</string>
+    <string name="settings">Settings</string>
+
+    <!-- VPN Service -->
+    <string name="vpn_service_running">Enforcing rules</string>
+    <string name="vpn_service_channel_name">VPN Service Notifications</string>
+    <string name="vpn_service_channel_description">Notifications for VPN service status and updates</string>
+
+    <!-- Permissions -->
+    <string name="vpn_permission">VPN Permission</string>
+    <string name="vpn_permission_description">To filter network traffic, this app needs to create a Virtual Private Network (VPN) connection. This connection does not route data to any external servers.</string>
+
+    <!-- VPN Service Disabled -->
+    <string name="allow">Allow</string>
+
+    <!-- Color and Styles Section -->
+    <string name="colors_title">Colors &amp; Styles</string>
+    <string name="colors_option_theme">Theme</string>
+    <string name="colors_option_radius">Radius</string>
+    <string name="colors_option_sort">Sort</string>
+
+    <!-- Behavior Section -->
+    <string name="behavior_title">Behavior</string>
+    <string name="behavior_option_system">System</string>
+    <string name="behavior_option_rules">Rules</string>
+    <string name="behavior_option_logging">Logging</string>
+
+    <!-- Language Section -->
+
+    <!-- Network Section -->
+    <string name="network_title">Network</string>
+    <string name="network_option_lockdown">Lockdown</string>
+    <string name="network_option_calling">Calling</string>
+
+    <!-- Proxy Section -->
+    <string name="proxy_title">Proxy</string>
+
+    <!-- DNS Section -->
+    <string name="dns_title">DNS</string>
+    <string name="dns_option_block">Block</string>
+    <string name="dns_option_hostname">Hostname</string>
+    <string name="dns_option_updates">Updates</string>
+
+    <!-- Privacy Section -->
+    <string name="privacy_title">Privacy</string>
+    <string name="privacy_option_lock">Lock</string>
+    <string name="privacy_option_hide_screen">Hide Screen</string>
+    <string name="privacy_option_privacy">Privacy</string>
+
+    <!-- About Section -->
+    <string name="about_title">About</string>
+    <string name="about_option_version">Version</string>
+    <string name="about_option_developers">Developers</string>
+    <string name="about_option_license">License</string>
+    <string name="verified_as_official_build">Verified as official build!</string>
+    <string name="maintained_by">Maintained by</string>
+    <string name="translator">Translator</string>
+    <string name="your_name">Vexzure</string>
+    <string name="build_type">Build type</string>
+    <string name="latest_release">Latest Release</string>
+    <string name="source_code">Source Code</string>
+    <string name="email">Email</string>
+    <string name="discord">Discord</string>
+    <string name="feature">Feature Request</string>
+    <string name="system_theme">System Theme</string>
+    <string name="system_theme_description">Adapts app theme based on system settings</string>
+    <string name="dark_theme">Dark Theme</string>
+    <string name="dark_theme_description">Toggle between dark and light color schemes</string>
+    <string name="dynamic_colors">Dynamic Colors</string>
+    <string name="dynamic_colors_description">Adjusts colors to match your wallpaper</string>
+    <string name="amoled_colors">Amoled Colors</string>
+    <string name="amoled_colors_description">Use black color for background</string>
+    <string name="dynamic_icons">Dynamic Icons</string>
+    <string name="dynamic_icons_description">Make app icons follow dynamic colors</string>
+    <string name="root_permission">Root Permission</string>
+    <string name="root_permission_description">Grant root access to manage network traffic using iptables. This allows the app to control which apps can access the internet</string>
+    <string name="deny_root">Use VPN</string>
+    <string name="use_root">Use Root</string>
+    <string name="use_root_description">Use root method for firewall</string>
+    <string name="manage_system_apps">Manage System Apps</string>
+    <string name="manage_system_apps_description">Define rules for system apps</string>
+    <string name="details">Details</string>
+    <string name="language">Language</string>
+    <string name="system_language">System Language</string>
+    <string name="language_description">Change language</string>
+    <string name="screen_protection">Screen Protection</string>
+    <string name="screen_protection_description">Hide screen in recents and disable screenshot</string>
+    <string name="app_lock">App lock</string>
+    <string name="app_lock_description">Lock app using password</string>
+    <string name="setup_password">Setup passcode</string>
+    <string name="enter_password">Enter Passcode</string>
+    <string name="passcode">Passcode</string>
+    <string name="fingerprint">Fingerprint</string>
+    <string name="fingerprint_name">Authentication required</string>
+    <string name="cancel">Cancel</string>
+    <string name="uid">UID</string>
+    <string name="authorize_fingerprint">Ask for fingerprint on start</string>
+    <string name="authorize_passcode">Ask for passcode on start</string>
+    <string name="pattern">Pattern</string>
+    <string name="authorize_pattern">Ask for pattern on start</string>
+    <string name="setup_pattern">Settup pattern</string>
+    <string name="lock_pattern">Enter pattern</string>
+    <string name="block_wifi">Block Wi-Fi</string>
+    <string name="block_wifi_description">Block Wi-Fi by default</string>
+    <string name="block_cellular_description">Block cellular by default</string>
+    <string name="block_cellular">Block Cellular</string>
+    <string name="logs_description">Enable logging connections</string>
+    <string name="lock_on_resume">Lock Immediately</string>
+    <string name="lock_on_resume_description">Lock instantly when app is resumed</string>
+    <string name="install_notification_channel_name">Installation Notifications</string>
+    <string name="install_notification_channel_description">Notifications triggered upon app installation.</string>
+    <string name="install_notification_message">Has been installed</string>
+    <string name="notification_on_install">Notify on install</string>
+    <string name="premium_setting">(Premium)</string>
+    <string name="notification_on_install_description">Show notification to directly configure installed apps</string>
+    <string name="network_permissions_setting">Manage offline Apps</string>
+    <string name="network_permissions_setting_description">Manage apps without network permission</string>
+    <string name="firewall_disable">Disable Firewall</string>
+    <string name="firewall_permission_description">This action will disable all rules. All applications will have access to the internet. Are you sure?</string>
+    <string name="disable">Disable</string>
+    <string name="show_disable_dialog">Show Disable Dialog</string>
+    <string name="show_disable_dialog_description">Show disable dialog when disabling firewall</string>
+    <string name="debug">Debug</string>
+    <string name="firwall_terminated">Firewall was terminated</string>
+    <string name="firewall_terminated_description">Firewall was terminated either by user or system. Press clear to remove iptables configuration.</string>
+    <string name="clear">Clear</string>
+    <string name="firewall_terminated">Firewall was terminated</string>
+    <string name="start_on_boot">Start on startup</string>
+    <string name="start_on_boot_description">Start firewall when device is powered on</string>
+    <string name="search_packets">Filter (app, ip, domains)</string>
+    <string name="installed">Installed</string>
+    <string name="permissions_request">Grant Permissions</string>
+    <string name="permissions_request_description">To ensure the firewall works correctly, you need to grant the Notifications permission and disable battery optimization for the app</string>
+    <string name="packet_log_title">Packet Log</string>
+    <string name="firewall_status">Firewall Status</string>
+    <string name="block">Block</string>
+    <string name="block_description">Block %1$s address</string>
+    <string name="protocol">Protocol</string>
+    <string name="sender">Sender</string>
+    <string name="source">Source</string>
+    <string name="destination">Destination</string>
+    <string name="destination_address">Destination Address</string>
+    <string name="destination_type">Destination Type</string>
+    <string name="time">Time</string>
+    <string name="manage_ips">Manage IPs</string>
+    <string name="manage_ips_description">Block specific IPs or allow them</string>
+    <string name="add_ip">Enter IP</string>
+    <string name="no_logs_found">No logs found</string>
+    <string name="enable">Enable</string>
+    <string name="interface_ipv4">Network IPv4</string>
+    <string name="interface_ipv4_description">"Set device vpn ip "</string>
+    <string name="interface_ipv6">Network IPv6</string>
+    <string name="interface_ipv6_description">Set device ipv6 version</string>
+    <string name="set_dns">DNS Server</string>
+    <string name="set_dns_description">Select your dns resolver</string>
+    <string name="no_ips_found">No ips found</string>
+    <string name="enter_ip">Add IP</string>
+    <string name="invalid_ip">Invalid IP</string>
+    <string name="block_port_80">Block HTTP</string>
+    <string name="block_port_80_description">Block packets to port 80</string>
+    <string name="always_allow_ips">Always allow local network</string>
+    <string name="always_allow_ips_description">Always allow packets from local subnets</string>
+    <string name="block_wifi_when_screen_off">Block wifi while turned off</string>
+    <string name="block_wifi_when_screen_off_description">Drop wifi packets while screen is off</string>
+    <string name="block_cellular_when_screen_off">Block Cellular while turned off</string>
+    <string name="block_cellular_when_screen_off_description">Drop cellular packets while screen is off</string>
+    <string name="arp_spoofing_protection">ARP spoofing protection</string>
+    <string name="in_development">This feature is in development</string>
+    <string name="dns_rebind_protection">DNS rebinding protection</string>
+    <string name="custom_dns">Custom DNS</string>
+    <string name="set_custom_dns">Set your own DNS server</string>
+    <string name="done">Done</string>
+    <string name="invalid_dns">Invalid DNS</string>
+    <string name="kill_switch">Kill Switch</string>
+    <string name="kill_switch_description">Block network connections outside firewall</string>
+    <string name="pernament_notification">Make Notification Silent</string>
+    <string name="pernament_notification_description">Make notification silent and not colored</string>
+    <string name="malware_protection">Malware Protection</string>
+    <string name="malware_protection_description">Block access to known malware</string>
+    <string name="ad_protection">Ad Blocker</string>
+    <string name="ad_blocker_description">Blocks ads, reduce data usage</string>
+    <string name="block_trackers">Privacy Protection</string>
+    <string name="block_trackers_description">Block trackers and surveillance tools</string>
+    <string name="block_more">Block More</string>
+    <string name="block_more_description">Block gambling, media and more</string>
+    <string name="update_blocklist">Update Lists</string>
+    <string name="update_blocklist_description">Update blocklists to latest version</string>
+    <string name="blocked_domains">Blocked Domains</string>
+    <string name="list_blocked_domains">Manage Domains</string>
+    <string name="list_blocked_domains_description">Block, Allow, Edit Domains</string>
+    <string name="download_blocklist">Downloading</string>
+    <string name="downloading_blocklist">Downloading Blacklist</string>
+    <string name="invalid_url_s">Invalid URL</string>
+    <string name="permission_denied">Permission Denied</string>
+    <string name="file_not_found">File Not Found</string>
+    <string name="unknown_error_s">Unknown Error</string>
+    <string name="requested_timed_out">Request timed out</string>
+    <string name="host_update_error_item">Host update time error</string>
+    <string name="social_media">Social Media</string>
+    <string name="social_media_description">Block Social Media</string>
+    <string name="adult_content">Adult Content</string>
+    <string name="block_adult_content">Block adult content</string>
+    <string name="illegal_content">Illegal Content</string>
+    <string name="illegal_content_description">Block illegal content</string>
+    <string name="gambling">Gambling</string>
+    <string name="block_gambling">Block gambling sites</string>
+    <string name="magisk_steps">Steps to enable:\n 1. Open the Magisk app.\n 2. Go to Settings.\n 3. Enable Systemless Hosts.\n 4. Reboot your device.\n 5. Try again after rebooting."</string>
+    <string name="magisk_title">Enable Magisk Systemless Hosts</string>
+    <string name="custom_blocklist">Add Blocklist</string>
+    <string name="custom_blocklist_description">Add custom blacklist</string>
+    <string name="premium_code">Permium Code</string>
+    <string name="invalid_license">Invalid License</string>
+    <string name="premium">Premium</string>
+    <string name="support_development">Support Development</string>
+    
+    <!-- Premium Purchase Strings -->
+    <string name="premium_purchase_title">Unlock Premium Features</string>
+    <string name="fdroid_premium_message">Google Play Billing is not available on this device. You can support development through Ko-fi or enter a premium code if you already have one.</string>
+    <string name="visit_kofi">Visit Ko-fi</string>
+    <string name="enter_premium_code">Enter Premium Code</string>
+    <string name="premium_code_title">Premium Code</string>
+    <string name="premium_code_message">Enter your premium code to unlock all features:</string>
+    <string name="enter_premium_code_hint">Enter premium code here</string>
+    <string name="verify">Verify</string>
+    <string name="ok">OK</string>
+    <string name="invalid_code_title">Invalid Code</string>
+    <string name="invalid_code_message">The code you entered is not valid. Please check your code and try again, or visit Ko-fi to get premium access.</string>
+</resources>

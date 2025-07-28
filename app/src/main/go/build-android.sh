@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Build nflog for Android
+# This script compiles the Go code for Android arm64-v8a and armeabi-v7a architectures
+
+set -e
+
+# Configuration
+NDK_VERSION="27.0.12077973"
+ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
+NDK="$ANDROID_HOME/ndk/$NDK_VERSION"
+
+# Check if NDK exists
+if [ ! -d "$NDK" ]; then
+    echo "Error: Android NDK not found at $NDK"
+    echo "Please set ANDROID_HOME or install NDK version $NDK_VERSION"
+    exit 1
+fi
+
+# Set up environment
+export PATH="$PATH:$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin"
+export GOOS='android'
+export CGO_ENABLED=1
+
+# Output directories
+OUTPUT_DIR="../../../libs"
+mkdir -p "$OUTPUT_DIR/arm64-v8a"
+mkdir -p "$OUTPUT_DIR/armeabi-v7a"
+
+echo "Building nflog for Android..."
+
+# Build for arm64-v8a
+echo "Building for arm64-v8a..."
+export GOARCH='arm64'
+export CC="aarch64-linux-android21-clang"
+export CXX="aarch64-linux-android21-clang++"
+export CGO_CFLAGS="-O2 -fPIC -DANDROID"
+export CGO_CPPFLAGS="-O2 -fPIC -DANDROID"
+export CGO_CXXFLAGS="-O2 -fPIC -DANDROID"
+export CGO_FFLAGS="-O2 -fPIC"
+export CGO_LDFLAGS="-s -w -Wl,-z,max-page-size=16384"
+
+go clean
+go build -x -ldflags="-s -w" -compiler gc -gcflags="-m -dwarf=false" -o "$OUTPUT_DIR/arm64-v8a/libnflog.so" .
+
+# Build for armeabi-v7a
+echo "Building for armeabi-v7a..."
+export GOARCH='arm'
+export CC="armv7a-linux-androideabi21-clang"
+export CXX="armv7a-linux-androideabi21-clang++"
+export CGO_CFLAGS="-O2 -fPIC -DANDROID -mfpu=neon"
+export CGO_CPPFLAGS="-O2 -fPIC -DANDROID -mfpu=neon"
+export CGO_CXXFLAGS="-O2 -fPIC -DANDROID -mfpu=neon"
+export CGO_FFLAGS="-O2 -fPIC -mfpu=neon"
+export CGO_LDFLAGS="-s -w -Wl,-z,max-page-size=16384"
+
+go clean
+go build -x -ldflags="-s -w" -compiler gc -gcflags="-m -dwarf=false" -o "$OUTPUT_DIR/armeabi-v7a/libnflog.so" .
+
+echo "Build completed successfully!"
+echo "Executables created:"
+echo "  - $OUTPUT_DIR/arm64-v8a/libnflog.so"
+echo "  - $OUTPUT_DIR/armeabi-v7a/libnflog.so"
