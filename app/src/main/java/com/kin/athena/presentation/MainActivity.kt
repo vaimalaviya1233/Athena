@@ -37,7 +37,6 @@ import androidx.work.WorkManager
 import com.kin.athena.core.logging.Logger
 import com.kin.athena.core.utils.extensions.popUpToTop
 import com.kin.athena.data.service.billing.BillingProvider
-import com.kin.athena.data.service.billing.FDroidBillingManager
 import com.kin.athena.presentation.components.KofiFallbackDialog
 import com.kin.athena.presentation.theme.EasyWallTheme
 import com.kin.athena.presentation.navigation.AppNavHost
@@ -129,13 +128,25 @@ class MainActivity : AppCompatActivity() {
                             navController = navController
                         )
                         
-                        // Show Ko-fi fallback dialog if needed
-                        billingProvider.getBillingInterface()?.let { billingInterface ->
-                            if (billingInterface is FDroidBillingManager && billingInterface.showKofiDialog) {
-                                KofiFallbackDialog(
-                                    onKofiClick = { billingInterface.handleKofiClick() },
-                                    onDismiss = { billingInterface.dismissKofiDialog() }
-                                )
+                        // Show Ko-fi fallback dialog if needed (F-Droid only)
+                        if (!BuildConfig.USE_PLAY_BILLING) {
+                            billingProvider.getBillingInterface()?.let { billingInterface ->
+                                // Use reflection to check for F-Droid specific methods
+                                try {
+                                    val showKofiDialog = billingInterface.javaClass.getMethod("getShowKofiDialog").invoke(billingInterface) as Boolean
+                                    if (showKofiDialog) {
+                                        KofiFallbackDialog(
+                                            onKofiClick = { 
+                                                billingInterface.javaClass.getMethod("handleKofiClick").invoke(billingInterface)
+                                            },
+                                            onDismiss = { 
+                                                billingInterface.javaClass.getMethod("dismissKofiDialog").invoke(billingInterface)
+                                            }
+                                        )
+                                    }
+                                } catch (e: Exception) {
+                                    Logger.error("Error handling Ko-fi dialog: ${e.message}")
+                                }
                             }
                         }
                     }
