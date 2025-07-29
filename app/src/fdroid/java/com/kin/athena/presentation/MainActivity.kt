@@ -104,20 +104,19 @@ class MainActivity : AppCompatActivity() {
 
             settings = hiltViewModel<SettingsViewModel>().apply {
                 val homeViewModel = hiltViewModel<HomeViewModel>()
-                val iconsColor = MaterialTheme.colorScheme.background
-
-                LaunchedEffect(homeViewModel) {
-                    runBlocking {
-                        homeViewModel.initialize(this@apply)
-
-                        homeViewModel.loadIcons(settingsViewModel = this@apply, iconsColor)
-
-                        viewModel.showSlashScreen(true)
-                    }
-                }
-
 
                 EasyWallTheme(this) {
+                    val iconsColor = MaterialTheme.colorScheme.background
+
+                    LaunchedEffect(homeViewModel) {
+                        runBlocking {
+                            homeViewModel.initialize(this@apply)
+
+                            homeViewModel.loadIcons(settingsViewModel = this@apply, iconsColor)
+
+                            viewModel.showSlashScreen(true)
+                        }
+                    }
                     Surface(
                         color = MaterialTheme.colorScheme.background,
                         modifier = Modifier.fillMaxSize()
