@@ -222,9 +222,9 @@
     <string name="support_development">Support Development</string>
     
     <!-- Premium Purchase Strings -->
-    <string name="premium_purchase_title">Unlock Premium Features</string>
-    <string name="fdroid_premium_message">Google Play Billing is not available on this device. You can support development through Ko-fi or enter a premium code if you already have one.</string>
-    <string name="visit_kofi">Visit Ko-fi</string>
+    <string name="premium_purchase_title">Premium Features</string>
+    <string name="fdroid_premium_message">Get lifetime access to all premium features! Block ads, see application logs and much more!</string>
+    <string name="visit_kofi">Get Premium €4.99</string>
     <string name="enter_premium_code">Enter Premium Code</string>
     <string name="premium_code_title">Premium Code</string>
     <string name="premium_code_message">Enter your premium code to unlock all features:</string>

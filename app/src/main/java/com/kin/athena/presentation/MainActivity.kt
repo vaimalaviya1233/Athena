@@ -34,6 +34,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.kin.athena.BuildConfig
 import com.kin.athena.core.logging.Logger
 import com.kin.athena.core.utils.extensions.popUpToTop
 import com.kin.athena.data.service.billing.BillingProvider
@@ -131,21 +132,17 @@ class MainActivity : AppCompatActivity() {
                         // Show Ko-fi fallback dialog if needed (F-Droid only)
                         if (!BuildConfig.USE_PLAY_BILLING) {
                             billingProvider.getBillingInterface()?.let { billingInterface ->
-                                // Use reflection to check for F-Droid specific methods
-                                try {
-                                    val showKofiDialog = billingInterface.javaClass.getMethod("getShowKofiDialog").invoke(billingInterface) as Boolean
-                                    if (showKofiDialog) {
+                                if (billingInterface is com.kin.athena.data.service.billing.FDroidBillingManager) {
+                                    if (billingInterface.showKofiDialog) {
                                         KofiFallbackDialog(
                                             onKofiClick = { 
-                                                billingInterface.javaClass.getMethod("handleKofiClick").invoke(billingInterface)
+                                                billingInterface.handleKofiClick()
                                             },
                                             onDismiss = { 
-                                                billingInterface.javaClass.getMethod("dismissKofiDialog").invoke(billingInterface)
+                                                billingInterface.dismissKofiDialog()
                                             }
                                         )
                                     }
-                                } catch (e: Exception) {
-                                    Logger.error("Error handling Ko-fi dialog: ${e.message}")
                                 }
                             }
                         }
