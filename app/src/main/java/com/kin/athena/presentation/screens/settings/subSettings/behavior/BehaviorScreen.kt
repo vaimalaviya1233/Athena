@@ -176,13 +176,13 @@ fun BehaviorScreen(
                 }
             )
             SettingsBox(
-                title = stringResource(id = R.string.pernament_notification),
-                description = stringResource(id = R.string.pernament_notification_description),
+                title = stringResource(id = R.string.permanent_notification),
+                description = stringResource(id = R.string.permanent_notification_description),
                 icon = IconType.VectorIcon(Icons.Rounded.Timer),
                 actionType = SettingType.SWITCH,
-                variable = !settings.settings.value.pernamentNotification,
+                variable = !settings.settings.value.permanentNotification,
                 onSwitchEnabled = {
-                    settings.update(settings.settings.value.copy(pernamentNotification = !it))
+                    settings.update(settings.settings.value.copy(permanentNotification = !it))
                 }
             )
         }

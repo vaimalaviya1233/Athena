@@ -61,7 +61,7 @@ suspend fun Service.showStartNotification(applications: List<Application>, prefe
                 channelId = "service_running",
                 channelName = R.string.vpn_service_channel_name,
                 channelDescription = R.string.vpn_service_channel_description,
-                importance = if (settings.pernamentNotification) NotificationManager.IMPORTANCE_HIGH else NotificationManager.IMPORTANCE_LOW
+                importance = if (settings.permanentNotification) NotificationManager.IMPORTANCE_HIGH else NotificationManager.IMPORTANCE_LOW
             )
 
 
@@ -76,7 +76,7 @@ suspend fun Service.showStartNotification(applications: List<Application>, prefe
                 NotificationCompat.Builder(contextNot, channelID).apply {
                     setContentTitle(contextNot.getString(R.string.vpn_service_running))
                     setContentText("Allowed ${networkStats.first}, Blocked ${networkStats.second}")
-                    if (settings.pernamentNotification) {
+                    if (settings.permanentNotification) {
                         setColorized(true)
                         setOngoing(true)
                         setPriority(NotificationCompat.PRIORITY_HIGH)
