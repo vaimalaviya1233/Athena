@@ -1,24 +1,28 @@
 #!/bin/bash
 
-# Build nflog for Android
-# This script compiles the Go code for Android arm64-v8a and armeabi-v7a architectures
-
 set -e
 
-# Configuration
 NDK_VERSION="27.0.12077973"
 ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
 NDK="$ANDROID_HOME/ndk/$NDK_VERSION"
 
-# Check if NDK exists
 if [ ! -d "$NDK" ]; then
     echo "Error: Android NDK not found at $NDK"
     echo "Please set ANDROID_HOME or install NDK version $NDK_VERSION"
     exit 1
 fi
 
-# Set up environment
-export PATH="$PATH:$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    if [[ $(uname -m) == "arm64" ]]; then
+        TOOLCHAIN_PATH="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/bin"
+    else
+        TOOLCHAIN_PATH="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/bin"
+    fi
+else
+    TOOLCHAIN_PATH="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin"
+fi
+
+export PATH="$PATH:$TOOLCHAIN_PATH"
 export GOOS='android'
 export CGO_ENABLED=1
 

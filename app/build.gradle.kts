@@ -205,6 +205,6 @@ dependencies {
     implementation(libs.dnsjava)
     implementation(libs.pcap4j.core)
 
-    //Billing
-    implementation(libs.billing)
+    //Billing (Play Store only)
+    "playstoreImplementation"(libs.billing)
 }

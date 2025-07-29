@@ -18,7 +18,6 @@
 package com.kin.athena.data.service.billing
 
 import android.app.Activity
-import com.kin.athena.BuildConfig
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -40,10 +39,6 @@ class BillingProvider @Inject constructor() {
     }
     
     private fun createBillingInterface(activity: Activity): BillingInterface {
-        return if (BuildConfig.USE_PLAY_BILLING) {
-            PlayStoreBillingManager(activity)
-        } else {
-            FDroidBillingManager(activity)
-        }
+        return FDroidBillingManager(activity)
     }
 }
