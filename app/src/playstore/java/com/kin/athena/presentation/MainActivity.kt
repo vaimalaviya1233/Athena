@@ -34,11 +34,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import com.kin.athena.BuildConfig
 import com.kin.athena.core.logging.Logger
 import com.kin.athena.core.utils.extensions.popUpToTop
 import com.kin.athena.data.service.billing.BillingProvider
-import com.kin.athena.presentation.components.KofiFallbackDialog
 import com.kin.athena.presentation.theme.EasyWallTheme
 import com.kin.athena.presentation.navigation.AppNavHost
 import com.kin.athena.presentation.navigation.routes.HomeRoutes
@@ -129,23 +127,8 @@ class MainActivity : AppCompatActivity() {
                             navController = navController
                         )
                         
-                        // Show Ko-fi fallback dialog if needed (F-Droid only)
-                        if (!BuildConfig.USE_PLAY_BILLING) {
-                            billingProvider.getBillingInterface()?.let { billingInterface ->
-                                if (billingInterface is com.kin.athena.data.service.billing.FDroidBillingManager) {
-                                    if (billingInterface.showKofiDialog) {
-                                        KofiFallbackDialog(
-                                            onKofiClick = { 
-                                                billingInterface.handleKofiClick()
-                                            },
-                                            onDismiss = { 
-                                                billingInterface.dismissKofiDialog()
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                        // Play Store builds use native billing dialogs
+                        // No Ko-fi fallback dialog needed
                     }
                 }
             }
