@@ -49,7 +49,7 @@ data class Settings(
     val allowLocal: Boolean = true,
     val blockWifiWhenScreenOff: Boolean = false,
     val blockCellularWhenScreenOff: Boolean = false,
-    val pernamentNotification: Boolean = false,
+    val permanentNotification: Boolean = false,
     val dnsServer1: String = NetworkConstants.DNS_SERVERS[0].second.first,
     val dnsServer2: String = NetworkConstants.DNS_SERVERS[0].second.second,
 

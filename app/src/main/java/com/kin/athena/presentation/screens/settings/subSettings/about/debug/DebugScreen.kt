@@ -72,7 +72,7 @@ fun ClearChainSheet(onExit: () -> Unit) {
 
 
     PermissionModal(
-        permissionName = stringResource(id = R.string.firwall_terminated),
+        permissionName = stringResource(id = R.string.firewall_terminated),
         permissionDescription = stringResource(id = R.string.firewall_terminated_description),
         permissionRequest = stringResource(id = R.string.clear),
         onDismiss = {
