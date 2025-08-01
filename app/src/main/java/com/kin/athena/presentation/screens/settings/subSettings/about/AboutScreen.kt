@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ContactSupport
@@ -32,18 +33,26 @@ import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Translate
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -163,6 +172,19 @@ fun PremiumCodeDialog(
     settings: SettingsViewModel
 ) {
     var code by remember { mutableStateOf(TextFieldValue("")) }
+    var notificationMessage by remember { mutableStateOf("") }
+    var isVerifying by remember { mutableStateOf(false) }
+
+    // Auto-clear notification after delay
+    LaunchedEffect(notificationMessage) {
+        if (notificationMessage.isNotEmpty()) {
+            delay(3000)
+            if (notificationMessage.startsWith("✅")) {
+                onExit() // Exit dialog on success after showing message
+            }
+            notificationMessage = ""
+        }
+    }
 
     SettingDialog(
         text = stringResource(id = R.string.premium_code),
@@ -188,14 +210,63 @@ fun PremiumCodeDialog(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Show notification message with Material You design
+            if (notificationMessage.isNotEmpty()) {
+                val isSuccess = notificationMessage.startsWith("✅")
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isSuccess) 
+                            MaterialTheme.colorScheme.tertiaryContainer
+                        else 
+                            MaterialTheme.colorScheme.errorContainer
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (isSuccess) Icons.Rounded.CheckCircle else Icons.Rounded.Error,
+                            contentDescription = null,
+                            tint = if (isSuccess)
+                                MaterialTheme.colorScheme.onTertiaryContainer
+                            else
+                                MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.padding(end = 12.dp)
+                        )
+                        Text(
+                            text = notificationMessage.removePrefix("✅ ").removePrefix("❌ "),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (isSuccess)
+                                MaterialTheme.colorScheme.onTertiaryContainer
+                            else
+                                MaterialTheme.colorScheme.onErrorContainer,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             Button(
                 onClick = {
-                    settings.verifyLicense(code.text)
-                    onExit()
+                    if (code.text.isNotBlank() && !isVerifying) {
+                        isVerifying = true
+                        settings.verifyLicense(code.text) { success, message ->
+                            isVerifying = false
+                            notificationMessage = message
+                        }
+                    }
                 },
+                enabled = !isVerifying && code.text.isNotBlank(),
                 modifier = Modifier.align(Alignment.End)
             ) {
-                Text(text = stringResource(id = R.string.done))
+                Text(text = if (isVerifying) "Verifying..." else stringResource(id = R.string.done))
             }
             Spacer(modifier = Modifier.height(8.dp))
         }

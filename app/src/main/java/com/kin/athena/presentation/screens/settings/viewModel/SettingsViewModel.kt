@@ -67,20 +67,25 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun verifyLicense(key: String) {
+    fun verifyLicense(key: String, onResult: (Boolean, String) -> Unit = { _, _ -> }) {
         viewModelScope.launch {
             verifyLicenseUseCase.invoke(key).fold(
                 ifSuccess = { licenseResponse ->
                     if (licenseResponse.valid == true) {
                         update(settings.value.copy(premiumUnlocked = true))
+                        Toast.makeText(context, "✅ Premium activated successfully!", Toast.LENGTH_LONG).show()
+                        onResult(true, "✅ Premium activated successfully!")
                     } else {
-                        if (licenseResponse.error != null) {
-                            Toast.makeText(context, licenseResponse.error, Toast.LENGTH_SHORT)
-                        } else {
-                            Toast.makeText(context, context.getString(R.string.invalid_license), Toast.LENGTH_SHORT)
-                        }
+                        val errorMessage = licenseResponse.error ?: context.getString(R.string.invalid_license)
+                        Toast.makeText(context, "❌ $errorMessage", Toast.LENGTH_LONG).show()
+                        onResult(false, "❌ $errorMessage")
                     }
                 },
+                ifFailure = { error ->
+                    val errorMessage = "❌ Failed to verify license: ${error.message}"
+                    Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+                    onResult(false, errorMessage)
+                }
             )
         }
     }
