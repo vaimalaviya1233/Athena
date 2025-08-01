@@ -131,6 +131,7 @@ fun HomeScreen(
     MaterialScaffold(
         topBar = {
             SearchBar(
+                showStartInfo = !settingsViewModel.settings.value.dontShowHelp,
                 query = homeViewModel.searchQuery.value,
                 onQueryChange = { homeViewModel.updateSearchQueryStatus(it) },
                 onClearClick = { homeViewModel.clearSearchQueryStatus() },
@@ -156,6 +157,7 @@ fun HomeScreen(
                     }
                 },
                 onFirewallClicked = {
+                    settingsViewModel.update(settingsViewModel.settings.value.copy(dontShowHelp = true))
                     if (isFirewallManager.value == FirewallStatus.ONLINE) {
                         homeViewModel.setFirewallClicked(true)
                     } else {

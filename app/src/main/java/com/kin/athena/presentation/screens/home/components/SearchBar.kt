@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kin.athena.R
@@ -45,6 +46,7 @@ import com.kin.athena.presentation.components.material.MaterialButton
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchBar(
+    showStartInfo: Boolean = false,
     text: String = stringResource(R.string.search),
     query: String,
     onQueryChange: (String) -> Unit,
@@ -59,7 +61,7 @@ fun SearchBar(
             .fillMaxWidth()
             .padding(24.dp, 0.dp, 24.dp, 18.dp),
         query = query,
-        placeholder = { Text(text = text) },
+        placeholder = { Text(text = if (showStartInfo) LocalContext.current.getString(R.string.search_bar_start) else text) },
         leadingIcon = {
             if (onFirewallClicked != null && firewallColor != null) {
                 Row(

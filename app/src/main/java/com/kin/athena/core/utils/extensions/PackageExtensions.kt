@@ -92,7 +92,7 @@ fun Application.getApplicationIcon(
                     useDynamicIcon -> {
                 icon.monochrome?.let { monochrome ->
                     applyTint(monochrome, tintColor).processIcon(context)
-                } ?: icon.foreground?.processIcon(context) ?: icon.processIcon(context)
+                } ?: icon.foreground?.processIcon(context) ?: icon
             }
             else -> icon.processIcon(context)
         }

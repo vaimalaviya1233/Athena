@@ -59,7 +59,7 @@ data class Settings(
     // Themes
     val automaticTheme: Boolean = true,
     val darkTheme: Boolean = false,
-    val useDynamicIcons: Boolean = true,
+    val useDynamicIcons: Boolean = false,
     var dynamicTheme: Boolean = false,
     var amoledTheme: Boolean = false,
     var showDialog: Boolean = true,
@@ -75,5 +75,7 @@ data class Settings(
     val adBlocker: Boolean = false,
     val trackerProtection: Boolean = false,
 
-    val premiumUnlocked: Boolean = false
+    val premiumUnlocked: Boolean = false,
+
+    val dontShowHelp: Boolean = false
 )
