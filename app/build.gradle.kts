@@ -42,11 +42,13 @@ android {
         create("playstore") {
             dimension = "store"
             buildConfigField("boolean", "USE_PLAY_BILLING", "true")
+            buildConfigField("boolean", "CHECK_PREMIUM_CODE", "true")
             buildConfigField("String", "KOFI_URL", "\"\"")
         }
         create("fdroid") {
             dimension = "store"
             buildConfigField("boolean", "USE_PLAY_BILLING", "false")
+            buildConfigField("boolean", "CHECK_PREMIUM_CODE", "true")
             buildConfigField("String", "KOFI_URL", "\"https://ko-fi.com/s/b127ca6671\"")
         }
     }
