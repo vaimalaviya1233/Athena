@@ -35,6 +35,28 @@
 -keep class java.nio.** { *; }
 -dontwarn java.nio.**
 
+# Fix InetAddressResolverProvider service warning
+-dontwarn java.net.spi.InetAddressResolverProvider
+-dontwarn java.net.spi.**
+-dontnote java.net.spi.**
+
+# Keep service files and providers
+-keepclassmembers class * {
+    *** loadService(***);
+}
+
+# Suppress kotlinx-serialization R8 warnings
+-dontwarn kotlinx.serialization.**
+
+# Keep license verification classes (prevent R8 from breaking premium code verification)
+-keep class com.kin.athena.data.remote.LicenseResponse { *; }
+-keep class com.kin.athena.data.remote.LicenseData { *; }
+-keep class com.kin.athena.data.remote.ActivationData { *; }
+-keep class com.kin.athena.data.remote.LicenseApi { *; }
+-keep class com.kin.athena.data.remote.LicenseRepository { *; }
+-keep class com.kin.athena.data.remote.LicenseRepositoryImpl { *; }
+-keep class com.kin.athena.data.remote.VerifyLicenseUseCase { *; }
+
 # Enhanced optimization rules for smaller APK size
 -allowaccessmodification
 -repackageclasses ''
