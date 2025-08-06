@@ -126,6 +126,7 @@ fun DnsScreen(
                     config.removeURL(list)
                     Logger.info("Removed list: $list")
                 }
+                config.save()  // Persist changes to disk
                 updateLists()
                 // Reload the database and update DNS rules in background to prevent ANR
                 CoroutineScope(Dispatchers.IO).launch {

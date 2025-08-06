@@ -51,7 +51,7 @@ object FileHelper{
         if (item.isDownloadable()) {
             try {
                 File(
-                    applicationContext.getExternalFilesDir(null),
+                    applicationContext.filesDir,  // Use internal storage instead of external
                     URLEncoder.encode(item.data, "UTF-8"),
                 )
             } catch (e: UnsupportedEncodingException) {
