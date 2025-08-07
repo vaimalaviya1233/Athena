@@ -95,9 +95,15 @@ class RuleDatabaseItemUpdate(
             connection = getHttpURLConnection(file!!, singleWriterMultipleReaderFile, url)
 
             if (!validateResponse(connection)) {
+                // Handle 304 Not Modified as success (file already up to date)
+                if (connection.responseCode == 304) {
+                    worker.addDone(item)
+                }
                 return
             }
             downloadFile(file!!, singleWriterMultipleReaderFile, connection)
+            // Only mark as done if download succeeded (no exception thrown)
+            worker.addDone(item)
         } catch (_: SocketTimeoutException) {
             worker.addError(item, context.getString(R.string.requested_timed_out))
         } catch (e: IOException) {
@@ -105,7 +111,6 @@ class RuleDatabaseItemUpdate(
         } catch (e: NullPointerException) {
             worker.addError(item, context.getString(R.string.unknown_error_s) + e.toString())
         } finally {
-            worker.addDone(item)
             connection?.disconnect()
         }
     }

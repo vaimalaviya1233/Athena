@@ -61,10 +61,17 @@ class ConnectionStateManager @Inject constructor(
 
     fun updateConnectionType(connectionType: NetworkManager.ConnectionType) {
         currentConnectionType = connectionType
-        val clearSessionsServiceIntent = Intent(context, VpnConnectionServer::class.java).apply {
-            action = NetworkConstants.ACTION_CLEAR_SESSIONS
+        try {
+            val clearSessionsServiceIntent = Intent(context, VpnConnectionServer::class.java).apply {
+                action = NetworkConstants.ACTION_CLEAR_SESSIONS
+            }
+            
+            // Use regular startService for clearing sessions as it's a quick operation
+            // that doesn't need foreground service capabilities
+            context.startService(clearSessionsServiceIntent)
+        } catch (e: Exception) {
+            Logger.error("Failed to start VPN service for session clearing: ${e.message}", e)
         }
-        context.startService(clearSessionsServiceIntent)
     }
 }
 

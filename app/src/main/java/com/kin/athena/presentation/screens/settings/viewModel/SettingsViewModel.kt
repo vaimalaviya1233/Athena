@@ -124,17 +124,24 @@ class SettingsViewModel @Inject constructor(
         val oldSettings = _settings.value
         _settings.value = newSettings.copy()
         viewModelScope.launch {
-            preferenceUseCases.saveSettings.execute(newSettings).fold(
-                ifSuccess = {
-                    // Check if blockPort80 setting changed
-                    if (oldSettings.blockPort80 != newSettings.blockPort80) {
-                        firewallManager.updateHttpSettings()
+            try {
+                preferenceUseCases.saveSettings.execute(newSettings).fold(
+                    ifSuccess = {
+                        // Check if blockPort80 setting changed
+                        if (oldSettings.blockPort80 != newSettings.blockPort80) {
+                            firewallManager.updateHttpSettings()
+                        }
+                        if (onSuccess != null) {
+                            onSuccess()
+                        }
+                    },
+                    ifFailure = { error ->
+                        Logger.error("Failed to save settings: ${error.message}", error)
                     }
-                    if (onSuccess != null) {
-                        onSuccess()
-                    }
-                }
-            )
+                )
+            } catch (e: Exception) {
+                Logger.error("Error updating settings: ${e.message}", e)
+            }
         }
     }
 

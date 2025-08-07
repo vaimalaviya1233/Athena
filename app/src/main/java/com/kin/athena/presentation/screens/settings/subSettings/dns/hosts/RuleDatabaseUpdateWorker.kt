@@ -81,7 +81,11 @@ class RuleDatabaseUpdateWorker @AssistedInject constructor(
         val end = System.currentTimeMillis()
         Logger.info("DNS Manager Finished (${end - start} milliseconds)")
         postExecute()
-        Result.success()
+        if (errors.isNotEmpty()) {
+            Result.failure()
+        } else {
+            Result.success()
+        }
     }
 
     private fun releaseGarbagePermissions() {

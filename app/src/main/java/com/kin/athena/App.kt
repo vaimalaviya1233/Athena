@@ -22,6 +22,7 @@ import android.app.Application
 import android.content.Context
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.kin.athena.data.cache.DomainCacheService
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -30,6 +31,9 @@ class App : Application(), Configuration.Provider {
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
+    
+    @Inject
+    lateinit var domainCacheService: DomainCacheService
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -40,6 +44,7 @@ class App : Application(), Configuration.Provider {
         super.onCreate()
         App.applicationContext = this
         instance = this
+        domainCacheService.initializeGlobally()
     }
 
     companion object {

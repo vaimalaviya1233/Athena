@@ -109,10 +109,17 @@ class VpnConnectionServer : Service(), CoroutineScope by MainScope(), AppChangeC
         Logger.info("Updating firewall rules${if (application != null) " for ${application.packageID}" else ""}")
         
         // Clear all active sessions before applying new rules
-        val clearSessionsServiceIntent = Intent(appContext, VpnConnectionServer::class.java).apply {
-            action = NetworkConstants.ACTION_CLEAR_SESSIONS
+        try {
+            val clearSessionsServiceIntent = Intent(appContext, VpnConnectionServer::class.java).apply {
+                action = NetworkConstants.ACTION_CLEAR_SESSIONS
+            }
+            
+            // Use regular startService for clearing sessions as it's a quick operation
+            // that doesn't need foreground service capabilities
+            appContext.startService(clearSessionsServiceIntent)
+        } catch (e: Exception) {
+            Logger.error("Failed to start VPN service for session clearing: ${e.message}", e)
         }
-        appContext.startService(clearSessionsServiceIntent)
         
         runBlocking {
             loadApplications()
@@ -179,6 +186,15 @@ class VpnConnectionServer : Service(), CoroutineScope by MainScope(), AppChangeC
                 Logger.warn("Cannot clear sessions: VPN is shutting down")
                 return
             }
+            
+            // If service was started as foreground service, ensure we become foreground immediately
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                runBlocking {
+                    loadApplications()
+                    showStartNotification(installedApplications!!, preferencesUseCases, appContext)
+                }
+            }
+            
             if (::tunnelManager.isInitialized) {
                 Logger.info("Clearing all active sessions due to rule update")
                 tunnelManager.clearSessions()

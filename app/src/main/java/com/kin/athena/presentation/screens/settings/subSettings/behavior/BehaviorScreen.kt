@@ -20,6 +20,7 @@ package com.kin.athena.presentation.screens.settings.subSettings.behavior
 import android.annotation.SuppressLint
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Code
+import androidx.compose.material.icons.rounded.DirectionsCar
 import androidx.compose.material.icons.rounded.InstallMobile
 import androidx.compose.material.icons.rounded.Key
 import androidx.compose.material.icons.rounded.RestartAlt

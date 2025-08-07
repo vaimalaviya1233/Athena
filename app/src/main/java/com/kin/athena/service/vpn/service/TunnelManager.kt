@@ -41,6 +41,8 @@ class TunnelManager(
 ) {
     
     private var contextPtr: Long = 0
+    private val lock = Any()
+    private var isReleased = false
 
 
     
@@ -83,14 +85,20 @@ class TunnelManager(
     }
     
     fun clearSessions() {
-        try {
-            if (contextPtr != 0L) {
-                jni_clear_sessions(contextPtr)
-            } else {
-                Logger.warn("Cannot clear sessions: TunnelManager not properly initialized")
+        synchronized(lock) {
+            try {
+                if (isReleased) {
+                    Logger.warn("Cannot clear sessions: TunnelManager has been released")
+                    return
+                }
+                if (contextPtr != 0L) {
+                    jni_clear_sessions(contextPtr)
+                } else {
+                    Logger.warn("Cannot clear sessions: TunnelManager not properly initialized")
+                }
+            } catch (e: Exception) {
+                Logger.error("Error in clearSessions: ${e.message}", e)
             }
-        } catch (e: Exception) {
-            Logger.error("Error in clearSessions: ${e.message}", e)
         }
     }
 
@@ -182,10 +190,14 @@ class TunnelManager(
     }
 
     fun release() {
-        if (contextPtr != 0L) {
-            stop()
-            done()
-            contextPtr = 0
+        synchronized(lock) {
+            if (!isReleased && contextPtr != 0L) {
+                isReleased = true
+                stop()
+                done()
+                contextPtr = 0
+                Logger.info("TunnelManager resources released")
+            }
         }
     }
 

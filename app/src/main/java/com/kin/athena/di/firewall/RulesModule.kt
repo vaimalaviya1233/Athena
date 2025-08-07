@@ -26,6 +26,7 @@ import com.kin.athena.domain.usecase.application.ApplicationUseCases
 import com.kin.athena.domain.usecase.log.LogUseCases
 import com.kin.athena.domain.usecase.networkFilter.NetworkFilterUseCases
 import com.kin.athena.domain.usecase.preferences.PreferencesUseCases
+import com.kin.athena.data.cache.DomainCacheService
 import com.kin.athena.presentation.screens.settings.subSettings.dns.hosts.RuleDatabase
 import com.kin.athena.service.firewall.rule.AppRule
 import com.kin.athena.service.firewall.handler.RuleHandler
@@ -162,8 +163,14 @@ object RulesModule {
 
     @Provides
     @Singleton
-    fun provideDNSRule(): DNSRule {
-        return DNSRule(RuleDatabase())
+    fun provideDomainCacheService(ruleDatabase: RuleDatabase): DomainCacheService {
+        return DomainCacheService(ruleDatabase)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDNSRule(ruleDatabase: RuleDatabase): DNSRule {
+        return DNSRule(ruleDatabase)
     }
 
     @Provides
