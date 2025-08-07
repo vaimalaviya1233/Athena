@@ -28,12 +28,28 @@ import javax.inject.Inject
 class DNSRule @Inject constructor(
     private val ruleDatabase: RuleDatabase
 ) : FirewallRule {
+    private var isDnsBlockingEnabled = true
+    
     init {
         updateBlocklist()
     }
 
     fun updateBlocklist() {
         ruleDatabase.initialize()
+    }
+    
+    fun enableDnsBlocking() {
+        isDnsBlockingEnabled = true
+        Logger.info("DNS blocking enabled")
+    }
+    
+    fun disableDnsBlocking() {
+        isDnsBlockingEnabled = false
+        Logger.info("DNS blocking disabled")
+    }
+    
+    fun isDnsBlockingEnabled(): Boolean {
+        return isDnsBlockingEnabled
     }
 
     override fun check(
@@ -42,6 +58,11 @@ class DNSRule @Inject constructor(
         logUseCases: LogUseCases,
         result: FirewallResult
     ): FirewallResult {
+        // If DNS blocking is disabled, always allow
+        if (!isDnsBlockingEnabled) {
+            return result
+        }
+        
         dnsModel?.let {
             if (ruleDatabase.isBlocked(dnsModel.domainName)) {
                 Logger.info("Blocked ${dnsModel.domainName}")

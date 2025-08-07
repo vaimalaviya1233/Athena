@@ -85,6 +85,20 @@ class RuleHandler @Inject constructor(
             it.updateLogStatus(enabled)
         }
     }
+    
+    fun setDnsBlocking(enabled: Boolean) {
+        rules.filterIsInstance<DNSRule>().forEach { dnsRule ->
+            if (enabled) {
+                dnsRule.enableDnsBlocking()
+            } else {
+                dnsRule.disableDnsBlocking()
+            }
+        }
+    }
+    
+    fun isDnsBlockingEnabled(): Boolean {
+        return rules.filterIsInstance<DNSRule>().firstOrNull()?.isDnsBlockingEnabled() ?: false
+    }
 
     fun updateScreenSetting() {
         rules.filterIsInstance<ScreenRule>().forEach {

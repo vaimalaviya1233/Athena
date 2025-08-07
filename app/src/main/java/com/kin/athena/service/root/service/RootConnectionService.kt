@@ -197,6 +197,14 @@ class RootConnectionService : Service(), CoroutineScope by CoroutineScope(Dispat
     override fun updateHttpSettings() {
 
     }
+    
+    override fun setDnsBlocking(enabled: Boolean) {
+        firewallRulesHandler.setDnsBlocking(enabled)
+    }
+    
+    override fun isDnsBlockingEnabled(): Boolean {
+        return firewallRulesHandler.isDnsBlockingEnabled()
+    }
 
     private suspend fun loadRules() {
         val applicationsJob = async { packageManager.getApplications.execute().fold(ifSuccess = { installedApplications = it }) }

@@ -63,6 +63,21 @@
             android:foregroundServiceType="systemExempted"
             android:exported="false"
             tools:ignore="ForegroundServicePermission" />
+
+        <!-- Quick Settings Tile Service -->
+        <service
+            android:name=".service.tiles.DnsQuickSettingsTile"
+            android:exported="true"
+            android:icon="@drawable/ic_shield"
+            android:label="@string/dns_protection_tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data android:name="android.service.quicksettings.ACTIVE_TILE"
+                android:value="false" />
+        </service>
+
         <receiver
             android:name=".data.service.BootReceiver"
             android:exported="true">

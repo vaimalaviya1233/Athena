@@ -13,6 +13,9 @@
     <string name="vpn_service_running">Enforcing rules</string>
     <string name="vpn_service_channel_name">VPN Service Notifications</string>
     <string name="vpn_service_channel_description">Notifications for VPN service status and updates</string>
+    
+    <!-- Quick Settings Tile -->
+    <string name="dns_protection_tile_label">DNS Protection</string>
 
     <!-- Permissions -->
     <string name="vpn_permission">VPN Permission</string>

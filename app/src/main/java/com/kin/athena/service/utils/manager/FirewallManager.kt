@@ -49,6 +49,8 @@ interface FirewallService {
     fun updateScreen(value: Boolean)
     fun updateDomains()
     fun updateHttpSettings()
+    fun setDnsBlocking(enabled: Boolean)
+    fun isDnsBlockingEnabled(): Boolean
 }
 
 @Singleton
@@ -161,5 +163,22 @@ class FirewallManager @Inject constructor(
         updateService()
         unbindService()
         currentService.value?.stopService(context) ?: Logger.warn("Service not available for stop.")
+    }
+    
+    fun setDnsBlocking(enabled: Boolean) {
+        if (isServiceBound) {
+            currentService.value?.setDnsBlocking(enabled) ?: Logger.warn("Cannot set DNS blocking: Service is not bound.")
+        } else {
+            Logger.warn("Cannot set DNS blocking: Service is not bound.")
+        }
+    }
+    
+    fun isDnsBlockingEnabled(): Boolean {
+        return if (isServiceBound) {
+            currentService.value?.isDnsBlockingEnabled() ?: false
+        } else {
+            Logger.warn("Cannot get DNS blocking status: Service is not bound.")
+            false
+        }
     }
 }

@@ -103,6 +103,14 @@ class VpnConnectionServer : Service(), CoroutineScope by MainScope(), AppChangeC
     override fun updateHttpSettings() {
         ruleManager.updateHttpSettings()
     }
+    
+    override fun setDnsBlocking(enabled: Boolean) {
+        ruleManager.setDnsBlocking(enabled)
+    }
+    
+    override fun isDnsBlockingEnabled(): Boolean {
+        return ruleManager.isDnsBlockingEnabled()
+    }
 
 
     override fun updateRules(application: Application?) {
