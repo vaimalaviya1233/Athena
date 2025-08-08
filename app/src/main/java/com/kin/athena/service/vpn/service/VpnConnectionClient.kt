@@ -101,7 +101,8 @@ class VpnConnectionClient : VpnService() {
         setMtu(NetworkConstants.MAX_PACKET_LEN)
         setBlocking(true)
         setSession(getString(R.string.app_name))
-        addDisallowedApplication(context.packageName).apply {
+        addDisallowedApplication(context.packageName)
+        addDisallowedApplication("com.google.android.projection.gearhead").apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 setMetered(false)
             }
