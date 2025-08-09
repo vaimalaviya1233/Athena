@@ -47,6 +47,7 @@ import androidx.navigation.NavController
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkInfo
+import androidx.work.Data
 import com.kin.athena.R
 import com.kin.athena.core.logging.Logger
 import com.kin.athena.core.utils.constants.AppConstants
@@ -97,6 +98,26 @@ fun DnsScreen(
 
     fun updateLists(onComplete: ((Boolean) -> Unit)? = null) {
         val workRequest = OneTimeWorkRequestBuilder<RuleDatabaseUpdateWorker>().build()
+        WorkManager.getInstance(context).enqueue(workRequest)
+        
+        // Monitor work completion
+        WorkManager.getInstance(context).getWorkInfoByIdLiveData(workRequest.id)
+            .observeForever { workInfo ->
+                if (workInfo?.state?.isFinished == true) {
+                    onComplete?.invoke(workInfo.state == WorkInfo.State.SUCCEEDED)
+                }
+            }
+    }
+    
+    fun updateSpecificList(targetList: String, onComplete: ((Boolean) -> Unit)? = null) {
+        val inputData = Data.Builder()
+            .putStringArray("target_lists", arrayOf(targetList))
+            .build()
+            
+        val workRequest = OneTimeWorkRequestBuilder<RuleDatabaseUpdateWorker>()
+            .setInputData(inputData)
+            .build()
+            
         WorkManager.getInstance(context).enqueue(workRequest)
         
         onComplete?.let { callback ->
@@ -181,38 +202,50 @@ fun DnsScreen(
                     blockListViewModel.invalidateDomainsCache() // Invalidate cache for next load
                     
                     withContext(Dispatchers.Main) {
-                        updateLists { success ->
-                            if (success && enabled) {
-                                // Only turn switch ON after successful download
-                                localSwitchStates[list] = true
-                                blockListViewModel.downloadSuccess()
-                            } else if (!success && enabled) {
-                                // Download failed, revert the config changes made earlier
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    try {
-                                        // Remove the URL that was added
-                                        config.removeURL(list)
-                                        config.save()
-                                        Logger.info("Reverted list addition: $list")
-                                    } catch (e: Exception) {
-                                        Logger.error("Failed to revert config for '$list': ${e.message}", e)
+                        if (enabled) {
+                            // Only update this specific list, not all lists
+                            updateSpecificList(list) { success ->
+                                if (success) {
+                                    // Only turn switch ON after successful download
+                                    localSwitchStates[list] = true
+                                    blockListViewModel.downloadSuccess()
+                                } else {
+                                    // Download failed, revert the config changes made earlier
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        try {
+                                            // Remove the URL that was added
+                                            config.removeURL(list)
+                                            config.save()
+                                            Logger.info("Reverted list addition: $list")
+                                        } catch (e: Exception) {
+                                            Logger.error("Failed to revert config for '$list': ${e.message}", e)
+                                        }
+                                    }
+                                    
+                                    // Show appropriate error
+                                    if (!blockListViewModel.isNetworkAvailable()) {
+                                        blockListViewModel.downloadNetworkError()
+                                    } else {
+                                        blockListViewModel.downloadError()
                                     }
                                 }
-                                
-                                // Show appropriate error
-                                if (!blockListViewModel.isNetworkAvailable()) {
-                                    blockListViewModel.downloadNetworkError()
-                                } else {
-                                    blockListViewModel.downloadError()
-                                }
+                                isDomainUpdateInProgress = false
                             }
+                        } else {
+                            // For disabling, just refresh the domain cache
                             isDomainUpdateInProgress = false
                         }
                     }
                     
-                    // Reload the database and update DNS rules
-                    reloadDatabase()
-                    blockListViewModel.firewallManager.updateDomains()
+                    // Only invalidate cache and update domains without full reload
+                    // This avoids downloading all blocklists when only one was changed
+                    blockListViewModel.invalidateDomainsCache()
+                    
+                    // For disabling, no need to download - just update the domain cache
+                    if (!enabled) {
+                        blockListViewModel.refreshDomains()
+                    }
+                    // For enabling, the download happens in updateLists() callback
                     
                 } catch (e: Exception) {
                     Logger.error("Failed to update list '$list': ${e.message}", e)

@@ -19,6 +19,7 @@ import android.net.Uri
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import androidx.work.Data
 import com.kin.athena.core.logging.Logger
 import com.kin.athena.presentation.config
 import com.kin.athena.service.utils.manager.FirewallManager
@@ -61,7 +62,20 @@ class RuleDatabaseUpdateWorker @AssistedInject constructor(
         _isRefreshing.value = true
         val start = System.currentTimeMillis()
         val jobs = mutableListOf<Deferred<Unit>>()
-        config.hosts.items.forEach {
+        
+        // Check if we should update specific lists only
+        val targetLists = inputData.getStringArray("target_lists")
+        val hostsToProcess = if (targetLists != null && targetLists.isNotEmpty()) {
+            // Only process specific lists
+            config.hosts.items.filter { targetLists.contains(it.data) }
+        } else {
+            // Process all lists (default behavior)
+            config.hosts.items
+        }
+        
+        Logger.info("DNS Manager: Processing ${hostsToProcess.size} out of ${config.hosts.items.size} lists")
+        
+        hostsToProcess.forEach {
             val update = RuleDatabaseItemUpdate(context, this@RuleDatabaseUpdateWorker, it)
             if (update.shouldDownload()) {
                 val job = async { update.run() }

@@ -116,17 +116,14 @@ class VpnConnectionServer : Service(), CoroutineScope by MainScope(), AppChangeC
     override fun updateRules(application: Application?) {
         Logger.info("Updating firewall rules${if (application != null) " for ${application.packageID}" else ""}")
         
-        // Clear all active sessions before applying new rules
+        // Clear sessions directly if tunnel manager is initialized
         try {
-            val clearSessionsServiceIntent = Intent(appContext, VpnConnectionServer::class.java).apply {
-                action = NetworkConstants.ACTION_CLEAR_SESSIONS
+            if (::tunnelManager.isInitialized) {
+                Logger.info("Clearing sessions for rule update")
+                tunnelManager.clearSessions()
             }
-            
-            // Use regular startService for clearing sessions as it's a quick operation
-            // that doesn't need foreground service capabilities
-            appContext.startService(clearSessionsServiceIntent)
         } catch (e: Exception) {
-            Logger.error("Failed to start VPN service for session clearing: ${e.message}", e)
+
         }
         
         runBlocking {
@@ -178,8 +175,16 @@ class VpnConnectionServer : Service(), CoroutineScope by MainScope(), AppChangeC
             NetworkConstants.ACTION_TOGGLE_CELLURAL -> toggleWifiAccess(intent.getStringExtra("packageName"))
             NetworkConstants.ACTION_TOGGLE_WIFI -> toggleCellularAccess(intent.getStringExtra("packageName"))
             NetworkConstants.ACTION_STOP_VPN -> stopVpn()
-            NetworkConstants.ACTION_START_VPN -> startVpn(intent)
-            NetworkConstants.ACTION_CLEAR_SESSIONS -> clearSessions()
+            NetworkConstants.ACTION_START_VPN -> {
+                startVpn(intent)
+                return START_STICKY
+            }
+            NetworkConstants.ACTION_CLEAR_SESSIONS -> {
+                clearSessions()
+                // For session clearing, we don't need to keep the service running
+                stopSelf()
+                return START_NOT_STICKY
+            }
         }
         return START_STICKY
     }
@@ -195,16 +200,8 @@ class VpnConnectionServer : Service(), CoroutineScope by MainScope(), AppChangeC
                 return
             }
             
-            // If service was started as foreground service, ensure we become foreground immediately
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                runBlocking {
-                    loadApplications()
-                    showStartNotification(installedApplications!!, preferencesUseCases, appContext)
-                }
-            }
-            
             if (::tunnelManager.isInitialized) {
-                Logger.info("Clearing all active sessions due to rule update")
+                Logger.info("Clearing all active sessions due to network change")
                 tunnelManager.clearSessions()
                 Logger.info("All sessions cleared successfully")
             } else {
@@ -245,6 +242,12 @@ class VpnConnectionServer : Service(), CoroutineScope by MainScope(), AppChangeC
     private fun startVpn(intent: Intent) {
         val vpnInterfaceFd = intent.getIntExtra("vpnInterfaceFd", -1)
         if (vpnInterfaceFd != -1) {
+            // Start foreground service immediately to avoid timing issues
+            runBlocking {
+                loadApplications()
+                showStartNotification(installedApplications!!, preferencesUseCases)
+            }
+            
             vpnInterface = ParcelFileDescriptor.adoptFd(vpnInterfaceFd)
             vpnInterface?.let {
                 initializeVpnComponents(it)
@@ -280,10 +283,6 @@ class VpnConnectionServer : Service(), CoroutineScope by MainScope(), AppChangeC
 
 
     private fun startVpnCoroutines() {
-        runBlocking {
-            loadApplications()
-            showStartNotification(installedApplications!!, preferencesUseCases)
-        }
         launch { if (::firewallManager.isInitialized) { firewallManager.update(FirewallStatus.ONLINE) } }
         launch(Dispatchers.IO) { ruleManager.updateAppRules() }
         

@@ -68,12 +68,9 @@ class ConnectionStateManager @Inject constructor(
                 action = NetworkConstants.ACTION_CLEAR_SESSIONS
             }
             
-            // Use ContextCompat.startForegroundService for Android 8.0+ compatibility
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                ContextCompat.startForegroundService(context, clearSessionsServiceIntent)
-            } else {
-                context.startService(clearSessionsServiceIntent)
-            }
+            // Use regular startService for session clearing since it's a quick operation
+            // that doesn't require foreground service capabilities
+            context.startService(clearSessionsServiceIntent)
         } catch (e: Exception) {
             Logger.error("Failed to start VPN service for session clearing: ${e.message}", e)
         }

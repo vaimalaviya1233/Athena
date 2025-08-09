@@ -37,6 +37,7 @@ import androidx.work.WorkManager
 import com.kin.athena.core.logging.Logger
 import com.kin.athena.core.utils.extensions.popUpToTop
 import com.kin.athena.data.service.billing.BillingProvider
+import com.kin.athena.presentation.components.CrashFixAnnouncementDialog
 import com.kin.athena.presentation.theme.EasyWallTheme
 import com.kin.athena.presentation.navigation.AppNavHost
 import com.kin.athena.presentation.navigation.routes.HomeRoutes
@@ -124,6 +125,21 @@ class MainActivity : AppCompatActivity() {
                         
                         // Play Store builds use native billing dialogs
                         // No Ko-fi fallback dialog needed
+                        
+                        // Show crash fix announcement dialog
+                        if (this@apply.shouldShowCrashFixDialog()) {
+                            CrashFixAnnouncementDialog(
+                                onDismiss = {
+                                    this@apply.markCrashFixDialogShown()
+                                },
+                                onUpdateReview = {
+                                    this@apply.markCrashFixDialogShown()
+                                },
+                                onMaybeLater = {
+                                    // Don't mark as shown, so it appears again later
+                                }
+                            )
+                        }
                     }
                 }
             }

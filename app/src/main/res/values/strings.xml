@@ -73,6 +73,21 @@
     <string name="email">Email</string>
     <string name="discord">Discord</string>
     <string name="feature">Feature Request</string>
+    <string name="license">License</string>
+    <string name="license_description">GNU General Public License v3.0</string>
+    <string name="license_info_title">Open Source License</string>
+    <string name="license_info_description">This app is free and open source software licensed under GPL v3</string>
+    <string name="view_license">View License</string>
+    <string name="rate_app">Rate App</string>
+    <string name="rate_app_description">Rate Athena on Google Play Store</string>
+    
+    <!-- Crash Fix Dialog -->
+    <string name="crash_fix_dialog_title">🚀 Athena Just Got Better!</string>
+    <string name="crash_fix_dialog_subtitle">Major stability improvements</string>
+    <string name="crash_fix_dialog_message">We\'ve fixed the crashes and stability issues that were affecting some users. The app is now more stable and reliable than ever!\n\nIf you previously experienced issues, would you consider updating your review to reflect the current experience?</string>
+    <string name="crash_fix_update_review">Update My Review</string>
+    <string name="crash_fix_maybe_later">Maybe Later</string>
+    <string name="crash_fix_no_thanks">No Thanks</string>
     <string name="system_theme">System Theme</string>
     <string name="system_theme_description">Adapts app theme based on system settings</string>
     <string name="dark_theme">Dark Theme</string>

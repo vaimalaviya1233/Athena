@@ -72,6 +72,12 @@ import com.kin.athena.presentation.screens.settings.subSettings.about.components
 import com.kin.athena.presentation.screens.settings.viewModel.SettingsViewModel
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.material.icons.rounded.Numbers
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.Gavel
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun AboutScreen(
@@ -79,6 +85,26 @@ fun AboutScreen(
     settings: SettingsViewModel,
 ) {
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
+    
+    // Function to handle rate app - tries Play Store first, falls back to web
+    fun openRateApp() {
+        try {
+            // Try to open Play Store app first
+            val playStoreIntent = Intent(Intent.ACTION_VIEW, Uri.parse(ProjectConstants.PLAY_STORE_URL))
+            context.startActivity(playStoreIntent)
+        } catch (e: ActivityNotFoundException) {
+            // Fallback to web browser if Play Store app is not available
+            try {
+                val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(ProjectConstants.PLAY_STORE_WEB_URL))
+                context.startActivity(webIntent)
+            } catch (e: ActivityNotFoundException) {
+                // Last fallback - open project page
+                uriHandler.openUri(ProjectConstants.PROJECT_DOWNLOADS)
+            }
+        }
+    }
+    
     SettingsScaffold(
         settings = settings,
         title = stringResource(id = R.string.about_title),
@@ -129,6 +155,13 @@ fun AboutScreen(
                 actionType = SettingType.LINK,
                 onLinkClicked = { uriHandler.openUri(ProjectConstants.PROJECT_SOURCE_CODE) }
             )
+            SettingsBox(
+                title = stringResource(id = R.string.license),
+                description = stringResource(id = R.string.license_description),
+                icon = IconType.VectorIcon(Icons.Rounded.Gavel),
+                actionType = SettingType.LINK,
+                onLinkClicked = { uriHandler.openUri(ProjectConstants.LICENSE_URL) }
+            )
         }
         settingsContainer {
             SettingsBox(
@@ -148,6 +181,15 @@ fun AboutScreen(
                 icon = IconType.VectorIcon(Icons.Rounded.BugReport),
                 onLinkClicked = { uriHandler.openUri(ProjectConstants.GITHUB_FEATURE_REQUEST) },
                 actionType = SettingType.LINK,
+            )
+        }
+        settingsContainer {
+            SettingsBox(
+                title = stringResource(id = R.string.rate_app),
+                description = stringResource(id = R.string.rate_app_description),
+                icon = IconType.VectorIcon(Icons.Rounded.Star),
+                actionType = SettingType.LINK,
+                onLinkClicked = { openRateApp() }
             )
         }
         settingsContainer {

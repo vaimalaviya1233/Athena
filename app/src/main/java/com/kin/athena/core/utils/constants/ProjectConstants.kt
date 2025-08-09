@@ -24,7 +24,12 @@ object ProjectConstants {
 
     const val PROJECT_DOWNLOADS = "https://github.com/Kin69/Athena"
     const val PROJECT_SOURCE_CODE = "https://github.com/Kin69/Athena"
+    const val LICENSE_URL = "https://www.gnu.org/licenses/gpl-3.0.en.html"
     const val SUPPORT_MAIL = "support@easyapps.me"
     const val SUPPORT_DISCORD = "https://discord.gg/ZrP4G8z23H"
     const val GITHUB_FEATURE_REQUEST = "https://github.com/Kin69/Athena/issues"
+    
+    // Store URLs - update these with your actual package name
+    const val PLAY_STORE_URL = "market://details?id=com.kin.athena"
+    const val PLAY_STORE_WEB_URL = "https://play.google.com/store/apps/details?id=com.kin.athena"
 }
