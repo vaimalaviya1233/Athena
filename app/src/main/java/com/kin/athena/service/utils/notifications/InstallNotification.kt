@@ -29,6 +29,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.kin.athena.R
+import com.kin.athena.core.logging.Logger
 import com.kin.athena.core.utils.NotificationUtils as CoreNotificationUtils
 import com.kin.athena.core.utils.extensions.doIfNotificationsAllowed
 import com.kin.athena.core.utils.extensions.getApplicationName
@@ -65,30 +66,39 @@ suspend fun Service.showInstallNotification(
         launch {
             preferencesUseCases.loadSettings.execute().fold(
                 ifSuccess = { settings ->
-                    val application = application ?: createApplication(packageName, settings)
-                    applicationUseCases.addApplication.execute(application).fold(
-                        ifSuccess = {
-                            firewallManager.updateFirewallRules(application)
-                            if (settings.sendNotificationOnInstall) {
-                                showNotification(packageName, channelID, application, useRootMode)
+                    val applicationToUse = application ?: createApplication(packageName, settings)
+                    applicationToUse?.let { app ->
+                        applicationUseCases.addApplication.execute(app).fold(
+                            ifSuccess = {
+                                firewallManager.updateFirewallRules(app)
+                                if (settings.sendNotificationOnInstall) {
+                                    showNotification(packageName, channelID, app, useRootMode)
+                                }
                             }
-                        }
-                    )
+                        )
+                    } ?: run {
+                        Logger.error("Failed to create application for package $packageName")
+                    }
                 }
             )
         }
     }
 }
 
-private fun Service.createApplication(packageName: String, settings: Settings): Application {
-    val info = packageManager.getApplicationInfo(packageName, 0)
-    return Application(
-        packageID = packageName,
-        uid = info.uid,
-        internetAccess = settings.wiFiDefault,
-        cellularAccess = settings.cellularDefault,
-        systemApp = info.flags and ApplicationInfo.FLAG_SYSTEM != 0
-    )
+private fun Service.createApplication(packageName: String, settings: Settings): Application? {
+    return try {
+        val info = packageManager.getApplicationInfo(packageName, 0)
+        Application(
+            packageID = packageName,
+            uid = info.uid,
+            internetAccess = settings.wiFiDefault,
+            cellularAccess = settings.cellularDefault,
+            systemApp = info.flags and ApplicationInfo.FLAG_SYSTEM != 0
+        )
+    } catch (e: Exception) {
+        Logger.error("Failed to get application info for package $packageName: ${e.message}", e)
+        null
+    }
 }
 
 @SuppressLint("MissingPermission")

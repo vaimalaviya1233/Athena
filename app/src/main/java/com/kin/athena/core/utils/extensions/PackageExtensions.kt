@@ -97,6 +97,13 @@ fun Application.getApplicationIcon(
             else -> icon.processIcon(context)
         }
     } catch (e: NameNotFoundException) {
+        Logger.error("Package not found for icon loading: ${packageID}")
+        null
+    } catch (e: OutOfMemoryError) {
+        Logger.error("Out of memory loading icon for: ${packageID}")
+        null
+    } catch (e: Exception) {
+        Logger.error("Failed to load icon for ${packageID}: ${e.message}", e)
         null
     }
 }

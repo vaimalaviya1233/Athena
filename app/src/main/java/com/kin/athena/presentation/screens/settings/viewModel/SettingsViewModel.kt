@@ -36,6 +36,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CancellationException
 import com.kin.athena.service.utils.manager.FirewallManager
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
@@ -131,14 +132,16 @@ class SettingsViewModel @Inject constructor(
                         if (oldSettings.blockPort80 != newSettings.blockPort80) {
                             firewallManager.updateHttpSettings()
                         }
-                        if (onSuccess != null) {
-                            onSuccess()
-                        }
+                        onSuccess?.invoke()
                     },
                     ifFailure = { error ->
                         Logger.error("Failed to save settings: ${error.message}", error)
                     }
                 )
+            } catch (e: CancellationException) {
+                // Don't log cancellation as error - it's expected behavior
+                Logger.debug("Settings update cancelled")
+                throw e // Re-throw to properly cancel the coroutine
             } catch (e: Exception) {
                 Logger.error("Error updating settings: ${e.message}", e)
             }

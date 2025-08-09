@@ -81,15 +81,19 @@ class IpViewModel @Inject constructor(
 
     fun loadBlockedIps() {
         viewModelScope.launch {
-            networkFilterUseCases.getIps.execute().fold(
-                ifSuccess = {
-                    it?.collect { newIps ->
-                        newIps?.let {
-                            _ips.value = newIps
+            try {
+                networkFilterUseCases.getIps.execute().fold(
+                    ifSuccess = { flow ->
+                        flow?.collect { newIps ->
+                            if (newIps != null) {
+                                _ips.value = newIps
+                            }
                         }
                     }
-                }
-            )
+                )
+            } catch (e: Exception) {
+                Logger.error("Failed to load blocked IPs: ${e.message}", e)
+            }
         }
     }
 

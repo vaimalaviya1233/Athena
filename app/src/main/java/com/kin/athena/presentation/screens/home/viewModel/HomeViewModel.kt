@@ -188,15 +188,21 @@ class HomeViewModel @Inject constructor(
     }
 
     fun loadIcons(settingsViewModel: SettingsViewModel, color: Color) {
-        iconMap.value = packages.value.associate { application ->
-            val icon = application.getApplicationIcon(
-                context.packageManager,
-                tintColor = color.toArgb(),
-                useDynamicIcon = settingsViewModel.settings.value.useDynamicIcons,
-                context
-            )
-            application.packageID to icon
-        }
+        iconMap.value = packages.value.mapNotNull { application ->
+            try {
+                val icon = application.getApplicationIcon(
+                    context.packageManager,
+                    tintColor = color.toArgb(),
+                    useDynamicIcon = settingsViewModel.settings.value.useDynamicIcons,
+                    context
+                )
+                application.packageID to icon
+            } catch (e: Exception) {
+                Logger.error("Failed to load icon for ${application.packageID}: ${e.message}", e)
+                // Return a pair with null icon instead of crashing
+                application.packageID to null
+            }
+        }.toMap()
     }
 
     private suspend fun loadPackages(settingsViewModel: SettingsViewModel) {

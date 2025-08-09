@@ -91,11 +91,14 @@ class TunnelManager(
                     Logger.warn("Cannot clear sessions: TunnelManager has been released")
                     return
                 }
-                if (contextPtr != 0L) {
-                    jni_clear_sessions(contextPtr)
+                val contextPtrSnapshot = contextPtr
+                if (contextPtrSnapshot != 0L) {
+                    jni_clear_sessions(contextPtrSnapshot)
                 } else {
                     Logger.warn("Cannot clear sessions: TunnelManager not properly initialized")
                 }
+            } catch (e: UnsatisfiedLinkError) {
+                Logger.error("Native library unavailable for clearSessions: ${e.message}")
             } catch (e: Exception) {
                 Logger.error("Error in clearSessions: ${e.message}", e)
             }
@@ -191,12 +194,24 @@ class TunnelManager(
 
     fun release() {
         synchronized(lock) {
-            if (!isReleased && contextPtr != 0L) {
+            if (!isReleased) {
                 isReleased = true
-                stop()
-                done()
-                contextPtr = 0
-                Logger.info("TunnelManager resources released")
+                val contextPtrSnapshot = contextPtr
+                if (contextPtrSnapshot != 0L) {
+                    try {
+                        stop()
+                        done()
+                    } catch (e: UnsatisfiedLinkError) {
+                        Logger.error("Native library unavailable during release: ${e.message}")
+                    } catch (e: Exception) {
+                        Logger.error("Error during TunnelManager release: ${e.message}", e)
+                    } finally {
+                        contextPtr = 0L
+                    }
+                    Logger.info("TunnelManager resources released")
+                } else {
+                    Logger.info("TunnelManager was already released or not initialized")
+                }
             }
         }
     }
