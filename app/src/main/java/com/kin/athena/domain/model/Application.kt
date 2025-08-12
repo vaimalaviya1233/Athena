@@ -43,5 +43,8 @@ data class Application(
     val internetAccess: Boolean = true,
 
     @ColumnInfo(name = "cellular_access")
-    val cellularAccess: Boolean = true
+    val cellularAccess: Boolean = true,
+
+    @ColumnInfo(name = "uses_google_play_services")
+    val usesGooglePlayServices: Boolean = false
 )

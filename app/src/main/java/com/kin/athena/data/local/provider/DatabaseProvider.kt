@@ -18,6 +18,8 @@ package com.kin.athena.data.local.provider
 
 import android.app.Application
 import androidx.room.Room
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.kin.athena.core.utils.constants.AppConstants
 import com.kin.athena.data.local.dao.ApplicationDao
 import com.kin.athena.data.local.dao.LogDao
@@ -28,6 +30,13 @@ class DatabaseProvider(private val application: Application) {
 
     @Volatile
     private var database: AppDatabase? = null
+
+    private val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add the uses_google_play_services column to applications table
+            database.execSQL("ALTER TABLE applications ADD COLUMN uses_google_play_services INTEGER NOT NULL DEFAULT 0")
+        }
+    }
 
     @Synchronized
     fun instance(): AppDatabase {
@@ -40,6 +49,7 @@ class DatabaseProvider(private val application: Application) {
         return Room.databaseBuilder(application.applicationContext,
             AppDatabase::class.java,
             AppConstants.DatabaseConstants.DATABASE_NAME)
+            .addMigrations(MIGRATION_2_3)
             .build()
     }
 

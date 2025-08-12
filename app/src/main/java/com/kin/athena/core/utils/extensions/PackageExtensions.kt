@@ -73,6 +73,24 @@ fun Application.requiresNetworkPermissions(packageManager: PackageManager): Bool
     }
 }
 
+fun Application.usesGooglePlayServices(): Boolean {
+    // Only show GMS indicator for these specific messaging apps
+    val messagingApps = listOf(
+        "com.discord",
+        "com.facebook.mlite", 
+        "com.facebook.orca",
+        "com.instagram.android",
+        "com.Slack",
+        "com.skype.raider",
+        "com.snapchat.android", 
+        "com.whatsapp",
+        "com.whatsapp.w4b"
+    )
+    
+    // Return true only if this is one of the specified messaging apps
+    return messagingApps.contains(packageID)
+}
+
 
 
 fun Application.getApplicationIcon(

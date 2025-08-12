@@ -69,7 +69,7 @@ fun SettingDialog(
                     shape = RoundedCornerShape(32.dp)
                 )
                 .padding(12.dp, 10.dp, 12.dp, 0.dp)
-                .fillMaxWidth(0.65f)
+                .fillMaxWidth(0.85f)
         ) {
             Text(
                 text = text,

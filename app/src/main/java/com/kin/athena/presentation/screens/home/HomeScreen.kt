@@ -30,10 +30,18 @@ import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.SignalCellularAlt
 import androidx.compose.material.icons.rounded.Wifi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -41,10 +49,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -68,6 +75,14 @@ import com.kin.athena.presentation.screens.settings.components.IconType
 import com.kin.athena.presentation.screens.settings.components.SettingDialog
 import com.kin.athena.presentation.screens.settings.components.SettingType
 import com.kin.athena.presentation.screens.settings.components.SettingsBox
+import com.kin.athena.presentation.components.material.MaterialText
+import com.kin.athena.presentation.components.CircleWrapper
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.dimensionResource
+import com.kin.athena.core.utils.extensions.toBitmap
+import androidx.compose.runtime.*
+import androidx.compose.animation.AnimatedVisibility
 import com.kin.athena.presentation.screens.settings.subSettings.dns.components.MagiskSystemlessHostsDialog
 import com.kin.athena.presentation.screens.settings.subSettings.dns.root.HostsManager
 import com.kin.athena.service.firewall.utils.FirewallStatus
@@ -286,6 +301,8 @@ private fun HomeScreenContent(
                 !showOfflinePackages && !application.requiresNetworkPermissions(context.packageManager) -> false
                 else -> true
             }
+        }.sortedBy { application ->
+            application.getApplicationName(context.packageManager)?.lowercase() ?: application.packageID.lowercase()
         }
 
         PackageList(
@@ -322,10 +339,16 @@ private fun PackageList(
 
             Column(modifier = Modifier.clip(shape)) {
                 if (title != null && icon != null) {
-                    SettingsBox(
+                    val description = if (packageEntity.usesGooglePlayServices()) {
+                        "${packageEntity.packageID}\nIncoming messages are fetched from GMS"
+                    } else {
+                        packageEntity.packageID
+                    }
+                    
+                    CustomSettingsBox(
                         icon = IconType.DrawableIcon(icon),
                         title = title,
-                        description = packageEntity.packageID,
+                        description = description,
                         actionType = SettingType.CUSTOM,
                         circleWrapperColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                         circleWrapperSize = if (settingsViewModel.settings.value.useDynamicIcons) 6.dp else 0.dp,
@@ -334,7 +357,8 @@ private fun PackageList(
                             LaunchedEffect(true) {
                                 onApplicationClicked(packageEntity.packageID)
                             }
-                        }
+                        },
+                        usesGMS = packageEntity.usesGooglePlayServices()
                     )
                 } else {
                     viewModel.deleteApplication(packageEntity)
@@ -468,6 +492,111 @@ private fun HandleVpnPermission(homeViewModel: HomeViewModel, context: Context, 
                     }
                     homeViewModel.updateVpnPermissionStatus(isRequested = false)
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CustomSettingsBox(
+    title: String,
+    description: String,
+    icon: IconType,
+    actionType: SettingType,
+    circleWrapperColor: Color,
+    circleWrapperSize: androidx.compose.ui.unit.Dp,
+    customButton: @Composable () -> Unit,
+    customAction: @Composable (() -> Unit) -> Unit,
+    usesGMS: Boolean
+) {
+    val context = LocalContext.current
+    var showCustomAction by remember { mutableStateOf(false) }
+    if (showCustomAction) customAction { showCustomAction = !showCustomAction }
+
+    AnimatedVisibility(visible = true) {
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier
+                .padding(bottom = dimensionResource(id = R.dimen.card_padding_bottom))
+                .clip(RoundedCornerShape(6.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .clickable {
+                    showCustomAction = !showCustomAction
+                }
+        ) {
+            androidx.compose.foundation.layout.Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(
+                        horizontal = dimensionResource(id = R.dimen.card_padding_horizontal),
+                        vertical = 12.dp
+                    )
+                    .fillMaxWidth()
+            ) {
+                androidx.compose.foundation.layout.Row(
+                    Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    when (icon) {
+                        is IconType.DrawableIcon -> {
+                            CircleWrapper(
+                                size = circleWrapperSize,
+                                color = circleWrapperColor
+                            ) {
+                                Image(
+                                    bitmap = icon.drawable.toBitmap().asImageBitmap(),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .height(38.dp - circleWrapperSize)
+                                        .width(38.dp - circleWrapperSize)
+                                )
+                            }
+                        }
+                        is IconType.VectorIcon -> {
+                            CircleWrapper(
+                                size = 12.dp,
+                                color = circleWrapperColor
+                            ) {
+                                Icon(
+                                    imageVector = icon.imageVector,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    
+                    if (usesGMS) {
+                        Column {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(bottom = 3.dp)
+                            )
+                            Text(
+                                text = description.substringBefore('\n'),
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 3.dp)
+                            )
+                            Text(
+                                text = "This app uses Google Play Services to receive incoming messages, meaning it cannot be blocked directly.",
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 9.sp),
+                                color = MaterialTheme.colorScheme.outline,
+                                modifier = Modifier.padding(bottom = 3.dp)
+                            )
+                        }
+                    } else {
+                        MaterialText(
+                            title = title,
+                            description = description
+                        )
+                    }
+                }
+                customButton()
             }
         }
     }

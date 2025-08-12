@@ -22,6 +22,7 @@ import android.content.pm.PackageManager
 import com.kin.athena.core.utils.Error
 import com.kin.athena.core.logging.Logger
 import com.kin.athena.core.utils.Result
+import com.kin.athena.core.utils.extensions.usesGooglePlayServices
 import com.kin.athena.domain.model.Application
 import com.kin.athena.domain.usecase.application.ApplicationUseCases
 import com.kin.athena.presentation.screens.settings.viewModel.SettingsViewModel
@@ -38,11 +39,14 @@ class PackageLoader(
         return@withContext try {
             val allApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
             val packageEntities = allApps.map { appInfo ->
-                Application(
+                val tempApp = Application(
                     packageID = appInfo.packageName,
                     uid = appInfo.uid,
                     systemApp = appInfo.flags and ApplicationInfo.FLAG_SYSTEM != 0
                 )
+                // Detect Google Play Services usage for specific messaging apps
+                val usesGPS = tempApp.usesGooglePlayServices()
+                tempApp.copy(usesGooglePlayServices = usesGPS)
             }
 
             packageEntities.forEach { packageEntity ->

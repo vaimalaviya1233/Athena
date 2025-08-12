@@ -58,6 +58,7 @@ import com.kin.athena.presentation.screens.settings.components.SettingType
 import com.kin.athena.presentation.screens.settings.components.SettingsBox
 import com.kin.athena.presentation.screens.settings.components.SettingsScaffold
 import com.kin.athena.presentation.screens.settings.components.settingsContainer
+import com.kin.athena.presentation.navigation.routes.SettingRoutes
 import com.kin.athena.presentation.screens.settings.subSettings.dns.components.CustomBlocklistDialog
 import com.kin.athena.presentation.screens.settings.subSettings.dns.components.DownloadDialog
 import com.kin.athena.presentation.screens.settings.subSettings.dns.components.DownloadState
@@ -368,46 +369,6 @@ fun DnsScreen(
         }
 
         settingsContainer {
-            @Composable
-            fun OnBlocklistClicked(blocklists: List<String>, onExit: () -> Unit) {
-                val uniqueBlocklists = blocklists.distinct()
-
-                ListDialog(
-                    text = stringResource(R.string.custom_blocklist),
-                    list = uniqueBlocklists,
-                    onExit = onExit,
-                    extractDisplayData = { it },
-                    customItem = {
-                        SettingsBox(
-                            size = 8.dp,
-                            title = stringResource(R.string.custom_blocklist),
-                            actionType = SettingType.CUSTOM,
-                            customAction = { onExit ->
-                                CustomBlocklistDialog(onExit) { blocklists ->
-                                    updateList(true, blocklists)
-                                }
-                            }
-                        )
-                    },
-                    setting = { displayData ->
-                        SettingsBox(
-                            size = 8.dp,
-                            title = displayData.replace("https://", ""),
-                            actionType = SettingType.CUSTOM,
-                            customButton = {
-                                Icon(Icons.Rounded.Delete, "")
-                            },
-                            customAction = {
-                                LaunchedEffect(true) {
-                                    updateList(false, displayData)
-                                }
-                            }
-                        )
-                    }
-                )
-            }
-
-
             SettingsBox(
                 title = stringResource(id = R.string.custom_blocklist) + " " + stringResource(id = R.string.premium_setting),
                 description = stringResource(R.string.custom_blocklist_description),
@@ -419,7 +380,8 @@ fun DnsScreen(
                         isEnabled = true
                     }
                     if (isEnabled) {
-                        OnBlocklistClicked(doneNames.value, onExit)
+                        navController.navigate(SettingRoutes.CustomBlocklist.route)
+                        onExit()
                     }
                 }
             )
