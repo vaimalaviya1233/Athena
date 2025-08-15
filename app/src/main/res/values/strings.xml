@@ -251,4 +251,11 @@
     <string name="ok">OK</string>
     <string name="invalid_code_title">Invalid Code</string>
     <string name="invalid_code_message">The code you entered is not valid. Please check your code and try again, or visit Ko-fi to get premium access.</string>
+    
+    <!-- Network Statistics -->
+    <string name="allowed_requests">Allowed Requests</string>
+    <string name="allowed_requests_description">%1$s requests allowed</string>
+    <string name="blocked_requests">Blocked Requests</string>
+    <string name="blocked_requests_description">%1$s requests blocked</string>
+    <string name="total_activity">Total Activity</string>
 </resources>
