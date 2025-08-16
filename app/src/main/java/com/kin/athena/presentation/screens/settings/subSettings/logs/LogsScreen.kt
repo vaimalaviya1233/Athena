@@ -57,8 +57,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.collectAsState
 import androidx.navigation.NavController
 import com.kin.athena.presentation.navigation.routes.LogRoutes
+import com.kin.athena.presentation.screens.settings.subSettings.logs.components.NetworkStatsSection
 import com.kin.athena.service.firewall.model.FirewallResult
 import java.net.URL
 
@@ -69,6 +71,8 @@ fun LogsScreen(
     logsViewModel: LogsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val networkStats = logsViewModel.networkStats.collectAsState()
+    
     MaterialScaffold(
         topBar = {
             LogsSearchBar(
@@ -80,11 +84,23 @@ fun LogsScreen(
             )
         }
     ) {
-        LogsContent(
-            logs = logsViewModel.filteredLogs.value,
-            context = context,
-            navController
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+        ) {
+            // Network Statistics Section
+            NetworkStatsSection(networkStats = networkStats.value)
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Logs Content
+            LogsContent(
+                logs = logsViewModel.filteredLogs.value,
+                context = context,
+                navController
+            )
+        }
     }
 }
 
@@ -127,7 +143,6 @@ fun LogsContent(logs: List<List<Log>>, context: Context, navController: NavContr
     } else {
         LazyColumn(
             modifier = Modifier
-                .padding(horizontal = 16.dp)
                 .clip(RoundedCornerShape(8.dp))
         ) {
             items(logs) { logGroup ->
