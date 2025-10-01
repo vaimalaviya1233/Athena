@@ -31,6 +31,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.kin.athena.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,7 +62,7 @@ fun MaterialBar(
             onBackNavClicked?.let {
                 MaterialButton(
                     imageVector = Icons.AutoMirrored.Rounded.ArrowBackIos,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.back_button_description),
                     scale = 0.8f
                 ) {
                     onBackNavClicked()

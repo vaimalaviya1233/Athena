@@ -207,9 +207,11 @@ class RootConnectionService : Service(), CoroutineScope by CoroutineScope(Dispat
     }
 
     private suspend fun loadRules() {
+        firewallManager.update(FirewallStatus.LOADING(0f))
+        
         val applicationsJob = async { packageManager.getApplications.execute().fold(ifSuccess = { installedApplications = it }) }
         val ipsJob = async { networkFilterManager.getIps.execute().fold(ifSuccess = { ipAddresses = it.first() }) }
-
+        
         runBlocking {
             applicationsJob.await()
             ipsJob.await()
@@ -322,8 +324,8 @@ class RootConnectionService : Service(), CoroutineScope by CoroutineScope(Dispat
         }
         applyIpRules("iptables", ips, commands)
 
-        var commandIndex = 0
-        executeShellCommand(commands.joinToString(" && ") { "echo ${++commandIndex} && $it" }, commands.count())
+        // Execute commands individually with progress updates
+        executeCommandsWithProgress(commands)
     }
 
     private fun block80(iptables: String, commands: MutableList<String>) {
@@ -435,6 +437,30 @@ class RootConnectionService : Service(), CoroutineScope by CoroutineScope(Dispat
 
     fun isNumber(input: String): Boolean {
         return input.toDoubleOrNull() != null
+    }
+
+    private fun executeCommandsWithProgress(commands: List<String>) {
+        val totalCommands = commands.size
+        commands.forEachIndexed { index, command ->
+            try {
+                Logger.info("RootConnectionService: Executing command ${index + 1}/$totalCommands: $command")
+                shellExecutor.run(command)
+                
+                // Update progress based purely on command execution
+                val progress = (index + 1).toFloat() / totalCommands.toFloat()
+                firewallManager.update(FirewallStatus.LOADING(progress))
+                
+                // Small delay to make progress visible
+                Thread.sleep(10)
+                
+            } catch (e: Exception) {
+                Logger.error("RootConnectionService: Failed to execute command: $command", e)
+            }
+        }
+        
+        // Mark as complete
+        firewallManager.update(FirewallStatus.ONLINE)
+        Logger.info("RootConnectionService: All firewall rules applied successfully")
     }
 
     private fun executeShellCommand(command: String, totalCmd: Int? = null) {

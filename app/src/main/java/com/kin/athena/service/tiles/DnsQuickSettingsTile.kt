@@ -97,21 +97,21 @@ class DnsQuickSettingsTile : TileService() {
                     // VPN is running and DNS blocking is enabled
                     tile.state = Tile.STATE_ACTIVE
                     tile.label = "DNS Blocking"
-                    tile.subtitle = "Active"
+                    tile.subtitle = getString(R.string.tile_active)
                     tile.icon = Icon.createWithResource(applicationContext, R.drawable.ic_shield_check)
                 }
                 isVpnActive && !isDnsBlockingEnabled -> {
                     // VPN is running but DNS blocking is disabled
                     tile.state = Tile.STATE_INACTIVE
                     tile.label = "DNS Blocking"
-                    tile.subtitle = "Tap to enable"
+                    tile.subtitle = getString(R.string.tile_tap_to_enable)
                     tile.icon = Icon.createWithResource(applicationContext, R.drawable.ic_shield)
                 }
                 else -> {
                     // VPN is not running
                     tile.state = Tile.STATE_UNAVAILABLE
                     tile.label = "DNS Blocking"
-                    tile.subtitle = "VPN required"
+                    tile.subtitle = getString(R.string.tile_vpn_required)
                     tile.icon = Icon.createWithResource(applicationContext, R.drawable.ic_shield_off)
                 }
             }
@@ -124,7 +124,7 @@ class DnsQuickSettingsTile : TileService() {
             // Fallback state
             tile.state = Tile.STATE_UNAVAILABLE
             tile.label = "DNS Blocking"
-            tile.subtitle = "Error"
+            tile.subtitle = getString(R.string.tile_error)
             tile.icon = Icon.createWithResource(applicationContext, R.drawable.ic_shield_off)
             tile.updateTile()
         }

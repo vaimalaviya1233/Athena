@@ -288,7 +288,7 @@ private fun PackageDetails(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Most established connections",
+                            text = stringResource(R.string.most_established_connections),
                             textAlign = TextAlign.Center,
                             fontSize = 16.sp,
                             fontWeight = FontWeight(530)

@@ -75,7 +75,7 @@ suspend fun Service.showStartNotification(applications: List<Application>, prefe
             val notificationNotColorized =
                 NotificationCompat.Builder(contextNot, channelID).apply {
                     setContentTitle(contextNot.getString(R.string.vpn_service_running))
-                    setContentText("Allowed ${networkStats.first}, Blocked ${networkStats.second}")
+                    setContentText(contextNot.getString(R.string.notification_allowed_blocked, networkStats.first, networkStats.second))
                     if (settings.permanentNotification) {
                         setColorized(true)
                         setOngoing(true)

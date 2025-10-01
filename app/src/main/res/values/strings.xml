@@ -258,4 +258,149 @@
     <string name="blocked_requests">Blocked Requests</string>
     <string name="blocked_requests_description">%1$s requests blocked</string>
     <string name="total_activity">Total Activity</string>
+    
+    <!-- Feature Labels -->
+    <string name="logs_feature_label">Logs</string>
+    <string name="app_notifications_feature_label">App Notifications</string>
+    <string name="dns_lists_feature_label">DNS Lists</string>
+    <string name="premium_benefits_text">✓ Instant access ✓ No subscription</string>
+    
+    <!-- Permission Setup -->
+    <string name="use_vpn_method">Use VPN Method</string>
+    <string name="use_root_method">Use Root Method</string>
+    <string name="setting_up_permissions">Setting up permissions</string>
+    <string name="grant_required_permissions_message">Please grant the required permissions in the system dialogs</string>
+    
+    <!-- Onboarding -->
+    <string name="tap_security_icon_instruction">Tap the security icon to start</string>
+    
+    <!-- Accessibility Descriptions -->
+    <string name="back_button_description">Back</string>
+    <string name="open_menu_description">Open Menu</string>
+    <string name="settings_description">Settings</string>
+    <string name="firewall_description">Firewall</string>
+    <string name="back_description">Back</string>
+    <string name="close_description">Close</string>
+    <string name="fingerprint_description">Fingerprint</string>
+    <string name="backspace_description">Backspace</string>
+    
+    <!-- Progress and Status -->
+    <string name="applying_firewall_rules">Applying Firewall Rules</string>
+    <string name="important_warning_title">Important</string>
+    <string name="firewall_setup_warning_message">Please do not turn off your device during this process. This may take a few minutes to complete.</string>
+    <string name="preparing_firewall_commands">Preparing firewall commands…</string>
+    <string name="executing_commands_progress">Executing command %1$d of %2$d</string>
+    <string name="firewall_rules_applied_successfully">Firewall rules applied successfully</string>
+    <string name="google_play_services_warning">This app uses Google Play Services to receive incoming messages, meaning it cannot be blocked directly.</string>
+    
+    <!-- Network Type Labels -->
+    <string name="wifi_label">WiFi</string>
+    <string name="cellular_label">Cellular</string>
+    <string name="most_established_connections">Most established connections</string>
+    
+    <!-- DNS Protection Categories -->
+    <string name="malware_protection_label">Malware Protection</string>
+    <string name="ad_protection_label">Ad Protection</string>
+    <string name="privacy_protection_label">Privacy Protection</string>
+    <string name="social_media_label">Social Media</string>
+    <string name="adult_content_label">Adult Content</string>
+    <string name="gambling_label">Gambling</string>
+    <string name="custom_rules_label">Custom Rules</string>
+    
+    <!-- Domain Loading Status -->
+    <string name="updating_domains">Updating domains…</string>
+    <string name="loading_domains">Loading domains…</string>
+    <string name="no_domains_loaded">No domains loaded</string>
+    <string name="downloading_rules_title">Downloading Rules</string>
+    
+    <!-- Download Dialog -->
+    <string name="downloading_processing_rules">Downloading and processing rules…</string>
+    <string name="please_wait">Please wait…</string>
+    <string name="success_message">Success!</string>
+    <string name="rules_downloaded_successfully">Rules downloaded and applied successfully</string>
+    <string name="network_error_title">Network Error</string>
+    <string name="check_internet_connection">Please check your internet connection and try again</string>
+    <string name="download_failed_title">Download Failed</string>
+    <string name="download_error_message">Something went wrong while downloading rules</string>
+    <string name="done_button">Done</string>
+    <string name="cancel_button">Cancel</string>
+    <string name="retry_button">Retry</string>
+    
+    <!-- Custom Blocklist -->
+    <string name="category_label">Category</string>
+    <string name="validating_message">Validating…</string>
+    <string name="valid_blocklist_message">Valid blocklist</string>
+    <string name="validation_failed_message">Validation failed</string>
+    <string name="enter_url_to_validate">Enter a URL to validate</string>
+    <string name="import_multiple_blocklists">Import Multiple Blocklists</string>
+    <string name="paste_urls_button">Paste URLs</string>
+    <string name="found_valid_urls">Found %1$d valid URLs:</string>
+    <string name="popular_preset_lists">Popular Preset Lists</string>
+    <string name="import_selected_button">Import Selected (%1$d)</string>
+    <string name="import_selected_presets_button">Import Selected Presets (%1$d)</string>
+    <string name="parsing_urls_message">Parsing URLs…</string>
+    <string name="add_blocklist_button">Add Blocklist</string>
+    <string name="entries_count">%1$dK entries</string>
+    
+    <!-- Toast Messages -->
+    <string name="premium_activated_successfully">✅ Premium activated successfully!</string>
+    <string name="premium_activation_error">❌ %1$s</string>
+    
+    <!-- Placeholders -->
+    <string name="ipv4_placeholder">127.0.0.1</string>
+    <string name="ipv6_placeholder">::1</string>
+    <string name="enter_premium_code_placeholder">Enter premium code</string>
+    <string name="blocklist_url_placeholder">https://example.com/blocklist.txt</string>
+    <string name="blocklist_name_placeholder">Blocklist Name (Optional)</string>
+    <string name="paste_urls_placeholder">Paste URLs here (one per line or separated by spaces)</string>
+    
+    <!-- Delete Confirmation -->
+    <string name="delete_blocklist_title">Delete Blocklist</string>
+    <string name="delete_blocklist_confirmation">Are you sure you want to delete \'%1$s\'? This action cannot be undone.</string>
+    <string name="delete_button">Delete</string>
+    <string name="cancel_button_text">Cancel</string>
+    
+    <!-- Empty States -->
+    <string name="no_custom_blocklists_message">No custom blocklists yet</string>
+    
+    <!-- Debug Actions -->
+    <string name="delete_iptables_chain">Delete iptables chain</string>
+    <string name="remove_all_hosts">Remove all hosts</string>
+    <string name="clear_hosts_file_title">Clear Hosts File</string>
+    <string name="clear_hosts_file_description">This will remove all blocked domains from the system hosts file and revert it to default.</string>
+    
+    <!-- Clipboard -->
+    <string name="copied_text_label">Copied Text</string>
+    
+    <!-- Quick Settings Tile -->
+    <string name="tile_active">Active</string>
+    <string name="tile_tap_to_enable">Tap to enable</string>
+    <string name="tile_vpn_required">VPN required</string>
+    <string name="tile_error">Error</string>
+    
+    <!-- Notification Text -->
+    <string name="notification_allowed_blocked">Allowed %1$s, Blocked %2$s</string>
+    
+    <!-- Additional Custom Blocklist Strings -->
+    <string name="add_custom_blocklist">Add Custom Blocklist</string>
+    <string name="edit_blocklist">Edit Blocklist</string>
+    <string name="import_from_file">Import from File</string>
+    <string name="import_multiple">Import Multiple</string>
+    <string name="select_all">Select All</string>
+    <string name="deselect_all">Deselect All</string>
+    <string name="imported_category">Imported</string>
+    <string name="delete_description">Delete</string>
+    <string name="downloading_description">Downloading</string>
+    <string name="success_description">Success</string>
+    <string name="error_description">Error</string>
+    <string name="network_error_description">Network Error</string>
+    <string name="validate_url_description">Validate URL</string>
+    <string name="select_category_description">Select Category</string>
+    <string name="valid_description">Valid</string>
+    <string name="invalid_description">Invalid</string>
+    <string name="info_description">Info</string>
+    <string name="paste_from_clipboard_description">Paste from clipboard</string>
+    <string name="logo_image_description">Logo Image</string>
+    <string name="blob_shape_description">Blob Shape</string>
+    <string name="placeholder_icon_description">Placeholder icon</string>
 </resources>

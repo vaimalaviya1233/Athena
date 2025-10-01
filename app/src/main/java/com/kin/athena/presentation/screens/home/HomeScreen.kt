@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 package com.kin.athena.presentation.screens.home
 
@@ -25,11 +25,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.SignalCellularAlt
 import androidx.compose.material.icons.rounded.Wifi
+import androidx.compose.material.icons.rounded.Security
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
@@ -38,12 +41,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,21 +62,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.size
 import com.kin.athena.R
 import com.kin.athena.core.utils.extensions.*
 import com.kin.athena.core.utils.isDeviceRooted
 import com.kin.athena.core.utils.isRootGranted
 import com.kin.athena.domain.model.Application
 import com.kin.athena.presentation.components.PermissionModal
+import com.kin.athena.presentation.components.ComprehensivePermissionModal
+import com.kin.athena.presentation.components.OnboardingOverlay
 import com.kin.athena.presentation.components.material.MaterialButton
 import com.kin.athena.presentation.components.material.MaterialScaffold
 import com.kin.athena.presentation.config
 import com.kin.athena.presentation.screens.home.components.BottomMenu
-import com.kin.athena.presentation.screens.home.components.GrantPermissions
-import com.kin.athena.presentation.screens.home.components.RootPermission
 import com.kin.athena.presentation.screens.settings.viewModel.SettingsViewModel
 import com.kin.athena.presentation.screens.home.components.SearchBar
-import com.kin.athena.presentation.screens.home.components.rootResut
 import com.kin.athena.presentation.screens.home.viewModel.HomeViewModel
 import com.kin.athena.presentation.screens.settings.components.IconType
 import com.kin.athena.presentation.screens.settings.components.SettingDialog
@@ -111,7 +118,6 @@ fun HomeScreen(
 
     LaunchedEffect(true) {
         homeViewModel.observePackages()
-
     }
 
     val firewallColor = getFirewallColor(isFirewallManager.value)
@@ -146,7 +152,7 @@ fun HomeScreen(
     MaterialScaffold(
         topBar = {
             SearchBar(
-                showStartInfo = !settingsViewModel.settings.value.dontShowHelp,
+                showStartInfo = false,
                 query = homeViewModel.searchQuery.value,
                 onQueryChange = { homeViewModel.updateSearchQueryStatus(it) },
                 onClearClick = { homeViewModel.clearSearchQueryStatus() },
@@ -154,7 +160,7 @@ fun HomeScreen(
                     if (settingsViewModel.settings.value.logs) {
                         MaterialButton(
                             imageVector = Icons.Rounded.MoreVert,
-                            contentDescription = "Open Menu"
+                            contentDescription = stringResource(R.string.open_menu_description)
                         ) {
                             if (homeViewModel.menuStatus.value) {
                                 onMenuClosed()
@@ -165,7 +171,7 @@ fun HomeScreen(
                     } else {
                         MaterialButton(
                             imageVector = Icons.Rounded.Settings,
-                            contentDescription = "Settings"
+                            contentDescription = stringResource(R.string.settings_description)
                         ) {
                             onSettingsClicked()
                         }
@@ -185,7 +191,6 @@ fun HomeScreen(
         content = {
             if (isFirewallManager.value.name() == FirewallStatus.OFFLINE.name()) {
                 if (settingsViewModel.settings.value.useRootMode == true) {
-
                     homeViewModel.checkIfCleanedUp()
                     if (homeViewModel.rootUncleaned.value) {
                         fun onClick() {
@@ -252,36 +257,34 @@ fun HomeScreen(
                 }
             }
 
-            if (isFirewallManager.value.name() == FirewallStatus.LOADING().name()) {
-                SettingDialog(text = "Updating Rules", onExit = { /*TODO*/ }) {
-                    Column(
-                        modifier = Modifier.padding(32.dp)
-                    ) {
-                        LinearProgressIndicator(
-                            progress = { homeViewModel.firewallManager.rulesLoaded.value.getRulesLoaded() },
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(32.dp))
-                                .height(16.dp)
-                                .fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.primary,
-                            trackColor = MaterialTheme.colorScheme.surfaceDim,
-                            drawStopIndicator = {}
-                        )
-                    }
-                }
-            }
-
             HomeScreenContent(settingsViewModel, homeViewModel, context, onApplicationClicked)
-            if (settingsViewModel.settings.value.isFirstTimeRunning) {
-                GrantPermissions(context = context, viewModel = homeViewModel, settings = settingsViewModel)
-                if (isDeviceRooted(context)) {
-                    settingsViewModel.update(settingsViewModel.settings.value.copy(useRootMode = false))
-                }
-            }
         }
     )
 
-    HandleVpnPermission(homeViewModel, context, settingsViewModel, isFirewallManager.value)
+    // Progress dialog overlay - appears on top of everything
+    if (isFirewallManager.value.name() == FirewallStatus.LOADING().name()) {
+        MaterialYouProgressDialog(
+            progress = homeViewModel.firewallManager.rulesLoaded.value.getRulesLoaded(),
+            onDismiss = { /* Cannot dismiss during loading */ }
+        )
+    }
+
+    // Onboarding overlay for first-time users
+    if (settingsViewModel.settings.value.isFirstTimeRunning && isFirewallManager.value == FirewallStatus.OFFLINE) {
+        OnboardingOverlay(
+            onDismiss = {
+                settingsViewModel.update(
+                    settingsViewModel.settings.value.copy(isFirstTimeRunning = false)
+                )
+            },
+            onFirewallClick = {
+                settingsViewModel.update(settingsViewModel.settings.value.copy(dontShowHelp = true))
+                handleFirewallClick(homeViewModel, context, settingsViewModel, isFirewallManager.value)
+            }
+        )
+    }
+
+    HandleComprehensivePermissions(homeViewModel, context, settingsViewModel, isFirewallManager.value)
 }
 
 @Composable
@@ -353,11 +356,7 @@ private fun PackageList(
                         circleWrapperColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                         circleWrapperSize = if (settingsViewModel.settings.value.useDynamicIcons) 6.dp else 0.dp,
                         customButton = { AccessControlButtons(packageEntity = packageEntity, viewModel = viewModel)},
-                        customAction = {
-                            LaunchedEffect(true) {
-                                onApplicationClicked(packageEntity.packageID)
-                            }
-                        },
+                        customAction = { onApplicationClicked(packageEntity.packageID) },
                         usesGMS = packageEntity.usesGooglePlayServices()
                     )
                 } else {
@@ -370,7 +369,6 @@ private fun PackageList(
         }
     }
 }
-
 
 @Composable
 private fun AccessControlButtons(
@@ -394,7 +392,6 @@ private fun AccessControlButtons(
         )
     }
 }
-
 
 @Composable
 private fun getFirewallColor(isFirewallActive: FirewallStatus?): Color {
@@ -440,60 +437,179 @@ private fun getAccessControlTint(isAccessEnabled: Boolean): Color {
     return if (isAccessEnabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outlineVariant
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HandleComprehensivePermissions(homeViewModel: HomeViewModel, context: Context, settingsViewModel: SettingsViewModel, isFirewallManager: FirewallStatus) {
+    val comprehensiveSheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    
+    if (homeViewModel.vpnPermissionRequested.value && isFirewallManager != FirewallStatus.ONLINE) {
+        // Show comprehensive permission modal for method selection and permissions
+        ComprehensivePermissionModal(
+            context = context,
+            sheetState = comprehensiveSheetState,
+            onPermissionsComplete = { useVpn ->
+                // Update settings based on selected method
+                settingsViewModel.update(
+                    settingsViewModel.settings.value.copy(
+                        useRootMode = if (useVpn) null else true,
+                        isFirstTimeRunning = false
+                    )
+                )
+                
+                // Start the firewall with the appropriate mode
+                val mode = if (useVpn) FirewallMode.VPN else FirewallMode.ROOT
+                homeViewModel.updateFirewallStatus(FirewallStatus.ONLINE, mode)
+                
+                // Reset permission state
+                homeViewModel.updateVpnPermissionStatus(false)
+                
+                // Hide the modal
+                scope.launch { comprehensiveSheetState.hide() }
+            },
+            onDismiss = {
+                homeViewModel.updateVpnPermissionStatus(false)
+                scope.launch { comprehensiveSheetState.hide() }
+            }
+        )
+        
+        // Auto-show the modal when permission is requested
+        LaunchedEffect(homeViewModel.vpnPermissionRequested.value) {
+            if (homeViewModel.vpnPermissionRequested.value) {
+                comprehensiveSheetState.show()
+            }
+        }
+    }
+}
 
 @Composable
-private fun HandleVpnPermission(homeViewModel: HomeViewModel, context: Context, settingsViewModel: SettingsViewModel, isFirewallManager: FirewallStatus) {
-    if (homeViewModel.vpnPermissionRequested.value && isFirewallManager != FirewallStatus.ONLINE) {
-        when (settingsViewModel.settings.value.useRootMode) {
-            false -> {
-                fun useVPN() {
-                    settingsViewModel.update(
-                        settingsViewModel.settings.value.copy(
-                            useRootMode = null
+private fun MaterialYouProgressDialog(
+    progress: Float,
+    onDismiss: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .padding(24.dp),
+                shape = RoundedCornerShape(28.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(32.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    // Header with icon
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Security,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(32.dp)
                         )
-                    )
-                    homeViewModel.updateVpnPermissionStatus(false)
-                    handleFirewallClick(homeViewModel, context, settingsViewModel, isFirewallManager)
-                }
+                        Text(
+                            text = stringResource(R.string.applying_firewall_rules),
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
 
-                RootPermission(viewModel = homeViewModel) {
-                    when (it) {
-                        rootResut.VPN -> {
-                            useVPN()
-                        }
-                        rootResut.DENIED -> {
-                            useVPN()
-                        }
-                        rootResut.GRANTED -> {
-                            settingsViewModel.update(
-                                settingsViewModel.settings.value.copy(
-                                    useRootMode = true
-                                )
+                    // Progress information
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Circular progress with percentage
+                        Box(
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                progress = { progress },
+                                modifier = Modifier.size(80.dp),
+                                color = MaterialTheme.colorScheme.primary,
+                                strokeWidth = 6.dp,
+                                trackColor = MaterialTheme.colorScheme.surfaceVariant
                             )
-                            homeViewModel.updateVpnPermissionStatus(false)
-                            if (config.hosts.items.isEmpty()) {
-                                homeViewModel.updateFirewallStatus(FirewallStatus.ONLINE, FirewallMode.ROOT)
+                            Text(
+                                text = "${(progress * 100).toInt()}%",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        // Progress stages text
+                        Text(
+                            text = getProgressStageText(progress),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    // Warning section
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Warning,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.important_warning_title),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = stringResource(R.string.firewall_setup_warning_message),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    lineHeight = 20.sp
+                                )
                             }
                         }
-                        rootResut.CLOSED -> {
-                            homeViewModel.updateVpnPermissionStatus(false)
-
-                        }
                     }
-                }
-            }
-            true -> {
-                homeViewModel.updateFirewallStatus(FirewallStatus.ONLINE, FirewallMode.ROOT)
-            }
-            null -> {
-                VpnManager.PermissionRequester(context, homeViewModel.vpnPermissionRequested.value) {
-                    if (it) {
-                        homeViewModel.updateFirewallStatus(value = FirewallStatus.ONLINE, serviceType = FirewallMode.VPN)
-                    }
-                    homeViewModel.updateVpnPermissionStatus(isRequested = false)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun getProgressStageText(progress: Float): String {
+    val currentCommand = (progress * 685).toInt() // Approximate total commands based on your logs
+    val totalCommands = 685
+    
+    return when {
+        progress < 0.01f -> stringResource(R.string.preparing_firewall_commands)
+        progress < 1.0f -> stringResource(R.string.executing_commands_progress, currentCommand, totalCommands)
+        else -> stringResource(R.string.firewall_rules_applied_successfully)
     }
 }
 
@@ -506,12 +622,11 @@ private fun CustomSettingsBox(
     circleWrapperColor: Color,
     circleWrapperSize: androidx.compose.ui.unit.Dp,
     customButton: @Composable () -> Unit,
-    customAction: @Composable (() -> Unit) -> Unit,
+    customAction: () -> Unit,
     usesGMS: Boolean
 ) {
     val context = LocalContext.current
     var showCustomAction by remember { mutableStateOf(false) }
-    if (showCustomAction) customAction { showCustomAction = !showCustomAction }
 
     AnimatedVisibility(visible = true) {
         androidx.compose.foundation.layout.Box(
@@ -520,7 +635,7 @@ private fun CustomSettingsBox(
                 .clip(RoundedCornerShape(6.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainer)
                 .clickable {
-                    showCustomAction = !showCustomAction
+                    customAction()
                 }
         ) {
             androidx.compose.foundation.layout.Row(
@@ -583,7 +698,7 @@ private fun CustomSettingsBox(
                                 modifier = Modifier.padding(bottom = 3.dp)
                             )
                             Text(
-                                text = "This app uses Google Play Services to receive incoming messages, meaning it cannot be blocked directly.",
+                                text = stringResource(R.string.google_play_services_warning),
                                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 9.sp),
                                 color = MaterialTheme.colorScheme.outline,
                                 modifier = Modifier.padding(bottom = 3.dp)

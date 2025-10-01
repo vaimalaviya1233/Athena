@@ -175,7 +175,7 @@ fun CustomBlocklistManagementScreen(
             if (customBlocklists.isEmpty()) {
                 settingsContainer {
                     Text(
-                        text = "No custom blocklists yet",
+                        text = stringResource(R.string.no_custom_blocklists_message),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
@@ -298,7 +298,7 @@ fun CustomBlocklistManagementScreen(
     
     // Download Dialog
     DownloadDialog(
-        title = "Custom Blocklist",
+        title = stringResource(R.string.custom_blocklist),
         isVisible = showDownloadDialog,
         downloadState = downloadState ?: DownloadState.Downloading,
         onDismiss = { blockListViewModel.dismissDownloadDialog() },
@@ -400,7 +400,7 @@ private fun ImprovedBlocklistTile(
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.DeleteOutline,
-                            contentDescription = "Delete",
+                            contentDescription = stringResource(R.string.delete_description),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -435,7 +435,7 @@ private fun ImprovedBlocklistTile(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Delete,
-                        contentDescription = "Delete",
+                        contentDescription = stringResource(R.string.delete_description),
                         tint = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.padding(8.dp)
                     )
@@ -448,9 +448,9 @@ private fun ImprovedBlocklistTile(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Blocklist") },
+            title = { Text(stringResource(R.string.delete_blocklist_title)) },
             text = { 
-                Text("Are you sure you want to delete '${entry.name}'? This action cannot be undone.") 
+                Text(stringResource(R.string.delete_blocklist_confirmation, entry.name)) 
             },
             confirmButton = {
                 TextButton(
@@ -462,12 +462,12 @@ private fun ImprovedBlocklistTile(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.delete_button))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel_button_text))
                 }
             }
         )

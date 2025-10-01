@@ -69,13 +69,13 @@ fun SearchBar(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     IconButton(onClick = { onFirewallClicked() }) {
-                        Icon(Icons.Rounded.Security, tint = firewallColor, contentDescription = "Firewall")
+                        Icon(Icons.Rounded.Security, tint = firewallColor, contentDescription = stringResource(R.string.firewall_description))
                     }
                 }
             } else {
                 if (onBackClicked != null) {
                     IconButton(onClick = {onBackClicked() }) {
-                        Icon(Icons.Rounded.ArrowBackIosNew, contentDescription = "Back", modifier = Modifier.scale(0.8f))
+                        Icon(Icons.Rounded.ArrowBackIosNew, contentDescription = stringResource(R.string.back_description), modifier = Modifier.scale(0.8f))
                     }
                 }
             }
@@ -87,7 +87,7 @@ fun SearchBar(
                 if (query.isNotBlank()) {
                     MaterialButton(
                         imageVector = Icons.Rounded.Close,
-                        contentDescription = "Close"
+                        contentDescription = stringResource(R.string.close_description)
                     ) {
                         onClearClick()
                     }

@@ -107,7 +107,7 @@ fun KofiFallbackDialog(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "Logs",
+                        text = stringResource(R.string.logs_feature_label),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Medium
@@ -124,7 +124,7 @@ fun KofiFallbackDialog(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "App Notifications",
+                        text = stringResource(R.string.app_notifications_feature_label),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Medium
@@ -141,7 +141,7 @@ fun KofiFallbackDialog(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "DNS Lists",
+                        text = stringResource(R.string.dns_lists_feature_label),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Medium
@@ -173,7 +173,7 @@ fun KofiFallbackDialog(
             }
             
             Text(
-                text = "✓ Instant access ✓ No subscription",
+                text = stringResource(R.string.premium_benefits_text),
                 style = MaterialTheme.typography.labelSmall,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),

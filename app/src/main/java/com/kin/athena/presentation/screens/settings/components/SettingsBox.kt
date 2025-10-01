@@ -296,7 +296,7 @@ private fun RenderClipboardIcon() {
 
 fun copyToClipboard(context: Context, clipboardText: String) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    val clip = ClipData.newPlainText("Copied Text", clipboardText)
+    val clip = ClipData.newPlainText(context.getString(com.kin.athena.R.string.copied_text_label), clipboardText)
     clipboard.setPrimaryClip(clip)
 }
 

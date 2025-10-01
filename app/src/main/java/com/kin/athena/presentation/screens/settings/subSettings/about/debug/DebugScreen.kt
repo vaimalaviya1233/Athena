@@ -48,14 +48,14 @@ fun DebugScreen(
     ) {
           settingsContainer {
               SettingsBox(
-                  title = "Delete iptables chain",
+                  title = stringResource(R.string.delete_iptables_chain),
                   actionType = SettingType.CUSTOM,
                   customAction = { onExit ->
                         ClearChainSheet(onExit)
                   }
               )
               SettingsBox(
-                  title = "Remove all hosts",
+                  title = stringResource(R.string.remove_all_hosts),
                   actionType = SettingType.CUSTOM,
                   customAction = { onExit ->
                         ClearHostsSheet(context, onExit)
@@ -96,8 +96,8 @@ fun ClearHostsSheet(context: android.content.Context, onExit: () -> Unit) {
     val disableState = rememberModalBottomSheetState()
 
     PermissionModal(
-        permissionName = "Clear Hosts File",
-        permissionDescription = "This will remove all blocked domains from the system hosts file and revert it to default.",
+        permissionName = stringResource(R.string.clear_hosts_file_title),
+        permissionDescription = stringResource(R.string.clear_hosts_file_description),
         permissionRequest = stringResource(id = R.string.clear),
         onDismiss = {
             onExit()
