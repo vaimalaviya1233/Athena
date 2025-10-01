@@ -43,7 +43,10 @@ import com.kin.athena.service.utils.manager.FirewallManager
 import com.kin.athena.service.utils.manager.FirewallMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -53,6 +56,12 @@ class HomeViewModel @Inject constructor(
     val firewallManager: FirewallManager
 ) : ViewModel() {
     val iconMap: MutableState<Map<String, Drawable?>> = mutableStateOf(emptyMap())
+    
+    // Cache for app names to avoid repeated PackageManager calls
+    private val appNameCache = mutableMapOf<String, String>()
+    
+    // Debounce job for search
+    private var searchJob: Job? = null
 
     private val _firewallClicked = mutableStateOf(false)
     val firewallClicked: State<Boolean> get() = _firewallClicked
@@ -104,7 +113,21 @@ class HomeViewModel @Inject constructor(
 
     fun updateSearchQueryStatus(value: String) {
         _searchQuery.value = value
-        filterPackages(value)
+        
+        // Cancel previous search job
+        searchJob?.cancel()
+        
+        // Debounce search to reduce filtering frequency
+        searchJob = viewModelScope.launch {
+            if (value.isBlank()) {
+                // Immediate filtering for empty query
+                filterPackages(value)
+            } else {
+                // Debounce for non-empty queries
+                delay(150) // 150ms debounce
+                filterPackages(value)
+            }
+        }
     }
 
     fun clearSearchQueryStatus() {
@@ -140,15 +163,38 @@ class HomeViewModel @Inject constructor(
                 application.packageID != currentPackageName
             }
         } else {
-            _unfilteredPackages.value.filter { application ->
-                val appName = application.getApplicationName(context.packageManager)
-                appName?.let {
-                    (appName.contains(query, ignoreCase = true) ||
-                            application.packageID.contains(query, ignoreCase = true) ||
-                            application.uid.toString().contains(query)) &&
-                            application.packageID != currentPackageName
-                } ?: false
-            }
+            // Optimize search with caching and early exit
+            val queryLowerCase = query.lowercase(Locale.getDefault())
+            val uidQuery = query.takeIf { it.all { char -> char.isDigit() } }
+            
+            // Use asSequence() for lazy evaluation on large lists
+            _unfilteredPackages.value.asSequence()
+                .filter { application ->
+                    if (application.packageID == currentPackageName) return@filter false
+                    
+                    // Check UID first (fastest check)
+                    if (uidQuery != null && application.uid.toString().contains(uidQuery)) {
+                        return@filter true
+                    }
+                    
+                    // Check package ID (second fastest)
+                    if (application.packageID.lowercase(Locale.getDefault()).contains(queryLowerCase)) {
+                        return@filter true
+                    }
+                    
+                    // Check app name last (slowest, with caching)
+                    val cachedName = appNameCache[application.packageID]
+                    val appName = if (cachedName != null) {
+                        cachedName
+                    } else {
+                        val name = application.getApplicationName(context.packageManager) ?: ""
+                        appNameCache[application.packageID] = name
+                        name
+                    }
+                    
+                    appName.lowercase(Locale.getDefault()).contains(queryLowerCase)
+                }
+                .toList()
         }
     }
 
@@ -214,10 +260,33 @@ class HomeViewModel @Inject constructor(
         when (val result = applicationUseCases.getApplications.execute()) {
             is Result.Success -> {
                 _unfilteredPackages.value = result.data
+                // Clear cache when packages are reloaded
+                appNameCache.clear()
+                
+                // Pre-warm cache in background for better search performance
+                viewModelScope.launch {
+                    preWarmAppNameCache(result.data)
+                }
+                
                 filterPackages(_searchQuery.value)
                 firewallManager.updateFirewallRules(null)
             }
             is Result.Failure -> Logger.error(result.error.stackTraceToString())
+        }
+    }
+    
+    private suspend fun preWarmAppNameCache(applications: List<Application>) {
+        // Pre-load app names in background to improve initial search performance
+        applications.forEach { application ->
+            if (!appNameCache.containsKey(application.packageID)) {
+                try {
+                    val name = application.getApplicationName(context.packageManager) ?: ""
+                    appNameCache[application.packageID] = name
+                } catch (e: Exception) {
+                    // Ignore exceptions during pre-warming
+                    appNameCache[application.packageID] = ""
+                }
+            }
         }
     }
 
@@ -284,5 +353,10 @@ class HomeViewModel @Inject constructor(
             shell.run("iptables -F -w && ip6tables -F -w")
             shell.run("iptables -t nat -F OUTPUT")
         }
+    }
+    
+    override fun onCleared() {
+        super.onCleared()
+        searchJob?.cancel()
     }
 }
