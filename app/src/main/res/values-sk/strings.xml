@@ -334,4 +334,5 @@
     <string name="logo_image_description">Logo obrázok</string>
     <string name="blob_shape_description">Blob tvar</string>
     <string name="placeholder_icon_description">Ikona miesta</string>
+    <string name="about_option_version">Verzia</string>
 </resources>
