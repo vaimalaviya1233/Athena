@@ -92,6 +92,12 @@ class HomeViewModel @Inject constructor(
     private val _vpnPermissionRequested = mutableStateOf(false)
     val vpnPermissionRequested: State<Boolean> = _vpnPermissionRequested
 
+    private val _isInitialLoad = mutableStateOf(true)
+    val isInitialLoad: State<Boolean> = _isInitialLoad
+
+    private val _showSplashScreen = mutableStateOf(true)
+    val showSplashScreen: State<Boolean> = _showSplashScreen
+
     private var appChangeReceiver: AppChangeReceiver? = null
 
     fun setRootUncleaned(value: Boolean) {
@@ -231,6 +237,14 @@ class HomeViewModel @Inject constructor(
         loadPackages(settingsViewModel)
         appChangeReceiver = AppChangeReceiver(createAppChangeCallback(settingsViewModel))
         appChangeReceiver?.register(context)
+        
+        // Set up callback to reload apps when filtering settings change
+        settingsViewModel.onAppFilteringSettingsChanged = {
+            viewModelScope.launch {
+                Logger.info("HomeViewModel: Reloading apps due to settings change")
+                reloadPackages(settingsViewModel)
+            }
+        }
     }
 
     fun loadIcons(settingsViewModel: SettingsViewModel, color: Color) {
@@ -255,6 +269,12 @@ class HomeViewModel @Inject constructor(
         PackageLoader(settingsViewModel, context.packageManager, applicationUseCases).loadPackages()
         observePackages()
     }
+    
+    suspend fun reloadPackages(settingsViewModel: SettingsViewModel) {
+        Logger.info("HomeViewModel: Starting package reload")
+        loadPackages(settingsViewModel)
+        Logger.info("HomeViewModel: Package reload completed")
+    }
 
     suspend fun observePackages() {
         when (val result = applicationUseCases.getApplications.execute()) {
@@ -270,6 +290,16 @@ class HomeViewModel @Inject constructor(
                 
                 filterPackages(_searchQuery.value)
                 firewallManager.updateFirewallRules(null)
+                
+                // Mark initial load as complete after first successful load
+                if (_isInitialLoad.value) {
+                    _isInitialLoad.value = false
+                    // Hide splash screen after a brief delay to ensure smooth transition
+                    viewModelScope.launch {
+                        delay(500) // Small delay to ensure UI is ready
+                        _showSplashScreen.value = false
+                    }
+                }
             }
             is Result.Failure -> Logger.error(result.error.stackTraceToString())
         }

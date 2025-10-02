@@ -21,6 +21,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.Close
@@ -33,6 +43,7 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -56,10 +67,21 @@ fun SearchBar(
     firewallColor: Color? = null,
     onBackClicked: (() -> Unit)? = null
 ) {
+    val isTyping = query.isNotBlank()
+    val searchBarScale by animateFloatAsState(
+        targetValue = if (isTyping) 1.02f else 1f,
+        animationSpec = spring(
+            dampingRatio = 0.8f,
+            stiffness = 300f
+        ),
+        label = "searchBarScale"
+    )
+    
     SearchBar(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(24.dp, 0.dp, 24.dp, 18.dp),
+            .padding(24.dp, 0.dp, 24.dp, 18.dp)
+            .scale(searchBarScale),
         query = query,
         placeholder = { Text(text = if (showStartInfo) LocalContext.current.getString(R.string.search_bar_start) else text) },
         leadingIcon = {
@@ -84,14 +106,68 @@ fun SearchBar(
             Row(
                 modifier = Modifier.padding(end = 6.dp)
             ) {
-                if (query.isNotBlank()) {
+                AnimatedVisibility(
+                    visible = query.isNotBlank(),
+                    enter = slideInHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = 0.8f,
+                            stiffness = 300f
+                        ),
+                        initialOffsetX = { it / 2 }
+                    ) + fadeIn(
+                        animationSpec = tween(250)
+                    ) + scaleIn(
+                        animationSpec = spring(
+                            dampingRatio = 0.8f,
+                            stiffness = 400f
+                        ),
+                        initialScale = 0.7f
+                    ),
+                    exit = slideOutHorizontally(
+                        animationSpec = tween(200),
+                        targetOffsetX = { it / 2 }
+                    ) + fadeOut(
+                        animationSpec = tween(200)
+                    ) + scaleOut(
+                        animationSpec = tween(200),
+                        targetScale = 0.7f
+                    )
+                ) {
                     MaterialButton(
                         imageVector = Icons.Rounded.Close,
                         contentDescription = stringResource(R.string.close_description)
                     ) {
                         onClearClick()
                     }
-                } else {
+                }
+                
+                AnimatedVisibility(
+                    visible = query.isBlank(),
+                    enter = slideInHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = 0.8f,
+                            stiffness = 300f
+                        ),
+                        initialOffsetX = { -it / 2 }
+                    ) + fadeIn(
+                        animationSpec = tween(250)
+                    ) + scaleIn(
+                        animationSpec = spring(
+                            dampingRatio = 0.8f,
+                            stiffness = 400f
+                        ),
+                        initialScale = 0.7f
+                    ),
+                    exit = slideOutHorizontally(
+                        animationSpec = tween(200),
+                        targetOffsetX = { -it / 2 }
+                    ) + fadeOut(
+                        animationSpec = tween(200)
+                    ) + scaleOut(
+                        animationSpec = tween(200),
+                        targetScale = 0.7f
+                    )
+                ) {
                     button()
                 }
             }

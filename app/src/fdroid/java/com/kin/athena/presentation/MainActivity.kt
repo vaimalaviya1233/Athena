@@ -111,7 +111,13 @@ class MainActivity : AppCompatActivity() {
                     LaunchedEffect(homeViewModel) {
                         homeViewModel.initialize(this@apply)
                         homeViewModel.loadIcons(settingsViewModel = this@apply, iconsColor)
-                        viewModel.showSlashScreen(true)
+                    }
+                    
+                    // Watch for when apps are loaded and hide splash screen
+                    LaunchedEffect(homeViewModel.showSplashScreen.value) {
+                        if (!homeViewModel.showSplashScreen.value) {
+                            viewModel.showSlashScreen(true)
+                        }
                     }
                     Surface(
                         color = MaterialTheme.colorScheme.background,

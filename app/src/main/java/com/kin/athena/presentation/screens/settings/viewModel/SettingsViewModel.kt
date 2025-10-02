@@ -61,6 +61,9 @@ class SettingsViewModel @Inject constructor(
     var defaultRoute: String? = null
     val version: String = BuildConfig.VERSION_NAME
     val build: String = BuildConfig.BUILD_TYPE
+    
+    // Callback for when app filtering settings change
+    var onAppFilteringSettingsChanged: (() -> Unit)? = null
 
     init {
         runBlocking {
@@ -132,6 +135,14 @@ class SettingsViewModel @Inject constructor(
                         if (oldSettings.blockPort80 != newSettings.blockPort80) {
                             firewallManager.updateHttpSettings()
                         }
+                        
+                        // Check if app filtering settings changed
+                        if (oldSettings.showSystemPackages != newSettings.showSystemPackages ||
+                            oldSettings.showOfflinePackages != newSettings.showOfflinePackages) {
+                            Logger.info("SettingsViewModel: App filtering settings changed, triggering app reload")
+                            onAppFilteringSettingsChanged?.invoke()
+                        }
+                        
                         onSuccess?.invoke()
                     },
                     ifFailure = { error ->

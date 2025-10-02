@@ -22,8 +22,11 @@ import android.app.Activity
 import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.Icons
@@ -55,10 +58,15 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -90,6 +98,17 @@ import androidx.compose.ui.res.dimensionResource
 import com.kin.athena.core.utils.extensions.toBitmap
 import androidx.compose.runtime.*
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.SpringSpec
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import com.kin.athena.presentation.screens.settings.subSettings.dns.components.MagiskSystemlessHostsDialog
 import com.kin.athena.presentation.screens.settings.subSettings.dns.root.HostsManager
 import com.kin.athena.service.firewall.utils.FirewallStatus
@@ -97,6 +116,7 @@ import com.kin.athena.service.utils.manager.FirewallMode
 import com.kin.athena.service.utils.manager.VpnManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")
@@ -229,7 +249,7 @@ fun HomeScreen(
                         disableState.hide()
                     }.invokeOnCompletion {
                         if (!sheetState.isVisible) {
-                            homeViewModel.setFirewallClicked(false)
+                            homeViewModel.setRootUncleaned(false)
                         }
                     }
                 }
@@ -264,7 +284,7 @@ fun HomeScreen(
     // Progress dialog overlay - appears on top of everything
     if (isFirewallManager.value.name() == FirewallStatus.LOADING().name()) {
         MaterialYouProgressDialog(
-            progress = homeViewModel.firewallManager.rulesLoaded.value.getRulesLoaded(),
+            progress = isFirewallManager.value.getRulesLoaded(),
             onDismiss = { /* Cannot dismiss during loading */ }
         )
     }
@@ -295,21 +315,13 @@ private fun HomeScreenContent(
     onApplicationClicked: (String) -> Unit,
 ) {
     Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-        val packages = homeViewModel.packages.value.filter { application ->
-            val showSystemPackages = settingsViewModel.settings.value.showSystemPackages
-            val showOfflinePackages = settingsViewModel.settings.value.showOfflinePackages
-
-            when {
-                !showSystemPackages && application.systemApp -> false
-                !showOfflinePackages && !application.requiresNetworkPermissions(context.packageManager) -> false
-                else -> true
-            }
-        }.sortedBy { application ->
+        // Get ALL packages but don't filter them here - let individual items handle visibility
+        val allPackages = homeViewModel.packages.value.sortedBy { application ->
             application.getApplicationName(context.packageManager)?.lowercase() ?: application.packageID.lowercase()
         }
 
-        PackageList(
-            packages = packages,
+        AnimatedPackageList(
+            allPackages = allPackages,
             viewModel = homeViewModel,
             context = context,
             onApplicationClicked = onApplicationClicked,
@@ -319,56 +331,121 @@ private fun HomeScreenContent(
 }
 
 @Composable
-private fun PackageList(
-    settingsViewModel: SettingsViewModel,
-    packages: List<Application>,
+private fun AnimatedPackageList(
+    allPackages: List<Application>,
     viewModel: HomeViewModel,
     context: Context,
     onApplicationClicked: (String) -> Unit,
+    settingsViewModel: SettingsViewModel
 ) {
-    LazyColumn(
-        modifier = Modifier.clip(RoundedCornerShape(18.dp,18.dp,0.dp,0.dp))
+    val scrollState = rememberScrollState()
+    
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(18.dp, 18.dp, 0.dp, 0.dp))
+            .verticalScroll(scrollState)
     ) {
-        itemsIndexed(packages) { index, packageEntity ->
+        allPackages.forEachIndexed { index, packageEntity ->
             val title = packageEntity.getApplicationName(context.packageManager)
             val icon = viewModel.iconMap.value[packageEntity.packageID]
+            
+            val isVisible = remember(
+                viewModel.searchQuery.value, 
+                packageEntity, 
+                settingsViewModel.settings.value.showSystemPackages,
+                settingsViewModel.settings.value.showOfflinePackages
+            ) {
+                // First check settings filters
+                val showSystemPackages = settingsViewModel.settings.value.showSystemPackages
+                val showOfflinePackages = settingsViewModel.settings.value.showOfflinePackages
+                
+                val passesSettingsFilter = when {
+                    !showSystemPackages && packageEntity.systemApp -> false
+                    !showOfflinePackages && !packageEntity.requiresNetworkPermissions(context.packageManager) -> false
+                    else -> true
+                }
+                
+                if (!passesSettingsFilter) {
+                    false
+                } else if (viewModel.searchQuery.value.isBlank()) {
+                    true
+                } else {
+                    // Then check search query
+                    val query = viewModel.searchQuery.value.lowercase()
+                    val appName = title?.lowercase() ?: ""
+                    val packageName = packageEntity.packageID.lowercase()
+                    val uidString = packageEntity.uid.toString()
+                    
+                    appName.contains(query) || 
+                    packageName.contains(query) || 
+                    uidString.contains(query)
+                }
+            }
 
             val shape = when {
-                0 == packages.lastIndex -> RoundedCornerShape(32.dp)
+                0 == allPackages.lastIndex -> RoundedCornerShape(32.dp)
                 index == 0 -> RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
-                index == packages.lastIndex -> RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                index == allPackages.lastIndex -> RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
                 else -> RoundedCornerShape(0.dp)
             }
 
-            Column(modifier = Modifier.clip(shape)) {
-                if (title != null && icon != null) {
-                    val description = if (packageEntity.usesGooglePlayServices()) {
-                        "${packageEntity.packageID}\nIncoming messages are fetched from GMS"
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = slideInVertically(
+                    animationSpec = spring(
+                        dampingRatio = 0.8f,
+                        stiffness = 300f
+                    ),
+                    initialOffsetY = { it / 3 }
+                ) + fadeIn(
+                    animationSpec = tween(300)
+                ) + scaleIn(
+                    animationSpec = spring(
+                        dampingRatio = 0.8f,
+                        stiffness = 400f
+                    ),
+                    initialScale = 0.9f
+                ),
+                exit = slideOutVertically(
+                    animationSpec = tween(250),
+                    targetOffsetY = { -it / 3 }
+                ) + fadeOut(
+                    animationSpec = tween(250)
+                ) + scaleOut(
+                    animationSpec = tween(250),
+                    targetScale = 0.9f
+                )
+            ) {
+                Column(modifier = Modifier.clip(shape)) {
+                    if (title != null && icon != null) {
+                        val description = if (packageEntity.usesGooglePlayServices()) {
+                            "${packageEntity.packageID}\nIncoming messages are fetched from GMS"
+                        } else {
+                            packageEntity.packageID
+                        }
+                        
+                        CustomSettingsBox(
+                            title = title,
+                            description = description,
+                            icon = IconType.DrawableIcon(icon),
+                            actionType = SettingType.CUSTOM,
+                            circleWrapperColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            circleWrapperSize = if (settingsViewModel.settings.value.useDynamicIcons) 6.dp else 0.dp,
+                            customButton = { AccessControlButtons(packageEntity = packageEntity, viewModel = viewModel)},
+                            customAction = { onApplicationClicked(packageEntity.packageID) },
+                            usesGMS = packageEntity.usesGooglePlayServices()
+                        )
                     } else {
-                        packageEntity.packageID
+                        viewModel.deleteApplication(packageEntity)
                     }
-                    
-                    CustomSettingsBox(
-                        icon = IconType.DrawableIcon(icon),
-                        title = title,
-                        description = description,
-                        actionType = SettingType.CUSTOM,
-                        circleWrapperColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        circleWrapperSize = if (settingsViewModel.settings.value.useDynamicIcons) 6.dp else 0.dp,
-                        customButton = { AccessControlButtons(packageEntity = packageEntity, viewModel = viewModel)},
-                        customAction = { onApplicationClicked(packageEntity.packageID) },
-                        usesGMS = packageEntity.usesGooglePlayServices()
-                    )
-                } else {
-                    viewModel.deleteApplication(packageEntity)
                 }
             }
         }
-        item {
-            Spacer(modifier = Modifier.height(14.dp))
-        }
+        
+        Spacer(modifier = Modifier.height(14.dp))
     }
 }
+
 
 @Composable
 private fun AccessControlButtons(
@@ -613,6 +690,7 @@ private fun getProgressStageText(progress: Float): String {
     }
 }
 
+
 @Composable
 private fun CustomSettingsBox(
     title: String,
@@ -628,91 +706,90 @@ private fun CustomSettingsBox(
     val context = LocalContext.current
     var showCustomAction by remember { mutableStateOf(false) }
 
-    AnimatedVisibility(visible = true) {
-        androidx.compose.foundation.layout.Box(
+    androidx.compose.foundation.layout.Box(
+        modifier = Modifier
+            .padding(bottom = dimensionResource(id = R.dimen.card_padding_bottom))
+            .clip(RoundedCornerShape(6.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .clickable {
+                customAction()
+            }
+    ) {
+        androidx.compose.foundation.layout.Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .padding(bottom = dimensionResource(id = R.dimen.card_padding_bottom))
-                .clip(RoundedCornerShape(6.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainer)
-                .clickable {
-                    customAction()
-                }
+                .padding(
+                    horizontal = dimensionResource(id = R.dimen.card_padding_horizontal),
+                    vertical = 12.dp
+                )
+                .fillMaxWidth()
         ) {
             androidx.compose.foundation.layout.Row(
+                Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(
-                        horizontal = dimensionResource(id = R.dimen.card_padding_horizontal),
-                        vertical = 12.dp
-                    )
-                    .fillMaxWidth()
+                horizontalArrangement = Arrangement.Start
             ) {
-                androidx.compose.foundation.layout.Row(
-                    Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    when (icon) {
-                        is IconType.DrawableIcon -> {
-                            CircleWrapper(
-                                size = circleWrapperSize,
-                                color = circleWrapperColor
-                            ) {
-                                Image(
-                                    bitmap = icon.drawable.toBitmap().asImageBitmap(),
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .height(38.dp - circleWrapperSize)
-                                        .width(38.dp - circleWrapperSize)
-                                )
-                            }
-                        }
-                        is IconType.VectorIcon -> {
-                            CircleWrapper(
-                                size = 12.dp,
-                                color = circleWrapperColor
-                            ) {
-                                Icon(
-                                    imageVector = icon.imageVector,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
+                when (icon) {
+                    is IconType.DrawableIcon -> {
+                        CircleWrapper(
+                            size = circleWrapperSize,
+                            color = circleWrapperColor
+                        ) {
+                            Image(
+                                bitmap = icon.drawable.toBitmap().asImageBitmap(),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .height(38.dp - circleWrapperSize)
+                                    .width(38.dp - circleWrapperSize)
+                            )
                         }
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    
-                    if (usesGMS) {
-                        Column {
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(bottom = 3.dp)
-                            )
-                            Text(
-                                text = description.substringBefore('\n'),
-                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(bottom = 3.dp)
-                            )
-                            Text(
-                                text = stringResource(R.string.google_play_services_warning),
-                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 9.sp),
-                                color = MaterialTheme.colorScheme.outline,
-                                modifier = Modifier.padding(bottom = 3.dp)
+                    is IconType.VectorIcon -> {
+                        CircleWrapper(
+                            size = 12.dp,
+                            color = circleWrapperColor
+                        ) {
+                            Icon(
+                                imageVector = icon.imageVector,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
-                    } else {
-                        MaterialText(
-                            title = title,
-                            description = description
-                        )
                     }
                 }
-                customButton()
+                Spacer(modifier = Modifier.width(10.dp))
+                
+                if (usesGMS) {
+                    Column {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 3.dp)
+                        )
+                        Text(
+                            text = description.substringBefore('\n'),
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 3.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.google_play_services_warning),
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 9.sp),
+                            color = MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.padding(bottom = 3.dp)
+                        )
+                    }
+                } else {
+                    MaterialText(
+                        title = title,
+                        description = description
+                    )
+                }
             }
+            customButton()
         }
     }
 }
+

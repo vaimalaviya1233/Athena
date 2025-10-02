@@ -38,26 +38,57 @@ class PackageLoader(
     suspend fun loadPackages(): Result<Unit, Error> = withContext(Dispatchers.IO) {
         return@withContext try {
             val allApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-            val packageEntities = allApps.map { appInfo ->
-                val tempApp = Application(
-                    packageID = appInfo.packageName,
-                    uid = appInfo.uid,
-                    systemApp = appInfo.flags and ApplicationInfo.FLAG_SYSTEM != 0
-                )
-                // Detect Google Play Services usage for specific messaging apps
-                val usesGPS = tempApp.usesGooglePlayServices()
-                tempApp.copy(usesGooglePlayServices = usesGPS)
+            
+            val showSystemPackages = settingsViewModel.settings.value.showSystemPackages
+            val showOfflinePackages = settingsViewModel.settings.value.showOfflinePackages
+            val wifiDefault = settingsViewModel.settings.value.wiFiDefault
+            val cellularDefault = settingsViewModel.settings.value.cellularDefault
+            
+            val filteredApps = allApps.filter { appInfo ->
+                val isSystemApp = appInfo.flags and ApplicationInfo.FLAG_SYSTEM != 0
+                
+                if (isSystemApp && !showSystemPackages) {
+                    return@filter false
+                }
+                
+                if (!appInfo.enabled && !showOfflinePackages) {
+                    return@filter false
+                }
+                
+                true
             }
+            
+            Logger.info("PackageLoader: Found ${allApps.size} total apps, filtered to ${filteredApps.size} apps (removed ${allApps.size - filteredApps.size} apps)")
+            
+            // Process apps in small chunks to maintain UI responsiveness
+            val chunkSize = 25
+            filteredApps.chunked(chunkSize).forEach { chunk ->
+                chunk.forEach { appInfo ->
+                    val isSystemApp = appInfo.flags and ApplicationInfo.FLAG_SYSTEM != 0
+                    
+                    // Create application entity
+                    val packageEntity = Application(
+                        packageID = appInfo.packageName,
+                        uid = appInfo.uid,
+                        systemApp = isSystemApp,
+                        usesGooglePlayServices = false, // Defer GPS detection for performance
+                        internetAccess = wifiDefault,
+                        cellularAccess = cellularDefault
+                    )
 
-            packageEntities.forEach { packageEntity ->
-                applicationUseCases.checkApplicationExists.execute(packageEntity.packageID).fold(
-                    ifSuccess = {
-                        val result = applicationUseCases.addApplication.execute(packageEntity.copy(internetAccess = settingsViewModel.settings.value.wiFiDefault, cellularAccess = settingsViewModel.settings.value.cellularDefault))
-                        if (result is Result.Failure) {
-                            Logger.error("Failed to add package ${packageEntity.packageID} (UID: ${packageEntity.uid}): ${result.error.message}")
+                    applicationUseCases.checkApplicationExists.execute(packageEntity.packageID).fold(
+                        ifSuccess = { exists ->
+                            if (!exists) {
+                                val result = applicationUseCases.addApplication.execute(packageEntity)
+                                if (result is Result.Failure) {
+                                    Logger.error("Failed to add package ${packageEntity.packageID} (UID: ${packageEntity.uid}): ${result.error.message}")
+                                }
+                            }
                         }
-                    }
-                )
+                    )
+                }
+                
+                kotlinx.coroutines.yield()
             }
             Result.Success(Unit)
         } catch (e: Exception) {

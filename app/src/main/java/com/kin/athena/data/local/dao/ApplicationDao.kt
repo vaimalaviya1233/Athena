@@ -32,6 +32,9 @@ interface ApplicationDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(application: Application)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAll(applications: List<Application>)
+
     @Update
     suspend fun update(application: Application)
 
@@ -46,4 +49,7 @@ interface ApplicationDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM applications WHERE package_id = :packageId)")
     suspend fun isPackageIdExists(packageId: String): Boolean
+
+    @Query("SELECT package_id FROM applications WHERE package_id IN (:packageIds)")
+    suspend fun getExistingPackageIds(packageIds: List<String>): List<String>
 }
