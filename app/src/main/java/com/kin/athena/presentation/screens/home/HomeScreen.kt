@@ -103,6 +103,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -349,6 +351,9 @@ private fun AnimatedPackageList(
             val title = packageEntity.getApplicationName(context.packageManager)
             val icon = viewModel.iconMap.value[packageEntity.packageID]
             
+            // Add staggered delay for smoother appearance
+            val staggerDelay = (index * 25).coerceAtMost(200)
+            
             val isVisible = remember(
                 viewModel.searchQuery.value, 
                 packageEntity, 
@@ -393,27 +398,40 @@ private fun AnimatedPackageList(
                 visible = isVisible,
                 enter = slideInVertically(
                     animationSpec = spring(
-                        dampingRatio = 0.8f,
-                        stiffness = 300f
+                        dampingRatio = 0.75f,
+                        stiffness = 400f
                     ),
-                    initialOffsetY = { it / 3 }
+                    initialOffsetY = { it / 4 }
                 ) + fadeIn(
-                    animationSpec = tween(300)
+                    animationSpec = tween(
+                        durationMillis = 400,
+                        delayMillis = staggerDelay,
+                        easing = androidx.compose.animation.core.FastOutSlowInEasing
+                    )
                 ) + scaleIn(
                     animationSpec = spring(
                         dampingRatio = 0.8f,
-                        stiffness = 400f
+                        stiffness = 500f
                     ),
-                    initialScale = 0.9f
+                    initialScale = 0.95f
                 ),
                 exit = slideOutVertically(
-                    animationSpec = tween(250),
-                    targetOffsetY = { -it / 3 }
+                    animationSpec = spring(
+                        dampingRatio = 0.9f,
+                        stiffness = 600f
+                    ),
+                    targetOffsetY = { -it / 4 }
                 ) + fadeOut(
-                    animationSpec = tween(250)
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = androidx.compose.animation.core.FastOutLinearInEasing
+                    )
                 ) + scaleOut(
-                    animationSpec = tween(250),
-                    targetScale = 0.9f
+                    animationSpec = spring(
+                        dampingRatio = 0.9f,
+                        stiffness = 600f
+                    ),
+                    targetScale = 0.95f
                 )
             ) {
                 Column(modifier = Modifier.clip(shape)) {
