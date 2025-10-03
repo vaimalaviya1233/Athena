@@ -130,7 +130,7 @@ fun SettingsScreen(
                         features = listOf(
                             stringResource(id = R.string.privacy_option_lock),
                             stringResource(id = R.string.privacy_option_hide_screen),
-                            stringResource(id = R.string.privacy_option_privacy)
+                            stringResource(id = R.string.privacy_title)
                         ),
                         icon = ImageVector.vectorResource(id = R.drawable.incognito),
                         onClick = { navController.safeNavigate(SettingRoutes.Privacy.route) }
@@ -138,9 +138,9 @@ fun SettingsScreen(
                     SettingSection(
                         title = stringResource(id = R.string.about_title),
                         features = listOf(
-                            stringResource(id = R.string.about_option_version),
+                            stringResource(id = R.string.version),
                             stringResource(id = R.string.about_option_developers),
-                            stringResource(id = R.string.about_option_license)
+                            stringResource(id = R.string.license)
                         ),
                         icon = Icons.Rounded.Info,
                         onClick = { navController.safeNavigate(SettingRoutes.About.route) }

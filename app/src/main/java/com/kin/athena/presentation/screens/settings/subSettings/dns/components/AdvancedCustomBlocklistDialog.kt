@@ -273,7 +273,7 @@ private fun AddEditBlocklistContent(
                     },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(stringResource(R.string.cancel_button))
+                    Text(stringResource(R.string.cancel))
                 }
                 
                 Button(
@@ -292,7 +292,7 @@ private fun AddEditBlocklistContent(
                              viewModel.isValidUrl(url.text) &&
                              (validationState.isValid == true || !validationState.isValidating)
                 ) {
-                    Text(stringResource(R.string.add_blocklist_button))
+                    Text(stringResource(R.string.custom_blocklist))
                 }
             }
         }

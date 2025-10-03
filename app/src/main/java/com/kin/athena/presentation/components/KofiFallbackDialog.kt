@@ -107,7 +107,7 @@ fun KofiFallbackDialog(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = stringResource(R.string.logs_feature_label),
+                        text = stringResource(R.string.logs),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Medium

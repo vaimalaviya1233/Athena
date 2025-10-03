@@ -198,7 +198,7 @@ fun DownloadDialog(
                     ) {
                         Icon(
                             Icons.Rounded.Close,
-                            contentDescription = stringResource(R.string.network_error_description),
+                            contentDescription = stringResource(R.string.network_error_title),
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(40.dp)
                         )
@@ -230,7 +230,7 @@ fun DownloadDialog(
                     ) {
                         Icon(
                             Icons.Rounded.Close,
-                            contentDescription = stringResource(R.string.error_description),
+                            contentDescription = stringResource(R.string.tile_error),
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(40.dp)
                         )
@@ -274,7 +274,7 @@ fun DownloadDialog(
                             )
                         ) {
                             Text(
-                                stringResource(R.string.done_button),
+                                stringResource(R.string.done),
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 fontWeight = FontWeight.Medium
                             )
@@ -291,7 +291,7 @@ fun DownloadDialog(
                                 contentColor = MaterialTheme.colorScheme.onSurface.copy(0.7f)
                             )
                         ) {
-                            Text(stringResource(R.string.cancel_button))
+                            Text(stringResource(R.string.cancel))
                         }
                         
                         if (onRetry != null) {

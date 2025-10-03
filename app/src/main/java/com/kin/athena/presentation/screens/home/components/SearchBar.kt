@@ -97,7 +97,7 @@ fun SearchBar(
             } else {
                 if (onBackClicked != null) {
                     IconButton(onClick = {onBackClicked() }) {
-                        Icon(Icons.Rounded.ArrowBackIosNew, contentDescription = stringResource(R.string.back_description), modifier = Modifier.scale(0.8f))
+                        Icon(Icons.Rounded.ArrowBackIosNew, contentDescription = stringResource(R.string.back_button_description), modifier = Modifier.scale(0.8f))
                     }
                 }
             }

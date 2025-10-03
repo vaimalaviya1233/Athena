@@ -400,7 +400,7 @@ private fun ImprovedBlocklistTile(
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.DeleteOutline,
-                            contentDescription = stringResource(R.string.delete_description),
+                            contentDescription = stringResource(R.string.delete_button),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -435,7 +435,7 @@ private fun ImprovedBlocklistTile(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Delete,
-                        contentDescription = stringResource(R.string.delete_description),
+                        contentDescription = stringResource(R.string.delete_button),
                         tint = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.padding(8.dp)
                     )
@@ -467,7 +467,7 @@ private fun ImprovedBlocklistTile(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text(stringResource(R.string.cancel_button_text))
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )

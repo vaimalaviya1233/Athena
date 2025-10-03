@@ -1,6 +1,4 @@
 <resources>
-    <!-- General App Information -->
-    <string name="app_name">Athena</string>
     <string name="search">Search</string>
     <string name="version">Version</string>
     <string name="permissions">Permissions</string>
@@ -8,65 +6,37 @@
     <string name="last_updated_time">Last Updated Time</string>
     <string name="logs">Logs</string>
     <string name="settings">Settings</string>
-
-    <!-- VPN Service -->
     <string name="vpn_service_running">Enforcing rules</string>
     <string name="vpn_service_channel_name">VPN Service Notifications</string>
     <string name="vpn_service_channel_description">Notifications for VPN service status and updates</string>
-    
-    <!-- Quick Settings Tile -->
     <string name="dns_protection_tile_label">DNS Protection</string>
-
-    <!-- Permissions -->
     <string name="vpn_permission">VPN Permission</string>
     <string name="vpn_permission_description">To filter network traffic, this app needs to create a Virtual Private Network (VPN) connection. This connection does not route data to any external servers.</string>
-
-    <!-- VPN Service Disabled -->
     <string name="allow">Allow</string>
-
-    <!-- Color and Styles Section -->
     <string name="colors_title">Colors &amp; Styles</string>
     <string name="colors_option_theme">Theme</string>
     <string name="colors_option_radius">Radius</string>
     <string name="colors_option_sort">Sort</string>
-
-    <!-- Behavior Section -->
     <string name="behavior_title">Behavior</string>
     <string name="behavior_option_system">System</string>
     <string name="behavior_option_rules">Rules</string>
     <string name="behavior_option_logging">Logging</string>
-
-    <!-- Language Section -->
-
-    <!-- Network Section -->
     <string name="network_title">Network</string>
     <string name="network_option_lockdown">Lockdown</string>
     <string name="network_option_calling">Calling</string>
-
-    <!-- Proxy Section -->
     <string name="proxy_title">Proxy</string>
-
-    <!-- DNS Section -->
     <string name="dns_title">DNS</string>
     <string name="dns_option_block">Block</string>
     <string name="dns_option_hostname">Hostname</string>
     <string name="dns_option_updates">Updates</string>
-
-    <!-- Privacy Section -->
     <string name="privacy_title">Privacy</string>
     <string name="privacy_option_lock">Lock</string>
     <string name="privacy_option_hide_screen">Hide Screen</string>
-    <string name="privacy_option_privacy">Privacy</string>
-
-    <!-- About Section -->
     <string name="about_title">About</string>
-    <string name="about_option_version">Version</string>
     <string name="about_option_developers">Developers</string>
-    <string name="about_option_license">License</string>
     <string name="verified_as_official_build">Verified as official build!</string>
     <string name="maintained_by">Maintained by</string>
     <string name="translator">Translator</string>
-    <string name="your_name">Vexzure</string>
     <string name="build_type">Build type</string>
     <string name="latest_release">Latest Release</string>
     <string name="source_code">Source Code</string>
@@ -74,20 +44,8 @@
     <string name="discord">Discord</string>
     <string name="feature">Feature Request</string>
     <string name="license">License</string>
-    <string name="license_description">GNU General Public License v3.0</string>
-    <string name="license_info_title">Open Source License</string>
-    <string name="license_info_description">This app is free and open source software licensed under GPL v3</string>
-    <string name="view_license">View License</string>
     <string name="rate_app">Rate App</string>
     <string name="rate_app_description">Rate Athena on Google Play Store</string>
-    
-    <!-- Crash Fix Dialog -->
-    <string name="crash_fix_dialog_title">🚀 Athena Just Got Better!</string>
-    <string name="crash_fix_dialog_subtitle">Major stability improvements</string>
-    <string name="crash_fix_dialog_message">We\'ve fixed the crashes and stability issues that were affecting some users. The app is now more stable and reliable than ever!\n\nIf you previously experienced issues, would you consider updating your review to reflect the current experience?</string>
-    <string name="crash_fix_update_review">Update My Review</string>
-    <string name="crash_fix_maybe_later">Maybe Later</string>
-    <string name="crash_fix_no_thanks">No Thanks</string>
     <string name="system_theme">System Theme</string>
     <string name="system_theme_description">Adapts app theme based on system settings</string>
     <string name="dark_theme">Dark Theme</string>
@@ -206,15 +164,7 @@
     <string name="ad_blocker_description">Blocks ads, reduce data usage</string>
     <string name="block_trackers">Privacy Protection</string>
     <string name="block_trackers_description">Block trackers and surveillance tools</string>
-    <string name="block_more">Block More</string>
-    <string name="block_more_description">Block gambling, media and more</string>
-    <string name="update_blocklist">Update Lists</string>
-    <string name="update_blocklist_description">Update blocklists to latest version</string>
     <string name="blocked_domains">Blocked Domains</string>
-    <string name="list_blocked_domains">Manage Domains</string>
-    <string name="list_blocked_domains_description">Block, Allow, Edit Domains</string>
-    <string name="download_blocklist">Downloading</string>
-    <string name="downloading_blocklist">Downloading Blacklist</string>
     <string name="invalid_url_s">Invalid URL</string>
     <string name="permission_denied">Permission Denied</string>
     <string name="file_not_found">File Not Found</string>
@@ -225,8 +175,6 @@
     <string name="social_media_description">Block Social Media</string>
     <string name="adult_content">Adult Content</string>
     <string name="block_adult_content">Block adult content</string>
-    <string name="illegal_content">Illegal Content</string>
-    <string name="illegal_content_description">Block illegal content</string>
     <string name="gambling">Gambling</string>
     <string name="block_gambling">Block gambling sites</string>
     <string name="magisk_steps">Steps to enable:\n 1. Open the Magisk app.\n 2. Go to Settings.\n 3. Enable Systemless Hosts.\n 4. Reboot your device.\n 5. Try again after rebooting.</string>
@@ -237,54 +185,24 @@
     <string name="invalid_license">Invalid License</string>
     <string name="premium">Premium</string>
     <string name="support_development">Unlock All Features</string>
-    <string name="search_bar_start">&lt;- Click to start</string>
-
-    <!-- Premium Purchase Strings -->
     <string name="premium_purchase_title">Premium Features</string>
     <string name="fdroid_premium_message">Get lifetime access to all premium features! Block ads, see application logs and much more!</string>
-    <string name="visit_kofi">Get Premium €4.99</string>
-    <string name="enter_premium_code">Enter Premium Code</string>
-    <string name="premium_code_title">Premium Code</string>
-    <string name="premium_code_message">Enter your premium code to unlock all features:</string>
-    <string name="enter_premium_code_hint">Enter premium code here</string>
-    <string name="verify">Verify</string>
-    <string name="ok">OK</string>
-    <string name="invalid_code_title">Invalid Code</string>
-    <string name="invalid_code_message">The code you entered is not valid. Please check your code and try again, or visit Ko-fi to get premium access.</string>
-    
-    <!-- Network Statistics -->
     <string name="allowed_requests">Allowed Requests</string>
     <string name="allowed_requests_description">%1$s requests allowed</string>
     <string name="blocked_requests">Blocked Requests</string>
     <string name="blocked_requests_description">%1$s requests blocked</string>
     <string name="total_activity">Total Activity</string>
-    
-    <!-- Feature Labels -->
-    <string name="logs_feature_label">Logs</string>
     <string name="app_notifications_feature_label">App Notifications</string>
     <string name="dns_lists_feature_label">DNS Lists</string>
-    <string name="premium_benefits_text">✓ Instant access ✓ No subscription</string>
-    
-    <!-- Permission Setup -->
     <string name="use_vpn_method">Use VPN Method</string>
     <string name="use_root_method">Use Root Method</string>
     <string name="setting_up_permissions">Setting up permissions</string>
     <string name="grant_required_permissions_message">Please grant the required permissions in the system dialogs</string>
-    
-    <!-- Onboarding -->
     <string name="tap_security_icon_instruction">Tap the security icon to start</string>
-    
-    <!-- Accessibility Descriptions -->
     <string name="back_button_description">Back</string>
     <string name="open_menu_description">Open Menu</string>
-    <string name="settings_description">Settings</string>
     <string name="firewall_description">Firewall</string>
-    <string name="back_description">Back</string>
     <string name="close_description">Close</string>
-    <string name="fingerprint_description">Fingerprint</string>
-    <string name="backspace_description">Backspace</string>
-    
-    <!-- Progress and Status -->
     <string name="applying_firewall_rules">Applying Firewall Rules</string>
     <string name="important_warning_title">Important</string>
     <string name="firewall_setup_warning_message">Please do not turn off your device during this process. This may take a few minutes to complete.</string>
@@ -292,28 +210,7 @@
     <string name="executing_commands_progress">Executing command %1$d of %2$d</string>
     <string name="firewall_rules_applied_successfully">Firewall rules applied successfully</string>
     <string name="google_play_services_warning">This app uses Google Play Services to receive incoming messages, meaning it cannot be blocked directly.</string>
-    
-    <!-- Network Type Labels -->
-    <string name="wifi_label">WiFi</string>
-    <string name="cellular_label">Cellular</string>
     <string name="most_established_connections">Most established connections</string>
-    
-    <!-- DNS Protection Categories -->
-    <string name="malware_protection_label">Malware Protection</string>
-    <string name="ad_protection_label">Ad Protection</string>
-    <string name="privacy_protection_label">Privacy Protection</string>
-    <string name="social_media_label">Social Media</string>
-    <string name="adult_content_label">Adult Content</string>
-    <string name="gambling_label">Gambling</string>
-    <string name="custom_rules_label">Custom Rules</string>
-    
-    <!-- Domain Loading Status -->
-    <string name="updating_domains">Updating domains…</string>
-    <string name="loading_domains">Loading domains…</string>
-    <string name="no_domains_loaded">No domains loaded</string>
-    <string name="downloading_rules_title">Downloading Rules</string>
-    
-    <!-- Download Dialog -->
     <string name="downloading_processing_rules">Downloading and processing rules…</string>
     <string name="please_wait">Please wait…</string>
     <string name="success_message">Success!</string>
@@ -322,11 +219,7 @@
     <string name="check_internet_connection">Please check your internet connection and try again</string>
     <string name="download_failed_title">Download Failed</string>
     <string name="download_error_message">Something went wrong while downloading rules</string>
-    <string name="done_button">Done</string>
-    <string name="cancel_button">Cancel</string>
     <string name="retry_button">Retry</string>
-    
-    <!-- Custom Blocklist -->
     <string name="category_label">Category</string>
     <string name="validating_message">Validating…</string>
     <string name="valid_blocklist_message">Valid blocklist</string>
@@ -339,49 +232,21 @@
     <string name="import_selected_button">Import Selected (%1$d)</string>
     <string name="import_selected_presets_button">Import Selected Presets (%1$d)</string>
     <string name="parsing_urls_message">Parsing URLs…</string>
-    <string name="add_blocklist_button">Add Blocklist</string>
     <string name="entries_count">%1$dK entries</string>
-    
-    <!-- Toast Messages -->
-    <string name="premium_activated_successfully">✅ Premium activated successfully!</string>
-    <string name="premium_activation_error">❌ %1$s</string>
-    
-    <!-- Placeholders -->
-    <string name="ipv4_placeholder">127.0.0.1</string>
-    <string name="ipv6_placeholder">::1</string>
-    <string name="enter_premium_code_placeholder">Enter premium code</string>
-    <string name="blocklist_url_placeholder">https://example.com/blocklist.txt</string>
-    <string name="blocklist_name_placeholder">Blocklist Name (Optional)</string>
-    <string name="paste_urls_placeholder">Paste URLs here (one per line or separated by spaces)</string>
-    
-    <!-- Delete Confirmation -->
     <string name="delete_blocklist_title">Delete Blocklist</string>
     <string name="delete_blocklist_confirmation">Are you sure you want to delete \'%1$s\'? This action cannot be undone.</string>
     <string name="delete_button">Delete</string>
-    <string name="cancel_button_text">Cancel</string>
-    
-    <!-- Empty States -->
     <string name="no_custom_blocklists_message">No custom blocklists yet</string>
-    
-    <!-- Debug Actions -->
     <string name="delete_iptables_chain">Delete iptables chain</string>
     <string name="remove_all_hosts">Remove all hosts</string>
     <string name="clear_hosts_file_title">Clear Hosts File</string>
     <string name="clear_hosts_file_description">This will remove all blocked domains from the system hosts file and revert it to default.</string>
-    
-    <!-- Clipboard -->
     <string name="copied_text_label">Copied Text</string>
-    
-    <!-- Quick Settings Tile -->
     <string name="tile_active">Active</string>
     <string name="tile_tap_to_enable">Tap to enable</string>
     <string name="tile_vpn_required">VPN required</string>
     <string name="tile_error">Error</string>
-    
-    <!-- Notification Text -->
     <string name="notification_allowed_blocked">Allowed %1$s, Blocked %2$s</string>
-    
-    <!-- Additional Custom Blocklist Strings -->
     <string name="add_custom_blocklist">Add Custom Blocklist</string>
     <string name="edit_blocklist">Edit Blocklist</string>
     <string name="import_from_file">Import from File</string>
@@ -389,18 +254,12 @@
     <string name="select_all">Select All</string>
     <string name="deselect_all">Deselect All</string>
     <string name="imported_category">Imported</string>
-    <string name="delete_description">Delete</string>
     <string name="downloading_description">Downloading</string>
     <string name="success_description">Success</string>
-    <string name="error_description">Error</string>
-    <string name="network_error_description">Network Error</string>
-    <string name="validate_url_description">Validate URL</string>
-    <string name="select_category_description">Select Category</string>
-    <string name="valid_description">Valid</string>
-    <string name="invalid_description">Invalid</string>
-    <string name="info_description">Info</string>
-    <string name="paste_from_clipboard_description">Paste from clipboard</string>
-    <string name="logo_image_description">Logo Image</string>
-    <string name="blob_shape_description">Blob Shape</string>
-    <string name="placeholder_icon_description">Placeholder icon</string>
+    <string name="your_name">Vexzure99</string>
+    <string name="premium_activated_successfully">✅ Premium activated successfully!</string>
+    <string name="search_bar_start">&lt;- Click to start</string>
+    <string name="premium_benefits_text">✓ Instant access ✓ No subscription</string>
+    <string name="blocklist_name_placeholder">Blocklist Name (Optional)</string>
+    <string name="paste_urls_placeholder">Paste URLs here (one per line or separated by spaces)</string>
 </resources>

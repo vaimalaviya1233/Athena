@@ -193,7 +193,7 @@ fun HomeScreen(
                     } else {
                         MaterialButton(
                             imageVector = Icons.Rounded.Settings,
-                            contentDescription = stringResource(R.string.settings_description)
+                            contentDescription = stringResource(R.string.settings)
                         ) {
                             onSettingsClicked()
                         }

@@ -172,7 +172,7 @@ private fun OnLanguageClicked(settingsViewModel: SettingsViewModel, onExit: () -
                 title = displayData.first,
                 actionType = SettingType.RADIOBUTTON,
                 variable = if (displayData.second.isNotBlank()) {
-                    AppCompatDelegate.getApplicationLocales()[0]?.language == displayData.second
+                    AppCompatDelegate.getApplicationLocales()[0]?.toLanguageTag() == displayData.second
                 } else {
                     AppCompatDelegate.getApplicationLocales().isEmpty
                 },
