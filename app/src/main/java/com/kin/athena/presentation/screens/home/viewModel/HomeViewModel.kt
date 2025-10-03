@@ -126,19 +126,24 @@ class HomeViewModel @Inject constructor(
         // Debounce search to reduce filtering frequency
         searchJob = viewModelScope.launch {
             if (value.isBlank()) {
-                // Immediate filtering for empty query
-                filterPackages(value)
+                // Small delay even for empty query to prevent lag when deleting last character
+                delay(50) // Minimal delay to avoid blocking UI
+                filterPackagesAsync(value)
             } else {
                 // Debounce for non-empty queries
                 delay(150) // 150ms debounce
-                filterPackages(value)
+                filterPackagesAsync(value)
             }
         }
     }
 
     fun clearSearchQueryStatus() {
         _searchQuery.value = ""
-        _packages.value = _unfilteredPackages.value
+        // Use async filtering to prevent lag
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            filterPackagesAsync("")
+        }
     }
 
     fun updateFirewallStatus(value: FirewallStatus, serviceType: FirewallMode) {
@@ -161,21 +166,32 @@ class HomeViewModel @Inject constructor(
         _vpnPermissionRequested.value = isRequested
     }
 
-    private fun filterPackages(query: String) {
+    private suspend fun filterPackagesAsync(query: String) {
         val currentPackageName = context.packageName
+        val unfilteredList = _unfilteredPackages.value
 
-        _packages.value = if (query.isBlank()) {
-            _unfilteredPackages.value.filter { application ->
-                application.packageID != currentPackageName
+        val filteredPackages = if (query.isBlank()) {
+            // For empty query, use simple filtering with chunked processing for large lists
+            if (unfilteredList.size > 500) {
+                // Process in chunks to avoid blocking UI
+                val result = mutableListOf<Application>()
+                unfilteredList.chunked(100).forEach { chunk ->
+                    result.addAll(chunk.filter { it.packageID != currentPackageName })
+                    // Yield to allow other coroutines to run
+                    kotlinx.coroutines.yield()
+                }
+                result
+            } else {
+                unfilteredList.filter { it.packageID != currentPackageName }
             }
         } else {
-            // Optimize search with caching and early exit
+            // Use chunked processing for search queries too
+            val result = mutableListOf<Application>()
             val queryLowerCase = query.lowercase(Locale.getDefault())
             val uidQuery = query.takeIf { it.all { char -> char.isDigit() } }
             
-            // Use asSequence() for lazy evaluation on large lists
-            _unfilteredPackages.value.asSequence()
-                .filter { application ->
+            unfilteredList.chunked(50).forEach { chunk ->
+                val chunkResult = chunk.filter { application ->
                     if (application.packageID == currentPackageName) return@filter false
                     
                     // Check UID first (fastest check)
@@ -200,8 +216,15 @@ class HomeViewModel @Inject constructor(
                     
                     appName.lowercase(Locale.getDefault()).contains(queryLowerCase)
                 }
-                .toList()
+                result.addAll(chunkResult)
+                // Yield after each chunk to keep UI responsive
+                kotlinx.coroutines.yield()
+            }
+            result
         }
+        
+        // Update packages on main thread
+        _packages.value = filteredPackages
     }
 
     fun updatePackage(packageEntity: Application) {
@@ -288,7 +311,9 @@ class HomeViewModel @Inject constructor(
                     preWarmAppNameCache(result.data)
                 }
                 
-                filterPackages(_searchQuery.value)
+                viewModelScope.launch {
+                    filterPackagesAsync(_searchQuery.value)
+                }
                 firewallManager.updateFirewallRules(null)
                 
                 // Mark initial load as complete after first successful load
