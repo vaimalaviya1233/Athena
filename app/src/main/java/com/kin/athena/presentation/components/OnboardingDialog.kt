@@ -18,7 +18,6 @@
 package com.kin.athena.presentation.components
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -31,29 +30,43 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.kin.athena.R
+import kotlin.math.roundToInt
 
 @Composable
 fun OnboardingOverlay(
     onDismiss: () -> Unit,
-    onFirewallClick: () -> Unit = {}
+    onFirewallClick: () -> Unit = {},
+    targetIconPosition: Offset = Offset.Zero // Pass the actual icon position from parent
 ) {
-
     val color = MaterialTheme.colorScheme.background
     val density = LocalDensity.current
     var showTutorialDialog by remember { mutableStateOf(true) }
     
-    val cutoutRadius = 32.dp
-    val cutoutCenterX = 52.dp
-    val cutoutCenterY = 88.dp
+    val cutoutRadius = 24.dp
+    val cutoutRadiusPx = with(density) { cutoutRadius.toPx() }
+    
+    // Use the passed target position or fallback to estimated position
+    val cutoutCenter = if (targetIconPosition != Offset.Zero) {
+        targetIconPosition
+    } else {
+        // Fallback estimation for the security icon position
+        val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+        Offset(
+            x = with(density) { 52.dp.toPx() },
+            y = with(density) { (statusBarHeight + 38.dp).toPx() }
+        )
+    }
     
     Box(modifier = Modifier.fillMaxSize()) {
-        // Background overlay that blocks all clicks
-        Box(
+        // Background overlay with cutout
+        Canvas(
             modifier = Modifier
                 .fillMaxSize()
                 .clickable(
@@ -62,88 +75,131 @@ fun OnboardingOverlay(
                 ) {
                     // Absorb clicks - do nothing
                 }
+                .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
         ) {
-            Canvas(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
-            ) {
-                drawRect(
-                    color = Color.Black.copy(alpha = 0.7f),
-                    size = size
-                )
-                
-                drawCircle(
-                    color = Color.Transparent,
-                    radius = with(density) { cutoutRadius.toPx() },
-                    center = Offset(
-                        x = with(density) { cutoutCenterX.toPx() },
-                        y = with(density) { cutoutCenterY.toPx() }
-                    ),
-                    blendMode = BlendMode.Clear
-                )
-                
-                // Add a subtle highlight ring around the cutout to draw attention
-                drawCircle(
-                    color = color,
-                    radius = with(density) { (cutoutRadius + 4.dp).toPx() },
-                    center = Offset(
-                        x = with(density) { cutoutCenterX.toPx() },
-                        y = with(density) { cutoutCenterY.toPx() }
-                    ),
-                    style = Stroke(width = with(density) { 2.dp.toPx() })
-                )
-            }
+            // Draw dark overlay
+            drawRect(
+                color = Color.Black.copy(alpha = 0.7f),
+                size = size
+            )
+            
+            // Clear circular area for the icon
+            drawCircle(
+                color = Color.Transparent,
+                radius = cutoutRadiusPx,
+                center = cutoutCenter,
+                blendMode = BlendMode.Clear
+            )
+            
+            // Add highlight ring around the cutout
+            drawCircle(
+                color = color,
+                radius = cutoutRadiusPx + with(density) { 4.dp.toPx() },
+                center = cutoutCenter,
+                style = Stroke(width = with(density) { 2.dp.toPx() })
+            )
         }
         
+        // Clickable area for the security icon
         Box(
             modifier = Modifier
-                .offset(
-                    x = cutoutCenterX - cutoutRadius,
-                    y = cutoutCenterY - cutoutRadius
-                )
+                .offset {
+                    IntOffset(
+                        x = (cutoutCenter.x - cutoutRadiusPx).roundToInt(),
+                        y = (cutoutCenter.y - cutoutRadiusPx).roundToInt()
+                    )
+                }
                 .size(cutoutRadius * 2)
                 .clickable(
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() }
                 ) {
                     onFirewallClick()
-                    onDismiss() // Auto-dismiss when clicked
+                    onDismiss()
                 }
         )
         
-        // Tutorial dialog positioned lower and more to the left
+        // Tutorial dialog positioned relative to the cutout
         if (showTutorialDialog) {
+            TutorialDialog(
+                cutoutCenter = cutoutCenter,
+                cutoutRadius = cutoutRadiusPx,
+                onDismiss = { showTutorialDialog = false }
+            )
+        }
+    }
+}
+
+@Composable
+private fun TutorialDialog(
+    cutoutCenter: Offset,
+    cutoutRadius: Float,
+    onDismiss: () -> Unit
+) {
+    val density = LocalDensity.current
+    
+    // Calculate exact positioning
+    val spacingFromIconPx = with(density) { 12.dp.toPx() }
+    
+    // Position dialog to the right of the icon, perfectly centered vertically
+    val dialogX = cutoutCenter.x + cutoutRadius + spacingFromIconPx
+    val estimatedDialogHeight = with(density) { 55.dp.toPx() } // Approximate height
+    val dialogY = cutoutCenter.y - (estimatedDialogHeight / 2f)
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .wrapContentSize(Alignment.TopStart)
+    ) {
+        Box(
+            modifier = Modifier
+                .offset {
+                    IntOffset(
+                        x = dialogX.roundToInt(),
+                        y = dialogY.roundToInt()
+                    )
+                }
+                .wrapContentSize()
+        ) {
+            // Center the card content around the target Y position
             Box(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.wrapContentSize(),
+                contentAlignment = Alignment.CenterStart
             ) {
-                Box(
-                    modifier = Modifier
-                        .offset(x = (-85).dp, y = 45.dp)
-                        .align(Alignment.TopEnd)
-                        .padding(16.dp)
+                Card(
+                    modifier = Modifier.widthIn(max = 250.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Card(
-                        modifier = Modifier.widthIn(max = 250.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.background
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                        shape = RoundedCornerShape(12.dp)
+                    Box(
+                        modifier = Modifier.padding(16.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.tap_security_icon_instruction),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                textAlign = TextAlign.Start
-                            )
-                        }
+                        Text(
+                            text = stringResource(R.string.tap_security_icon_instruction),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Start
+                        )
                     }
                 }
             }
         }
+    }
+}
+
+// Extension function to get icon position from a composable
+@Composable
+fun Modifier.onIconPositioned(onPosition: (Offset) -> Unit): Modifier {
+    return this.onGloballyPositioned { coordinates ->
+        val center = Offset(
+            x = coordinates.size.width / 2f,
+            y = coordinates.size.height / 2f
+        )
+        val globalCenter = coordinates.localToWindow(center)
+        onPosition(globalCenter)
     }
 }

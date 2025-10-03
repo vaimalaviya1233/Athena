@@ -65,6 +65,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
@@ -137,6 +138,9 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val isFirewallManager = homeViewModel.firewallManager.rulesLoaded.collectAsState()
     val context = LocalContext.current
+    
+    // Track security icon position for onboarding
+    var securityIconPosition by remember { mutableStateOf(Offset.Zero) }
 
     LaunchedEffect(true) {
         homeViewModel.observePackages()
@@ -207,7 +211,10 @@ fun HomeScreen(
                         handleFirewallClick(homeViewModel, context, settingsViewModel, isFirewallManager.value)
                     }
                 },
-                firewallColor = firewallColor
+                firewallColor = firewallColor,
+                onFirewallIconPositioned = { position ->
+                    securityIconPosition = position
+                }
             )
         },
         content = {
@@ -294,6 +301,7 @@ fun HomeScreen(
     // Onboarding overlay for first-time users
     if (settingsViewModel.settings.value.isFirstTimeRunning && isFirewallManager.value == FirewallStatus.OFFLINE) {
         OnboardingOverlay(
+            targetIconPosition = securityIconPosition,
             onDismiss = {
                 settingsViewModel.update(
                     settingsViewModel.settings.value.copy(isFirstTimeRunning = false)

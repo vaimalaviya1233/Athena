@@ -47,12 +47,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kin.athena.R
 import com.kin.athena.presentation.components.material.MaterialButton
+import com.kin.athena.presentation.components.onIconPositioned
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,7 +67,8 @@ fun SearchBar(
     button: @Composable () -> Unit,
     onFirewallClicked: (() -> Unit)? = null,
     firewallColor: Color? = null,
-    onBackClicked: (() -> Unit)? = null
+    onBackClicked: (() -> Unit)? = null,
+    onFirewallIconPositioned: ((Offset) -> Unit)? = null
 ) {
     val isTyping = query.isNotBlank()
     val searchBarScale by animateFloatAsState(
@@ -90,7 +93,12 @@ fun SearchBar(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    IconButton(onClick = { onFirewallClicked() }) {
+                    IconButton(
+                        modifier = onFirewallIconPositioned?.let { 
+                            Modifier.onIconPositioned(it) 
+                        } ?: Modifier,
+                        onClick = { onFirewallClicked() }
+                    ) {
                         Icon(Icons.Rounded.Security, tint = firewallColor, contentDescription = stringResource(R.string.firewall_description))
                     }
                 }
