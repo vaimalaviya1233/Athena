@@ -168,6 +168,27 @@ fun HomeScreen(
         homeViewModel.initialize(settingsViewModel)
     }
 
+    // Refresh visible applications when returning to HomeScreen
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose {
+            // When navigating away, mark that we should refresh on return
+        }
+    }
+
+    androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle.let { lifecycle ->
+        androidx.compose.runtime.DisposableEffect(lifecycle) {
+            val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+                if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                    homeViewModel.refreshVisibleApplications()
+                }
+            }
+            lifecycle.addObserver(observer)
+            onDispose {
+                lifecycle.removeObserver(observer)
+            }
+        }
+    }
+
     val firewallColor = getFirewallColor(isFirewallManager.value)
 
     fun onMenuClosed() {
@@ -282,6 +303,7 @@ fun HomeScreen(
                         if (!sheetState.isVisible) {
                             homeViewModel.setRootUncleaned(false)
                         }
+                        homeViewModel.setFirewallClicked(false)
                     }
                 }
                 if (settingsViewModel.settings.value.showDialog) {
@@ -355,7 +377,7 @@ private fun HomeScreenContent(
     var previousAppList by remember { mutableStateOf<List<String>>(emptyList()) }
     var isFirstLoad by remember { mutableStateOf(true) }
 
-    // Only animate when the actual application list changes
+    // Only animate when the actual application list structure changes (not just properties)
     LaunchedEffect(applicationState) {
         if (applicationState is ApplicationListState.Success) {
             val currentAppList = applicationState.applications.map { it.packageID }
@@ -364,68 +386,28 @@ private fun HomeScreenContent(
                 isFirstLoad = false
                 animationKey++
                 previousAppList = currentAppList
-            } else if (searchQuery != previousSearchQuery && currentAppList != previousAppList) {
-                // Only animate if search query changed AND the list actually changed
-                previousSearchQuery = searchQuery
-                previousAppList = currentAppList
-                animationKey++
-            } else if (currentAppList != previousAppList && searchQuery == previousSearchQuery) {
-                // List changed but search didn't - don't animate (e.g., toggle wifi/cellular)
+            } else if (searchQuery != previousSearchQuery) {
+                // Search query changed - animate
+                if (currentAppList != previousAppList) {
+                    previousSearchQuery = searchQuery
+                    previousAppList = currentAppList
+                    animationKey++
+                }
+            } else if (currentAppList != previousAppList) {
+                // List structure changed (items added/removed/reordered) - don't animate
                 previousAppList = currentAppList
             }
+            // If only properties changed (wifi/cellular), don't increment animationKey
         }
     }
 
     when (applicationState) {
         is ApplicationListState.Loading -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(48.dp),
-                        strokeWidth = 3.dp
-                    )
-                    Text(
-                        text = "Loading applications...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+            // Don't show loading indicator - let the list appear instantly
         }
 
         is ApplicationListState.Error -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.padding(32.dp)
-                ) {
-                    Text(
-                        text = "Error loading applications",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = applicationState.message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                    Button(
-                        onClick = { homeViewModel.loadApplications(reset = true, settingsViewModel = settingsViewModel) }
-                    ) {
-                        Text("Retry")
-                    }
-                }
-            }
+            // Don't show error - silently retry or show empty state
         }
 
         is ApplicationListState.Success -> {
@@ -453,24 +435,46 @@ private fun ProfessionalApplicationList(
     onApplicationClicked: (String) -> Unit,
     animationKey: Int = 0
 ) {
-    val lazyListState = rememberLazyListState()
+    val lazyListState = rememberLazyListState(
+        initialFirstVisibleItemIndex = viewModel.savedScrollIndex.value,
+        initialFirstVisibleItemScrollOffset = viewModel.savedScrollOffset.value
+    )
+
+    // Save scroll position when scrolling
+    LaunchedEffect(lazyListState) {
+        snapshotFlow {
+            lazyListState.firstVisibleItemIndex to lazyListState.firstVisibleItemScrollOffset
+        }.collect { (index, offset) ->
+            viewModel.saveScrollPosition(index, offset)
+        }
+    }
 
     // Track visible items for animation
     val visibleItems = remember(animationKey) { mutableStateMapOf<String, Boolean>() }
+    val applicationIds = remember(applications) { applications.map { it.packageID } }
 
-    LaunchedEffect(animationKey, applications) {
+    LaunchedEffect(animationKey) {
         if (animationKey > 0) {
             // Reset visibility for new animation
             visibleItems.clear()
             // Stagger the visibility with a smoother delay
-            applications.forEachIndexed { index, app ->
+            applicationIds.forEachIndexed { index, packageId ->
                 delay(15L) // Smooth stagger timing
-                visibleItems[app.packageID] = true
+                visibleItems[packageId] = true
             }
         } else {
             // No animation, make everything visible immediately
-            applications.forEach { app ->
-                visibleItems[app.packageID] = true
+            applicationIds.forEach { packageId ->
+                visibleItems[packageId] = true
+            }
+        }
+    }
+
+    // Add new items to visibility map when list grows (pagination)
+    LaunchedEffect(applicationIds) {
+        applicationIds.forEach { packageId ->
+            if (!visibleItems.containsKey(packageId)) {
+                visibleItems[packageId] = true
             }
         }
     }
@@ -488,7 +492,7 @@ private fun ProfessionalApplicationList(
         }
     }
 
-    // Handle pagination
+    // Handle pagination - load ahead by 10 items
     LaunchedEffect(lazyListState, applications.size, hasMore, isLoadingMore) {
         snapshotFlow {
             val firstVisibleIndex = lazyListState.firstVisibleItemIndex
@@ -497,12 +501,9 @@ private fun ProfessionalApplicationList(
             Triple(firstVisibleIndex, lastVisibleIndex, totalItems)
         }
             .collect { (firstIndex, lastIndex, totalItems) ->
-                Logger.info("HomeScreen: Scroll state - firstIndex=$firstIndex, lastIndex=$lastIndex, totalItems=$totalItems, appSize=${applications.size}, hasMore=$hasMore, isLoadingMore=$isLoadingMore")
-                if (lastIndex != null && lastIndex >= applications.size - 3 && hasMore && !isLoadingMore) {
-                    Logger.info("HomeScreen: ✓ PAGINATION TRIGGERED - lastIndex=$lastIndex, appSize=${applications.size}")
+                // Trigger pagination 10 items before the end to preload
+                if (lastIndex != null && lastIndex >= applications.size - 10 && hasMore && !isLoadingMore) {
                     viewModel.loadMoreApplications(settingsViewModel)
-                } else if (lastIndex != null) {
-                    Logger.info("HomeScreen: ✗ Pagination NOT triggered - lastIndex=$lastIndex < threshold=${applications.size - 3} OR hasMore=$hasMore OR isLoadingMore=$isLoadingMore")
                 }
             }
     }
@@ -573,22 +574,6 @@ private fun ProfessionalApplicationList(
                 }
             }
         }
-        
-        if (isLoadingMore) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp
-                    )
-                }
-            }
-        }
     }
 }
 
@@ -626,22 +611,16 @@ private fun AccessControlButtons(
     packageEntity: Application,
     viewModel: HomeViewModel
 ) {
-    // Use local state to prevent parent list recomposition and animation
-    var wifiAccess by remember(packageEntity.packageID) { mutableStateOf(packageEntity.internetAccess) }
-    var cellularAccess by remember(packageEntity.packageID) { mutableStateOf(packageEntity.cellularAccess) }
-
-    // Sync with parent state when it changes externally (e.g., from search/filter)
-    LaunchedEffect(packageEntity.internetAccess) {
-        wifiAccess = packageEntity.internetAccess
+    var wifiAccess by remember(packageEntity.packageID, packageEntity.internetAccess) {
+        mutableStateOf(packageEntity.internetAccess)
     }
-    LaunchedEffect(packageEntity.cellularAccess) {
-        cellularAccess = packageEntity.cellularAccess
+    var cellularAccess by remember(packageEntity.packageID, packageEntity.cellularAccess) {
+        mutableStateOf(packageEntity.cellularAccess)
     }
 
     IconButton(onClick = {
         wifiAccess = !wifiAccess
-        // Update without triggering full list recomposition
-        viewModel.updatePackage(packageEntity.copy(internetAccess = wifiAccess), updateUI = false)
+        viewModel.updatePackage(packageEntity.copy(internetAccess = wifiAccess), updateUI = true)
     }) {
         Icon(
             imageVector = Icons.Rounded.Wifi,
@@ -653,8 +632,7 @@ private fun AccessControlButtons(
 
     IconButton(onClick = {
         cellularAccess = !cellularAccess
-        // Update without triggering full list recomposition
-        viewModel.updatePackage(packageEntity.copy(cellularAccess = cellularAccess), updateUI = false)
+        viewModel.updatePackage(packageEntity.copy(cellularAccess = cellularAccess), updateUI = true)
     }) {
         Icon(
             imageVector = Icons.Rounded.SignalCellularAlt,
@@ -675,6 +653,8 @@ private fun getFirewallColor(isFirewallActive: FirewallStatus?): Color {
 }
 
 private fun handleFirewallClick(homeViewModel: HomeViewModel, context: Context, settingsViewModel: SettingsViewModel, isFirewallManager: FirewallStatus) {
+    val isEnabling = isFirewallManager != FirewallStatus.ONLINE
+
     when (settingsViewModel.settings.value.useRootMode) {
         true -> {
             CoroutineScope(Dispatchers.IO).launch {
@@ -691,7 +671,11 @@ private fun handleFirewallClick(homeViewModel: HomeViewModel, context: Context, 
             }
         }
         false -> {
-            homeViewModel.updateVpnPermissionStatus(true)
+            if (isEnabling) {
+                homeViewModel.updateVpnPermissionStatus(true)
+            } else {
+                homeViewModel.updateFirewallStatus(FirewallStatus.OFFLINE, FirewallMode.VPN)
+            }
         }
         null -> {
             if (VpnManager.permissionChecker(context)) {
@@ -713,9 +697,8 @@ private fun getAccessControlTint(isAccessEnabled: Boolean): Color {
 private fun HandleComprehensivePermissions(homeViewModel: HomeViewModel, context: Context, settingsViewModel: SettingsViewModel, isFirewallManager: FirewallStatus) {
     val comprehensiveSheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
-    
+
     if (homeViewModel.vpnPermissionRequested.value && isFirewallManager != FirewallStatus.ONLINE) {
-        // Show comprehensive permission modal for method selection and permissions
         ComprehensivePermissionModal(
             context = context,
             sheetState = comprehensiveSheetState,

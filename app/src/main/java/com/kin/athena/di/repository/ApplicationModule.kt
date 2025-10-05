@@ -30,6 +30,7 @@ import com.kin.athena.domain.usecase.application.GetApplication
 import com.kin.athena.domain.usecase.application.GetApplications
 import com.kin.athena.domain.usecase.application.GetExistingPackageIds
 import com.kin.athena.domain.usecase.application.GetFilteredApplications
+import com.kin.athena.domain.usecase.application.ObserveApplication
 import com.kin.athena.domain.usecase.application.UpdateApplication
 import dagger.Module
 import dagger.Provides
@@ -62,6 +63,7 @@ object ApplicationModule {
             addApplications = AddApplications(repository),
             deleteApplication = DeleteApplication(repository),
             getApplication = GetApplication(repository),
+            observeApplication = ObserveApplication(repository),
             getApplications = GetApplications(repository),
             updateApplication = UpdateApplication(repository),
             checkApplicationExists = CheckApplicationExists(repository),

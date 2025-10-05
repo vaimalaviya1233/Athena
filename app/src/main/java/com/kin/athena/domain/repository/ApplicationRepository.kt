@@ -17,6 +17,7 @@
 package com.kin.athena.domain.repository
 
 import com.kin.athena.domain.model.Application
+import kotlinx.coroutines.flow.Flow
 
 
 interface ApplicationRepository {
@@ -24,7 +25,7 @@ interface ApplicationRepository {
     suspend fun getAllApplications(): List<Application>
 
     suspend fun insertApplication(application: Application)
-    
+
     suspend fun insertApplications(applications: List<Application>)
 
     suspend fun updateApplication(application: Application)
@@ -32,6 +33,8 @@ interface ApplicationRepository {
     suspend fun deleteApplication(application: Application)
 
     suspend fun getApplicationByID(packageId: String): Application?
+
+    fun observeApplicationByID(packageId: String): Flow<Application?>
 
     suspend fun isPackageIdExists(packageId: String): Boolean
     

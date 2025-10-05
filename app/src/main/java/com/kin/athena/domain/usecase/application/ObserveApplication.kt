@@ -16,15 +16,15 @@
 */
 package com.kin.athena.domain.usecase.application
 
-data class ApplicationUseCases(
-    val getApplications: GetApplications,
-    val deleteApplication: DeleteApplication,
-    val addApplication: AddApplication,
-    val addApplications: AddApplications,
-    val updateApplication: UpdateApplication,
-    val getApplication: GetApplication,
-    val observeApplication: ObserveApplication,
-    val checkApplicationExists: CheckApplicationExists,
-    val getExistingPackageIds: GetExistingPackageIds,
-    val getFilteredApplications: GetFilteredApplications
-)
+import com.kin.athena.domain.model.Application
+import com.kin.athena.domain.repository.ApplicationRepository
+import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
+
+class ObserveApplication @Inject constructor(
+    private val packageRepository: ApplicationRepository
+) {
+    fun execute(applicationID: String): Flow<Application?> {
+        return packageRepository.observeApplicationByID(applicationID)
+    }
+}

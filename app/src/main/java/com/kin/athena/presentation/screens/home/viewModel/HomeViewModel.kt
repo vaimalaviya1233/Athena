@@ -47,6 +47,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Locale
 import javax.inject.Inject
 
@@ -70,8 +71,15 @@ class HomeViewModel @Inject constructor(
     private var currentSettingsViewModel: SettingsViewModel? = null
     
     private var currentOffset = 0
-    private val pageSize = 50
-    
+    private val pageSize = 20
+
+    // Saved scroll position for restoration
+    private val _savedScrollIndex = mutableStateOf(0)
+    val savedScrollIndex: State<Int> = _savedScrollIndex
+
+    private val _savedScrollOffset = mutableStateOf(0)
+    val savedScrollOffset: State<Int> = _savedScrollOffset
+
     // Icon cache
     val iconMap: MutableState<Map<String, Drawable?>> = mutableStateOf(emptyMap())
 
@@ -121,12 +129,40 @@ class HomeViewModel @Inject constructor(
         _menuStatus.value = value
     }
 
+    fun saveScrollPosition(index: Int, offset: Int) {
+        _savedScrollIndex.value = index
+        _savedScrollOffset.value = offset
+    }
+
+    fun refreshVisibleApplications() {
+        val currentState = _applicationState.value
+        if (currentState is ApplicationListState.Success) {
+            viewModelScope.launch(Dispatchers.IO) {
+                // Get fresh data for visible applications
+                val packageIds = currentState.applications.map { it.packageID }
+                val freshApps = packageIds.mapNotNull { packageId ->
+                    applicationUseCases.getApplication.execute(packageId).fold(
+                        ifSuccess = { it },
+                        ifFailure = { null }
+                    )
+                }
+
+                // Update state with fresh data
+                val updatedApplications = currentState.applications.map { oldApp ->
+                    freshApps.find { it.packageID == oldApp.packageID } ?: oldApp
+                }
+                _applicationState.value = currentState.copy(applications = updatedApplications)
+                Logger.info("HomeViewModel: Refreshed ${freshApps.size} visible applications")
+            }
+        }
+    }
+
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
-        
+
         // Cancel previous search job
         searchJob?.cancel()
-        
+
         // Debounce search for professional performance
         searchJob = viewModelScope.launch {
             delay(300) // Professional debounce timing
@@ -310,8 +346,12 @@ class HomeViewModel @Inject constructor(
 
     fun updatePackage(packageEntity: Application, updateUI: Boolean = true) {
         viewModelScope.launch {
-            // Update database
-            applicationUseCases.updateApplication.execute(packageEntity)
+            Logger.info("HomeViewModel: updatePackage called for ${packageEntity.packageID}, wifi=${packageEntity.internetAccess}, cellular=${packageEntity.cellularAccess}")
+            // Update database on IO thread and wait for completion
+            withContext(Dispatchers.IO) {
+                applicationUseCases.updateApplication.execute(packageEntity)
+            }
+            Logger.info("HomeViewModel: Database updated for ${packageEntity.packageID}")
 
             // Only update UI state if requested (to prevent unnecessary recomposition)
             if (updateUI) {
@@ -325,7 +365,9 @@ class HomeViewModel @Inject constructor(
             }
 
             if (firewallManager.rulesLoaded.value == FirewallStatus.ONLINE) {
-                firewallManager.updateFirewallRules(packageEntity)
+                withContext(Dispatchers.IO) {
+                    firewallManager.updateFirewallRules(packageEntity)
+                }
             }
         }
     }
@@ -348,12 +390,16 @@ class HomeViewModel @Inject constructor(
         // Store settings reference for search and filtering
         currentSettingsViewModel = settingsViewModel
 
-        viewModelScope.launch {
-            // Load packages from database with initial settings (wait for it to complete)
-            loadPackages(settingsViewModel)
+        // Only load if we don't have data already
+        val currentState = _applicationState.value
+        if (currentState !is ApplicationListState.Success || currentState.applications.isEmpty()) {
+            viewModelScope.launch {
+                // Load packages from database with initial settings (wait for it to complete)
+                loadPackages(settingsViewModel)
 
-            // Now load applications from database
-            loadApplications(reset = true, settingsViewModel = settingsViewModel)
+                // Now load applications from database
+                loadApplications(reset = true, settingsViewModel = settingsViewModel)
+            }
         }
 
         // Register app change receiver once
@@ -364,6 +410,7 @@ class HomeViewModel @Inject constructor(
 
         // Set up callback to reload when settings change
         settingsViewModel.onAppFilteringSettingsChanged = {
+            Logger.info("HomeViewModel: onAppFilteringSettingsChanged triggered, reloading applications")
             loadApplications(reset = true, settingsViewModel = settingsViewModel)
         }
     }

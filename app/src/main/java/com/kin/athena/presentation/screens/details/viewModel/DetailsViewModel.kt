@@ -88,20 +88,22 @@ class DetailsViewModel @Inject constructor(
         applicationID?.let {
             viewModelScope.launch {
                 uiState.value = DetailsUiState.Loading
-                applicationUseCases.getApplication.execute(applicationID).fold(
-                    ifSuccess = { application ->
+                applicationUseCases.observeApplication.execute(applicationID).collectLatest { application ->
+                    application?.let {
                         uiState.value = DetailsUiState.Success(application)
                         loadLogs(application)
                     }
-                )
+                }
             }
         }
     }
 
     fun updatePackage(packageEntity: Application) {
         viewModelScope.launch {
+            Logger.info("DetailsViewModel: Updating package ${packageEntity.packageID}, wifi=${packageEntity.internetAccess}, cellular=${packageEntity.cellularAccess}")
             applicationUseCases.updateApplication.execute(packageEntity)
-            uiState.value = DetailsUiState.Success(packageEntity)
+            Logger.info("DetailsViewModel: Package updated in database")
+            // The observeApplication flow will automatically update the UI
             if (firewallManager.rulesLoaded.value == FirewallStatus.ONLINE) {
                 firewallManager.updateFirewallRules(packageEntity)
             }

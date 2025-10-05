@@ -140,11 +140,6 @@ fun BehaviorScreen(
                 variable = settings.settings.value.showSystemPackages,
                 onSwitchEnabled = {
                     settings.update(settings.settings.value.copy(showSystemPackages = it))
-                    behaviorViewModel.updateApp(
-                        settings.settings.value.wiFiDefault,
-                        settings.settings.value.cellularDefault,
-                        settings.settings.value.showSystemPackages
-                    )
                 }
             )
             SettingsBox(

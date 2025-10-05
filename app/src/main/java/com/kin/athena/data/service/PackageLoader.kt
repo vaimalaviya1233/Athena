@@ -37,12 +37,14 @@ class PackageLoader(
 
     suspend fun loadPackages(): Result<Unit, Error> = withContext(Dispatchers.IO) {
         return@withContext try {
+            Logger.info("PackageLoader: loadPackages() called")
             val allApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-            
+
             val showSystemPackages = settingsViewModel.settings.value.showSystemPackages
             val showOfflinePackages = settingsViewModel.settings.value.showOfflinePackages
             val wifiDefault = settingsViewModel.settings.value.wiFiDefault
             val cellularDefault = settingsViewModel.settings.value.cellularDefault
+            Logger.info("PackageLoader: Settings - showSystem=$showSystemPackages, showOffline=$showOfflinePackages, wifiDefault=$wifiDefault, cellularDefault=$cellularDefault")
             
             val filteredApps = allApps.filter { appInfo ->
                 if (appInfo.packageName == "com.kin.athena") {
@@ -130,27 +132,30 @@ class PackageLoader(
             allAppsResult.fold(
                 ifSuccess = { allApps ->
                     val appsToUpdate = allApps.filter { it.displayName.isEmpty() || it.displayName == it.packageID }
-                    
+
                     if (appsToUpdate.isNotEmpty()) {
                         Logger.info("PackageLoader: Updating display names for ${appsToUpdate.size} applications")
-                        
-                        val updatedApps = appsToUpdate.mapNotNull { app ->
+
+                        appsToUpdate.forEach { app ->
                             try {
                                 val appInfo = packageManager.getApplicationInfo(app.packageID, 0)
                                 val displayName = packageManager.getApplicationLabel(appInfo).toString()
-                                app.copy(displayName = displayName)
+
+                                // Get fresh app data from database to avoid overwriting recent changes
+                                val freshApp = applicationUseCases.getApplication.execute(app.packageID)
+                                freshApp.fold(
+                                    ifSuccess = { currentApp ->
+                                        applicationUseCases.updateApplication.execute(
+                                            currentApp.copy(displayName = displayName)
+                                        )
+                                    }
+                                )
                             } catch (e: Exception) {
                                 Logger.error("Failed to get display name for ${app.packageID}: ${e.message}")
-                                null
                             }
                         }
-                        
-                        // Update all apps with proper display names
-                        updatedApps.forEach { app ->
-                            applicationUseCases.updateApplication.execute(app)
-                        }
-                        
-                        Logger.info("PackageLoader: Updated ${updatedApps.size} display names")
+
+                        Logger.info("PackageLoader: Updated ${appsToUpdate.size} display names")
                     }
                 },
                 ifFailure = { error ->

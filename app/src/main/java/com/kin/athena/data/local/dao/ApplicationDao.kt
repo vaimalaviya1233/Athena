@@ -25,6 +25,7 @@ import androidx.room.Query
 import androidx.room.Update
 import com.kin.athena.core.utils.constants.AppConstants
 import com.kin.athena.domain.model.Application
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ApplicationDao {
@@ -46,6 +47,9 @@ interface ApplicationDao {
 
     @Query("SELECT * FROM applications WHERE package_id = :packageId")
     suspend fun getApplicationByID(packageId: String): Application?
+
+    @Query("SELECT * FROM applications WHERE package_id = :packageId")
+    fun observeApplicationByID(packageId: String): Flow<Application?>
 
     @Query("SELECT EXISTS(SELECT 1 FROM applications WHERE package_id = :packageId)")
     suspend fun isPackageIdExists(packageId: String): Boolean

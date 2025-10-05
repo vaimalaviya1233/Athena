@@ -20,6 +20,7 @@ package com.kin.athena.data.repository
 import com.kin.athena.data.local.provider.DatabaseProvider
 import com.kin.athena.domain.model.Application
 import com.kin.athena.domain.repository.ApplicationRepository
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class ApplicationRepositoryImpl @Inject constructor(
@@ -48,6 +49,10 @@ class ApplicationRepositoryImpl @Inject constructor(
 
     override suspend fun getApplicationByID(packageId: String): Application? {
         return provider.applicationDao().getApplicationByID(packageId)
+    }
+
+    override fun observeApplicationByID(packageId: String): Flow<Application?> {
+        return provider.applicationDao().observeApplicationByID(packageId)
     }
 
     override suspend fun isPackageIdExists(packageId: String): Boolean {
