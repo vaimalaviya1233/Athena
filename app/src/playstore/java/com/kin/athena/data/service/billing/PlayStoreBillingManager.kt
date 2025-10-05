@@ -80,6 +80,14 @@ class PlayStoreBillingManager @Inject constructor(
             QueryProductDetailsParams.Product.newBuilder()
                 .setProductId("packet_logs")
                 .setProductType(BillingClient.ProductType.INAPP)
+                .build(),
+            QueryProductDetailsParams.Product.newBuilder()
+                .setProductId("notify_on_install")
+                .setProductType(BillingClient.ProductType.INAPP)
+                .build(),
+            QueryProductDetailsParams.Product.newBuilder()
+                .setProductId("custom_blocklist")
+                .setProductType(BillingClient.ProductType.INAPP)
                 .build()
         )
         billingClient.queryProductDetailsAsync(
@@ -90,10 +98,36 @@ class PlayStoreBillingManager @Inject constructor(
             ) {
                 productDetailsList.productDetailsList.forEach { pd ->
                     productDetailsMap[pd.productId] = pd
-                    Logger.info("Product fetched: ${pd.productId}")
+                    val price = pd.oneTimePurchaseOfferDetails?.formattedPrice ?: "Price not available"
+                    Logger.info("Product fetched: ${pd.productId} - Price: $price")
                 }
             } else {
                 Logger.error("Failed product fetch: ${billingResult.responseCode}")
+            }
+        }
+    }
+
+    override fun checkExistingPurchases(onPremiumOwned: () -> Unit) {
+        if (!billingClient.isReady) {
+            Logger.error("Billing client not ready for purchase check")
+            return
+        }
+
+        billingClient.queryPurchasesAsync(
+            QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build()
+        ) { billingResult, purchases ->
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
+                val hasPremium = purchases.any {
+                    it.products.contains("all_features") && it.purchaseState == Purchase.PurchaseState.PURCHASED
+                }
+                if (hasPremium) {
+                    Logger.info("User already owns premium features")
+                    onPremiumOwned()
+                } else {
+                    Logger.info("User does not own premium features")
+                }
+            } else {
+                Logger.error("Error checking existing purchases: ${billingResult.responseCode}")
             }
         }
     }
@@ -192,6 +226,22 @@ class PlayStoreBillingManager @Inject constructor(
                 pendingSuccessCallback = null
             }
         }
+    }
+
+    override fun getProductPrice(productId: String): String? {
+        val price = productDetailsMap[productId]?.oneTimePurchaseOfferDetails?.formattedPrice
+        Logger.info("Getting price for $productId: $price")
+        return price
+    }
+
+    override fun getAllProductPrices(): Map<String, String> {
+        val prices = productDetailsMap.mapNotNull { (id, details) ->
+            details.oneTimePurchaseOfferDetails?.formattedPrice?.let { price ->
+                id to price
+            }
+        }.toMap()
+        Logger.info("All product prices: $prices")
+        return prices
     }
 
     fun shutdown() {

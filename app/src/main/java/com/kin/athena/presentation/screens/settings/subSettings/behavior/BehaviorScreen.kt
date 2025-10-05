@@ -40,6 +40,7 @@ import com.kin.athena.presentation.screens.settings.components.SettingType
 import com.kin.athena.presentation.screens.settings.components.SettingsBox
 import com.kin.athena.presentation.screens.settings.components.SettingsScaffold
 import com.kin.athena.presentation.screens.settings.components.settingsContainer
+import com.kin.athena.presentation.components.PremiumFeatureChoiceDialog
 import com.kin.athena.presentation.screens.settings.subSettings.behavior.viewModel.BehaviorViewModel
 import com.kin.athena.presentation.screens.settings.viewModel.SettingsViewModel
 import com.kin.athena.service.firewall.utils.FirewallStatus
@@ -60,15 +61,27 @@ fun BehaviorScreen(
         onBackNavClicked = { navController.navigateUp() }
     ) {
         settingsContainer {
+            val notificationTitle = stringResource(id = R.string.notification_on_install)
+            val notificationDescription = stringResource(id = R.string.notification_on_install_description)
+            
             SettingsBox(
-                title = stringResource(id = R.string.notification_on_install) + " " + stringResource(id = R.string.premium_setting),
-                description = stringResource(id = R.string.notification_on_install_description),
+                title = notificationTitle + " " + stringResource(id = R.string.premium_setting),
+                description = notificationDescription,
                 icon = IconType.VectorIcon(Icons.Rounded.InstallMobile),
                 actionType = SettingType.SWITCH,
                 variable = settings.settings.value.sendNotificationOnInstall,
                 onSwitchEnabled = {
-                    settings.startBilling("notify_on_install") {
-                        settings.update(settings.settings.value.copy(sendNotificationOnInstall = it))                    }
+                    if (!settings.settings.value.premiumUnlocked) {
+                        settings.showFeatureChoiceDialog(
+                            featureName = notificationTitle,
+                            featureDescription = notificationDescription,
+                            productId = "notify_on_install"
+                        ) {
+                            settings.update(settings.settings.value.copy(sendNotificationOnInstall = it))
+                        }
+                    } else {
+                        settings.update(settings.settings.value.copy(sendNotificationOnInstall = it))
+                    }
                 }
             )
         }
@@ -92,14 +105,26 @@ fun BehaviorScreen(
                     }
                 }
             )
+            val logsTitle = stringResource(id = R.string.logs)
+            val logsDescription = stringResource(id = R.string.logs_description)
+            
             SettingsBox(
-                title = stringResource(id = R.string.logs) + " " + stringResource(id = R.string.premium_setting),
-                description = stringResource(id = R.string.logs_description),
+                title = logsTitle + " " + stringResource(id = R.string.premium_setting),
+                description = logsDescription,
                 icon = IconType.VectorIcon(Icons.Rounded.Code),
                 actionType = SettingType.SWITCH,
                 variable = settings.settings.value.logs,
                 onSwitchEnabled = {
-                    settings.startBilling("packet_logs") {
+                    if (!settings.settings.value.premiumUnlocked) {
+                        settings.showFeatureChoiceDialog(
+                            featureName = logsTitle,
+                            featureDescription = logsDescription,
+                            productId = "packet_logs"
+                        ) {
+                            settings.update(settings.settings.value.copy(logs = it))
+                            behaviorViewModel.updateLogs(it)
+                        }
+                    } else {
                         settings.update(settings.settings.value.copy(logs = it))
                         behaviorViewModel.updateLogs(it)
                     }
@@ -185,6 +210,21 @@ fun BehaviorScreen(
                 onSwitchEnabled = {
                     settings.update(settings.settings.value.copy(permanentNotification = !it))
                 }
+            )
+        }
+    }
+    
+    // Premium Feature Choice Dialog
+    if (settings.showFeatureChoiceDialog.value) {
+        settings.currentFeatureChoice.value?.let { choice ->
+            PremiumFeatureChoiceDialog(
+                featureName = choice.featureName,
+                featureDescription = choice.featureDescription,
+                singleFeaturePrice = settings.getProductPrice(choice.productId),
+                fullPremiumPrice = settings.getProductPrice("all_features"),
+                onSingleFeaturePurchase = { settings.purchaseSingleFeature() },
+                onFullPremiumPurchase = { settings.purchaseFullPremium() },
+                onDismiss = { settings.dismissFeatureChoiceDialog() }
             )
         }
     }

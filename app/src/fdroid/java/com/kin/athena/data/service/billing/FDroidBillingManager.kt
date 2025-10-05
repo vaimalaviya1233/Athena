@@ -36,11 +36,26 @@ class FDroidBillingManager @Inject constructor(
     private var currentOnSuccess: (() -> Unit)? = null
 
     override fun showPurchaseDialog(productId: String, onSuccess: () -> Unit) {
-        Logger.info("F-Droid: Using Ko-fi donation for $productId")
-        showKofiFallbackDialog(productId, onSuccess)
+        Logger.info("F-Droid: Opening Ko-fi directly for $productId")
+        openKofiPage()
     }
 
     override fun isReady(): Boolean = true
+
+    override fun getProductPrice(productId: String): String? {
+        return "4.99"
+    }
+
+    override fun getAllProductPrices(): Map<String, String> {
+        val prices = mapOf(
+            "all_features" to "4.99",
+            "packet_logs" to "4.99",
+            "notify_on_install" to "4.99",
+            "custom_blocklist" to "4.99"
+        )
+        Logger.info("F-Droid: All product prices: $prices")
+        return prices
+    }
 
     private fun showKofiFallbackDialog(productId: String, onSuccess: () -> Unit) {
         currentOnSuccess = onSuccess
@@ -70,5 +85,10 @@ class FDroidBillingManager @Inject constructor(
         } catch (e: Exception) {
             Logger.error("F-Droid: Failed to open Ko-fi page: ${e.message}")
         }
+    }
+
+    override fun checkExistingPurchases(onPremiumOwned: () -> Unit) {
+        // F-Droid doesn't use Google Play billing, so no purchases to check
+        Logger.info("F-Droid: No purchase check needed")
     }
 }

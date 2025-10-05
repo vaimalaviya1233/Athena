@@ -43,6 +43,7 @@ import com.kin.athena.service.utils.manager.FirewallManager
 import com.kin.athena.service.utils.manager.FirewallMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -55,24 +56,27 @@ class HomeViewModel @Inject constructor(
     private val applicationUseCases: ApplicationUseCases,
     val firewallManager: FirewallManager
 ) : ViewModel() {
-    val iconMap: MutableState<Map<String, Drawable?>> = mutableStateOf(emptyMap())
     
-    // Cache for app names to avoid repeated PackageManager calls
-    private val appNameCache = mutableMapOf<String, String>()
-    
-    // Debounce job for search
-    private var searchJob: Job? = null
-
-    private val _firewallClicked = mutableStateOf(false)
-    val firewallClicked: State<Boolean> get() = _firewallClicked
-
-    private val _unfilteredPackages = mutableStateOf<List<Application>>(emptyList())
-
-    private val _packages = mutableStateOf<List<Application>>(emptyList())
-    val packages: State<List<Application>> = _packages
+    // Professional state management
+    private val _applicationState = mutableStateOf<ApplicationListState>(ApplicationListState.Loading)
+    val applicationState: State<ApplicationListState> = _applicationState
 
     private val _searchQuery = mutableStateOf("")
     val searchQuery: State<String> = _searchQuery
+
+    // Debounce job for search
+    private var searchJob: Job? = null
+    
+    private var currentSettingsViewModel: SettingsViewModel? = null
+    
+    private var currentOffset = 0
+    private val pageSize = 50
+    
+    // Icon cache
+    val iconMap: MutableState<Map<String, Drawable?>> = mutableStateOf(emptyMap())
+
+    private val _firewallClicked = mutableStateOf(false)
+    val firewallClicked: State<Boolean> get() = _firewallClicked
 
     private val _rootUncleaned = mutableStateOf(false)
     val rootUncleaned: State<Boolean> get() = _rootUncleaned
@@ -117,32 +121,88 @@ class HomeViewModel @Inject constructor(
         _menuStatus.value = value
     }
 
-    fun updateSearchQueryStatus(value: String) {
-        _searchQuery.value = value
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
         
         // Cancel previous search job
         searchJob?.cancel()
         
-        // Debounce search to reduce filtering frequency
+        // Debounce search for professional performance
         searchJob = viewModelScope.launch {
-            if (value.isBlank()) {
-                // Small delay even for empty query to prevent lag when deleting last character
-                delay(50) // Minimal delay to avoid blocking UI
-                filterPackagesAsync(value)
-            } else {
-                // Debounce for non-empty queries
-                delay(150) // 150ms debounce
-                filterPackagesAsync(value)
+            delay(300) // Professional debounce timing
+            
+            // For search, we want to smoothly update without resetting scroll position
+            currentOffset = 0
+            
+            val showSystemPackages = currentSettingsViewModel?.settings?.value?.showSystemPackages ?: true
+            val showOfflinePackages = currentSettingsViewModel?.settings?.value?.showOfflinePackages ?: true
+            
+            Logger.info("HomeViewModel: Search with query='$query', showSystemPackages=$showSystemPackages, showOfflinePackages=$showOfflinePackages")
+            
+            val result = applicationUseCases.getFilteredApplications.execute(
+                showSystemPackages = showSystemPackages,
+                showOfflinePackages = showOfflinePackages,
+                searchQuery = query,
+                limit = pageSize,
+                offset = 0
+            )
+            
+            when (result) {
+                is Result.Success -> {
+                    val data = result.data
+                    // Smoothly replace the current list without showing loading state
+                    _applicationState.value = ApplicationListState.Success(
+                        applications = data.applications,
+                        totalCount = data.totalCount,
+                        hasMore = data.hasMore
+                    )
+                    currentOffset = data.applications.size
+                }
+                is Result.Failure -> {
+                    _applicationState.value = ApplicationListState.Error(
+                        result.error.message ?: "Failed to search applications"
+                    )
+                }
             }
         }
     }
 
-    fun clearSearchQueryStatus() {
+    fun clearSearchQuery() {
         _searchQuery.value = ""
-        // Use async filtering to prevent lag
         searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            filterPackagesAsync("")
+        
+        // When clearing search, smoothly reload the full list without jumping
+        viewModelScope.launch(Dispatchers.IO) {
+            currentOffset = 0
+            
+            val showSystemPackages = currentSettingsViewModel?.settings?.value?.showSystemPackages ?: true
+            val showOfflinePackages = currentSettingsViewModel?.settings?.value?.showOfflinePackages ?: true
+            
+            val result = applicationUseCases.getFilteredApplications.execute(
+                showSystemPackages = showSystemPackages,
+                showOfflinePackages = showOfflinePackages,
+                searchQuery = "",
+                limit = pageSize,
+                offset = 0
+            )
+            
+            when (result) {
+                is Result.Success -> {
+                    val data = result.data
+                    // Smoothly replace the current list without showing loading state
+                    _applicationState.value = ApplicationListState.Success(
+                        applications = data.applications,
+                        totalCount = data.totalCount,
+                        hasMore = data.hasMore
+                    )
+                    currentOffset = data.applications.size
+                }
+                is Result.Failure -> {
+                    _applicationState.value = ApplicationListState.Error(
+                        result.error.message ?: "Failed to load applications"
+                    )
+                }
+            }
         }
     }
 
@@ -166,76 +226,104 @@ class HomeViewModel @Inject constructor(
         _vpnPermissionRequested.value = isRequested
     }
 
-    private suspend fun filterPackagesAsync(query: String) {
-        val currentPackageName = context.packageName
-        val unfilteredList = _unfilteredPackages.value
-
-        val filteredPackages = if (query.isBlank()) {
-            // For empty query, use simple filtering with chunked processing for large lists
-            if (unfilteredList.size > 500) {
-                // Process in chunks to avoid blocking UI
-                val result = mutableListOf<Application>()
-                unfilteredList.chunked(100).forEach { chunk ->
-                    result.addAll(chunk.filter { it.packageID != currentPackageName })
-                    // Yield to allow other coroutines to run
-                    kotlinx.coroutines.yield()
-                }
-                result
-            } else {
-                unfilteredList.filter { it.packageID != currentPackageName }
-            }
+    fun loadApplications(reset: Boolean = false, settingsViewModel: SettingsViewModel? = null) {
+        Logger.info("HomeViewModel: loadApplications called - reset=$reset, currentOffset=$currentOffset")
+        if (reset) {
+            currentOffset = 0
+            _applicationState.value = ApplicationListState.Loading
         } else {
-            // Use chunked processing for search queries too
-            val result = mutableListOf<Application>()
-            val queryLowerCase = query.lowercase(Locale.getDefault())
-            val uidQuery = query.takeIf { it.all { char -> char.isDigit() } }
-            
-            unfilteredList.chunked(50).forEach { chunk ->
-                val chunkResult = chunk.filter { application ->
-                    if (application.packageID == currentPackageName) return@filter false
-                    
-                    // Check UID first (fastest check)
-                    if (uidQuery != null && application.uid.toString().contains(uidQuery)) {
-                        return@filter true
-                    }
-                    
-                    // Check package ID (second fastest)
-                    if (application.packageID.lowercase(Locale.getDefault()).contains(queryLowerCase)) {
-                        return@filter true
-                    }
-                    
-                    // Check app name last (slowest, with caching)
-                    val cachedName = appNameCache[application.packageID]
-                    val appName = if (cachedName != null) {
-                        cachedName
-                    } else {
-                        val name = application.getApplicationName(context.packageManager) ?: ""
-                        appNameCache[application.packageID] = name
-                        name
-                    }
-                    
-                    appName.lowercase(Locale.getDefault()).contains(queryLowerCase)
-                }
-                result.addAll(chunkResult)
-                // Yield after each chunk to keep UI responsive
-                kotlinx.coroutines.yield()
+            // Loading more - update state to show loading indicator
+            val currentState = _applicationState.value
+            if (currentState is ApplicationListState.Success) {
+                Logger.info("HomeViewModel: Setting isLoadingMore=true for pagination")
+                _applicationState.value = currentState.copy(isLoadingMore = true)
+            } else {
+                Logger.error("HomeViewModel: Cannot load more - current state is not Success: ${currentState.javaClass.simpleName}")
             }
-            result
         }
         
-        // Update packages on main thread
-        _packages.value = filteredPackages
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Get filter settings - use defaults if settingsViewModel is null
+                val showSystemPackages = settingsViewModel?.settings?.value?.showSystemPackages ?: true
+                val showOfflinePackages = settingsViewModel?.settings?.value?.showOfflinePackages ?: true
+                
+                // Debug logging for search
+                Logger.info("HomeViewModel: Loading applications with search='${_searchQuery.value}', showSystemPackages=$showSystemPackages, showOfflinePackages=$showOfflinePackages")
+                
+                val result = applicationUseCases.getFilteredApplications.execute(
+                    showSystemPackages = showSystemPackages,
+                    showOfflinePackages = showOfflinePackages,
+                    searchQuery = _searchQuery.value,
+                    limit = pageSize,
+                    offset = currentOffset
+                )
+                
+                when (result) {
+                    is Result.Success -> {
+                        val data = result.data
+
+                        if (reset) {
+                            Logger.info("HomeViewModel: Reset load - got ${data.applications.size} apps, totalCount=${data.totalCount}, hasMore=${data.hasMore}")
+                            _applicationState.value = ApplicationListState.Success(
+                                applications = data.applications,
+                                totalCount = data.totalCount,
+                                hasMore = data.hasMore
+                            )
+                        } else {
+                            // Append to existing list
+                            val currentState = _applicationState.value
+                            if (currentState is ApplicationListState.Success) {
+                                Logger.info("HomeViewModel: Pagination load - appending ${data.applications.size} apps to existing ${currentState.applications.size}")
+                                _applicationState.value = currentState.copy(
+                                    applications = currentState.applications + data.applications,
+                                    hasMore = data.hasMore,
+                                    isLoadingMore = false
+                                )
+                            }
+                        }
+
+                        currentOffset += data.applications.size
+                        Logger.info("HomeViewModel: New offset: $currentOffset")
+                    }
+                    is Result.Failure -> {
+                        _applicationState.value = ApplicationListState.Error(
+                            result.error.message ?: "Failed to load applications"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _applicationState.value = ApplicationListState.Error(
+                    e.message ?: "Unknown error occurred"
+                )
+            }
+        }
+    }
+    
+    fun loadMoreApplications(settingsViewModel: SettingsViewModel) {
+        val currentState = _applicationState.value
+        if (currentState is ApplicationListState.Success && currentState.hasMore && !currentState.isLoadingMore) {
+            Logger.info("HomeViewModel: Loading more applications. Current count: ${currentState.applications.size}, offset: $currentOffset")
+            loadApplications(reset = false, settingsViewModel = settingsViewModel)
+        }
     }
 
-    fun updatePackage(packageEntity: Application) {
+    fun updatePackage(packageEntity: Application, updateUI: Boolean = true) {
         viewModelScope.launch {
-            Logger.error("Updating $packageEntity")
+            // Update database
             applicationUseCases.updateApplication.execute(packageEntity)
-            val existingPackages = _packages.value.toMutableList()
-            val index = existingPackages.indexOfFirst { it.uid == packageEntity.uid }
-            existingPackages[index] = packageEntity
-            _packages.value = existingPackages
-            observePackages()
+
+            // Only update UI state if requested (to prevent unnecessary recomposition)
+            if (updateUI) {
+                val currentState = _applicationState.value
+                if (currentState is ApplicationListState.Success) {
+                    val updatedApplications = currentState.applications.map { app ->
+                        if (app.packageID == packageEntity.packageID) packageEntity else app
+                    }
+                    _applicationState.value = currentState.copy(applications = updatedApplications)
+                }
+            }
+
             if (firewallManager.rulesLoaded.value == FirewallStatus.ONLINE) {
                 firewallManager.updateFirewallRules(packageEntity)
             }
@@ -256,93 +344,61 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    suspend fun initialize(settingsViewModel: SettingsViewModel) {
-        loadPackages(settingsViewModel)
-        appChangeReceiver = AppChangeReceiver(createAppChangeCallback(settingsViewModel))
-        appChangeReceiver?.register(context)
-        
-        // Set up callback to reload apps when filtering settings change
+    fun initialize(settingsViewModel: SettingsViewModel) {
+        // Store settings reference for search and filtering
+        currentSettingsViewModel = settingsViewModel
+
+        viewModelScope.launch {
+            // Load packages from database with initial settings (wait for it to complete)
+            loadPackages(settingsViewModel)
+
+            // Now load applications from database
+            loadApplications(reset = true, settingsViewModel = settingsViewModel)
+        }
+
+        // Register app change receiver once
+        if (appChangeReceiver == null) {
+            appChangeReceiver = AppChangeReceiver(createAppChangeCallback(settingsViewModel))
+            appChangeReceiver?.register(context)
+        }
+
+        // Set up callback to reload when settings change
         settingsViewModel.onAppFilteringSettingsChanged = {
-            viewModelScope.launch {
-                Logger.info("HomeViewModel: Reloading apps due to settings change")
-                reloadPackages(settingsViewModel)
-            }
+            loadApplications(reset = true, settingsViewModel = settingsViewModel)
         }
     }
 
-    fun loadIcons(settingsViewModel: SettingsViewModel, color: Color) {
-        iconMap.value = packages.value.mapNotNull { application ->
-            try {
-                val icon = application.getApplicationIcon(
-                    context.packageManager,
-                    tintColor = color.toArgb(),
-                    useDynamicIcon = settingsViewModel.settings.value.useDynamicIcons,
-                    context
-                )
-                application.packageID to icon
-            } catch (e: Exception) {
-                Logger.error("Failed to load icon for ${application.packageID}: ${e.message}", e)
-                // Return a pair with null icon instead of crashing
-                application.packageID to null
-            }
-        }.toMap()
+    fun loadIcons(applications: List<Application>, settingsViewModel: SettingsViewModel, color: Color) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val existingIcons = iconMap.value
+            
+            // Only load icons for new applications
+            val newIcons = applications.filter { !existingIcons.containsKey(it.packageID) }
+                .chunked(10) // Smaller chunks for better performance
+                .map { chunk ->
+                    chunk.mapNotNull { application ->
+                        try {
+                            val icon = application.getApplicationIcon(
+                                context.packageManager,
+                                tintColor = color.toArgb(),
+                                useDynamicIcon = settingsViewModel.settings.value.useDynamicIcons,
+                                context
+                            )
+                            application.packageID to icon
+                        } catch (e: Exception) {
+                            Logger.error("Failed to load icon for ${application.packageID}: ${e.message}", e)
+                            application.packageID to null
+                        }
+                    }
+                }.flatten().toMap()
+            
+            // Merge with existing icons
+            iconMap.value = existingIcons + newIcons
+        }
     }
 
     private suspend fun loadPackages(settingsViewModel: SettingsViewModel) {
         PackageLoader(settingsViewModel, context.packageManager, applicationUseCases).loadPackages()
-        observePackages()
-    }
-    
-    suspend fun reloadPackages(settingsViewModel: SettingsViewModel) {
-        Logger.info("HomeViewModel: Starting package reload")
-        loadPackages(settingsViewModel)
-        Logger.info("HomeViewModel: Package reload completed")
-    }
-
-    suspend fun observePackages() {
-        when (val result = applicationUseCases.getApplications.execute()) {
-            is Result.Success -> {
-                _unfilteredPackages.value = result.data
-                // Clear cache when packages are reloaded
-                appNameCache.clear()
-                
-                // Pre-warm cache in background for better search performance
-                viewModelScope.launch {
-                    preWarmAppNameCache(result.data)
-                }
-                
-                viewModelScope.launch {
-                    filterPackagesAsync(_searchQuery.value)
-                }
-                firewallManager.updateFirewallRules(null)
-                
-                // Mark initial load as complete after first successful load
-                if (_isInitialLoad.value) {
-                    _isInitialLoad.value = false
-                    // Hide splash screen after a brief delay to ensure smooth transition
-                    viewModelScope.launch {
-                        delay(500) // Small delay to ensure UI is ready
-                        _showSplashScreen.value = false
-                    }
-                }
-            }
-            is Result.Failure -> Logger.error(result.error.stackTraceToString())
-        }
-    }
-    
-    private suspend fun preWarmAppNameCache(applications: List<Application>) {
-        // Pre-load app names in background to improve initial search performance
-        applications.forEach { application ->
-            if (!appNameCache.containsKey(application.packageID)) {
-                try {
-                    val name = application.getApplicationName(context.packageManager) ?: ""
-                    appNameCache[application.packageID] = name
-                } catch (e: Exception) {
-                    // Ignore exceptions during pre-warming
-                    appNameCache[application.packageID] = ""
-                }
-            }
-        }
     }
 
     private fun createAppChangeCallback(settingsViewModel: SettingsViewModel) = object : AppChangeCallback {

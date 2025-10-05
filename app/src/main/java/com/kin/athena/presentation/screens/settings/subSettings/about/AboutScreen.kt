@@ -57,6 +57,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.kin.athena.R
+import com.kin.athena.core.utils.constants.AppConstants
 import com.kin.athena.core.utils.constants.ProjectConstants
 import com.kin.athena.core.utils.extensions.safeNavigate
 import com.kin.athena.presentation.components.material.MaterialTextField
@@ -190,6 +191,13 @@ fun AboutScreen(
                 icon = IconType.VectorIcon(Icons.Rounded.Star),
                 actionType = SettingType.LINK,
                 onLinkClicked = { openRateApp() }
+            )
+            SettingsBox(
+                title = stringResource(id = R.string.help_translate),
+                description = stringResource(id = R.string.help_translate_description),
+                icon = IconType.VectorIcon(Icons.Rounded.Translate),
+                actionType = SettingType.LINK,
+                onLinkClicked = { uriHandler.openUri(AppConstants.Links.TRANSLATE) }
             )
         }
         settingsContainer {

@@ -41,7 +41,7 @@ interface ApplicationDao {
     @Delete
     suspend fun delete(application: Application)
 
-    @Query("SELECT * FROM applications")
+    @Query("SELECT * FROM applications ORDER BY display_name COLLATE NOCASE")
     suspend fun getAllApplications(): List<Application>
 
     @Query("SELECT * FROM applications WHERE package_id = :packageId")
@@ -52,4 +52,44 @@ interface ApplicationDao {
 
     @Query("SELECT package_id FROM applications WHERE package_id IN (:packageIds)")
     suspend fun getExistingPackageIds(packageIds: List<String>): List<String>
+
+    @Query("""
+        SELECT * FROM applications 
+        WHERE (:showSystemPackages = 1 OR system_app = 0)
+        AND (:showOfflinePackages = 1 OR requires_network = 1)
+        AND package_id != 'com.kin.athena'
+        AND (
+            :searchQuery = '' OR 
+            display_name LIKE '%' || :searchQuery || '%' OR 
+            package_id LIKE '%' || :searchQuery || '%' OR 
+            CAST(uid AS TEXT) LIKE '%' || :searchQuery || '%'
+        )
+        ORDER BY display_name COLLATE NOCASE
+        LIMIT :limit OFFSET :offset
+    """)
+    suspend fun getFilteredApplications(
+        showSystemPackages: Boolean,
+        showOfflinePackages: Boolean,
+        searchQuery: String,
+        limit: Int,
+        offset: Int
+    ): List<Application>
+
+    @Query("""
+        SELECT COUNT(*) FROM applications 
+        WHERE (:showSystemPackages = 1 OR system_app = 0)
+        AND (:showOfflinePackages = 1 OR requires_network = 1)
+        AND package_id != 'com.kin.athena'
+        AND (
+            :searchQuery = '' OR 
+            display_name LIKE '%' || :searchQuery || '%' OR 
+            package_id LIKE '%' || :searchQuery || '%' OR 
+            CAST(uid AS TEXT) LIKE '%' || :searchQuery || '%'
+        )
+    """)
+    suspend fun getFilteredApplicationsCount(
+        showSystemPackages: Boolean,
+        showOfflinePackages: Boolean,
+        searchQuery: String
+    ): Int
 }

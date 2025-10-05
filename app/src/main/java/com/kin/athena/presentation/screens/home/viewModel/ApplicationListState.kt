@@ -13,17 +13,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
-package com.kin.athena.domain.usecase.application
+ */
 
-data class ApplicationUseCases(
-    val getApplications: GetApplications,
-    val deleteApplication: DeleteApplication,
-    val addApplication: AddApplication,
-    val addApplications: AddApplications,
-    val updateApplication: UpdateApplication,
-    val getApplication: GetApplication,
-    val checkApplicationExists: CheckApplicationExists,
-    val getExistingPackageIds: GetExistingPackageIds,
-    val getFilteredApplications: GetFilteredApplications
-)
+package com.kin.athena.presentation.screens.home.viewModel
+
+import com.kin.athena.domain.model.Application
+
+sealed class ApplicationListState {
+    object Loading : ApplicationListState()
+    data class Success(
+        val applications: List<Application>,
+        val totalCount: Int,
+        val hasMore: Boolean,
+        val isLoadingMore: Boolean = false
+    ) : ApplicationListState()
+    data class Error(val message: String) : ApplicationListState()
+}

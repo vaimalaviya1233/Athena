@@ -45,6 +45,10 @@ class PackageLoader(
             val cellularDefault = settingsViewModel.settings.value.cellularDefault
             
             val filteredApps = allApps.filter { appInfo ->
+                if (appInfo.packageName == "com.kin.athena") {
+                    return@filter false
+                }
+                
                 val isSystemApp = appInfo.flags and ApplicationInfo.FLAG_SYSTEM != 0
                 
                 if (isSystemApp && !showSystemPackages) {
@@ -60,40 +64,101 @@ class PackageLoader(
             
             Logger.info("PackageLoader: Found ${allApps.size} total apps, filtered to ${filteredApps.size} apps (removed ${allApps.size - filteredApps.size} apps)")
             
-            // Process apps in small chunks to maintain UI responsiveness
-            val chunkSize = 25
-            filteredApps.chunked(chunkSize).forEach { chunk ->
-                chunk.forEach { appInfo ->
+            // Get all existing package IDs in one batch query
+            val allPackageIds = filteredApps.map { it.packageName }
+            val existingPackageIds = applicationUseCases.getExistingPackageIds.execute(allPackageIds)
+            val existingPackageSet = existingPackageIds.toSet()
+            
+            // Create list of new applications to insert with proper display names
+            val newApplications = filteredApps.mapNotNull { appInfo ->
+                if (appInfo.packageName !in existingPackageSet) {
                     val isSystemApp = appInfo.flags and ApplicationInfo.FLAG_SYSTEM != 0
                     
-                    // Create application entity
-                    val packageEntity = Application(
+                    // Get display name efficiently
+                    val displayName = try {
+                        packageManager.getApplicationLabel(appInfo).toString()
+                    } catch (e: Exception) {
+                        appInfo.packageName
+                    }
+                    
+                    // Check network permissions efficiently
+                    val requiresNetwork = try {
+                        packageManager.checkPermission(
+                            android.Manifest.permission.INTERNET,
+                            appInfo.packageName
+                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                    } catch (e: Exception) {
+                        true // Default to true for safety
+                    }
+                    
+                    Application(
                         packageID = appInfo.packageName,
                         uid = appInfo.uid,
                         systemApp = isSystemApp,
                         usesGooglePlayServices = false, // Defer GPS detection for performance
                         internetAccess = wifiDefault,
-                        cellularAccess = cellularDefault
+                        cellularAccess = cellularDefault,
+                        displayName = displayName,
+                        lastUpdated = System.currentTimeMillis(),
+                        requiresNetwork = requiresNetwork
                     )
-
-                    applicationUseCases.checkApplicationExists.execute(packageEntity.packageID).fold(
-                        ifSuccess = { exists ->
-                            if (!exists) {
-                                val result = applicationUseCases.addApplication.execute(packageEntity)
-                                if (result is Result.Failure) {
-                                    Logger.error("Failed to add package ${packageEntity.packageID} (UID: ${packageEntity.uid}): ${result.error.message}")
-                                }
-                            }
-                        }
-                    )
-                }
-                
-                kotlinx.coroutines.yield()
+                } else null
             }
+            
+            // Batch insert all new applications
+            if (newApplications.isNotEmpty()) {
+                Logger.info("PackageLoader: Inserting ${newApplications.size} new applications")
+                applicationUseCases.addApplications.execute(newApplications)
+            } else {
+                Logger.info("PackageLoader: No new applications to insert")
+            }
+            
+            // Update display names for existing apps that have empty display names
+            updateEmptyDisplayNames()
+            
             Result.Success(Unit)
         } catch (e: Exception) {
             Logger.error("Error while loading packages: ${e.message}")
             Result.Failure(Error.ServerError(e.message ?: "Error while loading packages"))
+        }
+    }
+    
+    private suspend fun updateEmptyDisplayNames() {
+        try {
+            // Get all apps with empty display names
+            val allAppsResult = applicationUseCases.getApplications.execute()
+            allAppsResult.fold(
+                ifSuccess = { allApps ->
+                    val appsToUpdate = allApps.filter { it.displayName.isEmpty() || it.displayName == it.packageID }
+                    
+                    if (appsToUpdate.isNotEmpty()) {
+                        Logger.info("PackageLoader: Updating display names for ${appsToUpdate.size} applications")
+                        
+                        val updatedApps = appsToUpdate.mapNotNull { app ->
+                            try {
+                                val appInfo = packageManager.getApplicationInfo(app.packageID, 0)
+                                val displayName = packageManager.getApplicationLabel(appInfo).toString()
+                                app.copy(displayName = displayName)
+                            } catch (e: Exception) {
+                                Logger.error("Failed to get display name for ${app.packageID}: ${e.message}")
+                                null
+                            }
+                        }
+                        
+                        // Update all apps with proper display names
+                        updatedApps.forEach { app ->
+                            applicationUseCases.updateApplication.execute(app)
+                        }
+                        
+                        Logger.info("PackageLoader: Updated ${updatedApps.size} display names")
+                    }
+                },
+                ifFailure = { error ->
+                    Logger.error("Error getting all applications: ${error.message}")
+                }
+            )
+        } catch (e: Exception) {
+            Logger.error("Error updating display names: ${e.message}")
         }
     }
 }

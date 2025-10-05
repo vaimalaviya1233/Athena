@@ -34,6 +34,10 @@ class ApplicationRepositoryImpl @Inject constructor(
         provider.applicationDao().insert(application)
     }
 
+    override suspend fun insertApplications(applications: List<Application>) {
+        provider.applicationDao().insertAll(applications)
+    }
+
     override suspend fun updateApplication(application: Application) {
         provider.applicationDao().update(application)
     }
@@ -48,5 +52,32 @@ class ApplicationRepositoryImpl @Inject constructor(
 
     override suspend fun isPackageIdExists(packageId: String): Boolean {
         return provider.applicationDao().isPackageIdExists(packageId)
+    }
+
+    override suspend fun getExistingPackageIds(packageIds: List<String>): List<String> {
+        return provider.applicationDao().getExistingPackageIds(packageIds)
+    }
+
+    override suspend fun getFilteredApplications(
+        showSystemPackages: Boolean,
+        showOfflinePackages: Boolean,
+        searchQuery: String,
+        limit: Int,
+        offset: Int
+    ): List<Application> {
+        val results = provider.applicationDao().getFilteredApplications(
+            showSystemPackages, showOfflinePackages, searchQuery, limit, offset
+        )
+        return results
+    }
+
+    override suspend fun getFilteredApplicationsCount(
+        showSystemPackages: Boolean,
+        showOfflinePackages: Boolean,
+        searchQuery: String
+    ): Int {
+        return provider.applicationDao().getFilteredApplicationsCount(
+            showSystemPackages, showOfflinePackages, searchQuery
+        )
     }
 }

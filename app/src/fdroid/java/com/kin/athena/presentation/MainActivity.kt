@@ -110,12 +110,11 @@ class MainActivity : AppCompatActivity() {
 
                     LaunchedEffect(homeViewModel) {
                         homeViewModel.initialize(this@apply)
-                        homeViewModel.loadIcons(settingsViewModel = this@apply, iconsColor)
                     }
-                    
+
                     // Watch for when apps are loaded and hide splash screen
-                    LaunchedEffect(homeViewModel.showSplashScreen.value) {
-                        if (!homeViewModel.showSplashScreen.value) {
+                    LaunchedEffect(homeViewModel.applicationState.value) {
+                        if (homeViewModel.applicationState.value is com.kin.athena.presentation.screens.home.viewModel.ApplicationListState.Success) {
                             viewModel.showSlashScreen(true)
                         }
                     }

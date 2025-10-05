@@ -53,23 +53,30 @@ fun SettingsScreen(
         onBackNavClicked = { navController.navigateUp() }
     ) {
 
-        item {
-            val context = LocalContext.current
-            SettingBoxSmall(
-                title = stringResource(R.string.premium),
-                description = stringResource(R.string.support_development),
-                onAction = {
-                    if (! settings.settings.value.premiumUnlocked) {
-                        settings.startBilling("all_features") {
+        if (!settings.settings.value.premiumUnlocked) {
+            item {
+                val context = LocalContext.current
+                val currentPrice = settings.getProductPrice("all_features")
+                val originalPrice = settings.calculateOriginalPrice(currentPrice)
+
+                SettingBoxSmall(
+                    title = stringResource(R.string.premium),
+                    description = currentPrice?.let {
+                        stringResource(R.string.support_development, it)
+                    } ?: stringResource(R.string.support_development, "Loading..."),
+                    originalPrice = originalPrice,
+                    salePrice = null,
+                    onAction = {
+                        settings.showFeatureChoiceDialog(
+                            featureName = context.getString(R.string.all_premium_features),
+                            featureDescription = context.getString(R.string.fdroid_premium_message),
+                            productId = "all_features"
+                        ) {
                             settings.update(settings.settings.value.copy(premiumUnlocked = true))
                         }
-                    } else {
-                        val websiteUri = Uri.parse(ProjectConstants.DONATE)
-                        val intent = Intent(Intent.ACTION_VIEW, websiteUri)
-                        context.startActivity(intent)
                     }
-                }
-            )
+                )
+            }
         }
         item {
             SectionBlock(

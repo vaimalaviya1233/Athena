@@ -28,7 +28,7 @@ object AppConstants {
 
     object DatabaseConstants {
         const val DATABASE_NAME: String = "packages"
-        const val DATABASE_VERSION: Int = 3
+        const val DATABASE_VERSION: Int = 5
         const val SETTINGS_DATABASE_NAME: String = "settings"
     }
 
@@ -43,5 +43,9 @@ object AppConstants {
         val GAMBLING_PROTECTION = "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/gambling-only/hosts"
         val ADULT_PROTECTION = "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts"
         val SOCIAL_PROTECTION = "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/social-only/hosts"
+    }
+
+    object Links {
+        const val TRANSLATE = "https://hosted.weblate.org/projects/athena/"
     }
 }

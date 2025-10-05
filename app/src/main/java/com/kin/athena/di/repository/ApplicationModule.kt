@@ -22,11 +22,14 @@ import com.kin.athena.data.local.provider.DatabaseProvider
 import com.kin.athena.data.repository.ApplicationRepositoryImpl
 import com.kin.athena.domain.repository.ApplicationRepository
 import com.kin.athena.domain.usecase.application.AddApplication
+import com.kin.athena.domain.usecase.application.AddApplications
 import com.kin.athena.domain.usecase.application.ApplicationUseCases
 import com.kin.athena.domain.usecase.application.CheckApplicationExists
 import com.kin.athena.domain.usecase.application.DeleteApplication
 import com.kin.athena.domain.usecase.application.GetApplication
 import com.kin.athena.domain.usecase.application.GetApplications
+import com.kin.athena.domain.usecase.application.GetExistingPackageIds
+import com.kin.athena.domain.usecase.application.GetFilteredApplications
 import com.kin.athena.domain.usecase.application.UpdateApplication
 import dagger.Module
 import dagger.Provides
@@ -56,11 +59,14 @@ object ApplicationModule {
     fun provideApplicationUseCases(repository: ApplicationRepository): ApplicationUseCases {
         return ApplicationUseCases(
             addApplication = AddApplication(repository),
+            addApplications = AddApplications(repository),
             deleteApplication = DeleteApplication(repository),
             getApplication = GetApplication(repository),
             getApplications = GetApplications(repository),
             updateApplication = UpdateApplication(repository),
-            checkApplicationExists = CheckApplicationExists(repository)
+            checkApplicationExists = CheckApplicationExists(repository),
+            getExistingPackageIds = GetExistingPackageIds(repository),
+            getFilteredApplications = GetFilteredApplications(repository)
         )
     }
 }

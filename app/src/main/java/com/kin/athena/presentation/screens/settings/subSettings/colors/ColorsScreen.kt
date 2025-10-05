@@ -116,7 +116,15 @@ fun ColorsScreen(
                         )
                     )
                     CoroutineScope(Dispatchers.IO).launch {
-                        homeViewModel.loadIcons(settings, iconColors)
+                        // Get current applications and load icons with new color
+                        val currentState = homeViewModel.applicationState.value
+                        if (currentState is com.kin.athena.presentation.screens.home.viewModel.ApplicationListState.Success) {
+                            homeViewModel.loadIcons(
+                                applications = currentState.applications,
+                                settingsViewModel = settings,
+                                color = iconColors
+                            )
+                        }
                     }
                 }
             )

@@ -31,7 +31,10 @@ import androidx.compose.material.icons.rounded.Numbers
 import androidx.compose.material.icons.rounded.RemoveRedEye
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -57,6 +60,7 @@ import com.kin.athena.presentation.screens.settings.components.ListDialog
 import com.kin.athena.presentation.screens.settings.components.SettingType
 import com.kin.athena.presentation.screens.settings.components.SettingsBox
 import com.kin.athena.presentation.screens.settings.components.SettingsScaffold
+import com.kin.athena.presentation.components.PremiumFeatureChoiceDialog
 import com.kin.athena.presentation.screens.settings.components.settingsContainer
 import com.kin.athena.presentation.navigation.routes.SettingRoutes
 import com.kin.athena.presentation.screens.settings.subSettings.dns.components.CustomBlocklistDialog
@@ -90,6 +94,9 @@ fun DnsScreen(
     val showDownloadDialog by blockListViewModel.showDownloadDialog.collectAsState()
     val downloadState by blockListViewModel.downloadState.collectAsState()
     val currentDownloadingRule by blockListViewModel.currentDownloadingRule.collectAsState()
+    
+    // Local dialog state for premium feature choice
+    var showPremiumDialog by remember { mutableStateOf(false) }
     
     // Local state to track immediate switch changes for UI responsiveness
     val localSwitchStates = remember { mutableStateMapOf<String, Boolean>() }
@@ -369,21 +376,23 @@ fun DnsScreen(
         }
 
         settingsContainer {
+            val customBlocklistTitle = stringResource(id = R.string.custom_blocklist)
+            val customBlocklistDescription = stringResource(R.string.custom_blocklist_description)
+            
             SettingsBox(
-                title = stringResource(id = R.string.custom_blocklist) + " " + stringResource(id = R.string.premium_setting),
-                description = stringResource(R.string.custom_blocklist_description),
+                title = customBlocklistTitle + " " + stringResource(id = R.string.premium_setting),
+                description = customBlocklistDescription,
                 icon = IconType.VectorIcon(Icons.Rounded.Add),
                 actionType = SettingType.CUSTOM,
                 customAction = { onExit ->
-                    var isEnabled by remember { mutableStateOf(false) }
-                    settings.startBilling("custom_blocklist") {
-                        isEnabled = true
-                    }
-                    if (isEnabled) {
+                    println("DEBUG: Custom action composable called")
+                    if (!settings.settings.value.premiumUnlocked) {
+                        showPremiumDialog = true
+                    } else {
                         navController.navigate(SettingRoutes.CustomBlocklist.route)
-                        onExit()
                     }
-                }
+                    onExit()
+                },
             )
             SettingsBox(
                 title = stringResource(id = R.string.blocked_domains),
@@ -433,6 +442,30 @@ fun DnsScreen(
             }
         }
     )
+    
+    // Premium Feature Choice Dialog
+    if (showPremiumDialog) {
+        PremiumFeatureChoiceDialog(
+            featureName = "Custom Blocklist",
+            featureDescription = stringResource(R.string.custom_blocklist_description),
+            singleFeaturePrice = settings.getProductPrice("custom_blocklist"),
+            fullPremiumPrice = settings.getProductPrice("all_features"),
+            onSingleFeaturePurchase = { 
+                settings.startBilling("custom_blocklist") {
+                    navController.navigate(SettingRoutes.CustomBlocklist.route)
+                }
+                showPremiumDialog = false
+            },
+            onFullPremiumPurchase = { 
+                settings.startBilling("all_features") {
+                    settings.update(settings.settings.value.copy(premiumUnlocked = true))
+                    navController.navigate(SettingRoutes.CustomBlocklist.route)
+                }
+                showPremiumDialog = false
+            },
+            onDismiss = { showPremiumDialog = false }
+        )
+    }
 }
 
 @Composable

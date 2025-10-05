@@ -20,4 +20,7 @@ package com.kin.athena.data.service.billing
 interface BillingInterface {
     fun showPurchaseDialog(productId: String, onSuccess: () -> Unit)
     fun isReady(): Boolean
+    fun getProductPrice(productId: String): String?
+    fun getAllProductPrices(): Map<String, String>
+    fun checkExistingPurchases(onPremiumOwned: () -> Unit)
 }

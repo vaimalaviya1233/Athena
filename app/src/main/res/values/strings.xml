@@ -46,6 +46,8 @@
     <string name="license">License</string>
     <string name="rate_app">Rate App</string>
     <string name="rate_app_description">Rate Athena on Google Play Store</string>
+    <string name="help_translate">Help Translate</string>
+    <string name="help_translate_description">Contribute translations on Weblate</string>
     <string name="system_theme">System Theme</string>
     <string name="system_theme_description">Adapts app theme based on system settings</string>
     <string name="dark_theme">Dark Theme</string>
@@ -184,7 +186,9 @@
     <string name="premium_code">Premium Code</string>
     <string name="invalid_license">Invalid License</string>
     <string name="premium">Premium</string>
-    <string name="support_development">Unlock All Features</string>
+    <string name="thank_you_premium">Thank You for Your Support!</string>
+    <string name="premium_unlocked_description">All premium features unlocked. Tap to donate more!</string>
+    <string name="support_development">Save 20%% - Only %s</string>
     <string name="premium_purchase_title">Premium Features</string>
     <string name="fdroid_premium_message">Get lifetime access to all premium features! Block ads, see application logs and much more!</string>
     <string name="allowed_requests">Allowed Requests</string>
@@ -262,4 +266,8 @@
     <string name="premium_benefits_text">✓ Instant access ✓ No subscription</string>
     <string name="blocklist_name_placeholder">Blocklist Name (Optional)</string>
     <string name="paste_urls_placeholder">Paste URLs here (one per line or separated by spaces)</string>
-</resources>
+    <string name="unlock_feature_title">Unlock %s</string>
+    <string name="unlock_feature_description">This feature unlocks only %s. Choose your preferred option:</string>
+    <string name="just_this_feature">Just %s</string>
+    <string name="unlock_only_this">Unlock only this feature</string>
+    <string name="all_premium_features">All Premium Features</string></resources>

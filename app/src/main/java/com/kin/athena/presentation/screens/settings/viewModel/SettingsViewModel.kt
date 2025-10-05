@@ -45,6 +45,12 @@ import java.security.MessageDigest
 import javax.inject.Inject
 import java.security.NoSuchAlgorithmException
 
+data class FeatureChoice(
+    val featureName: String,
+    val featureDescription: String,
+    val productId: String,
+    val onSuccess: () -> Unit
+)
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -59,6 +65,13 @@ class SettingsViewModel @Inject constructor(
     val settings: State<Settings> = _settings
 
     var defaultRoute: String? = null
+    
+    // Premium feature choice dialog state
+    private val _showFeatureChoiceDialog = mutableStateOf(false)
+    val showFeatureChoiceDialog: State<Boolean> = _showFeatureChoiceDialog
+    
+    private val _currentFeatureChoice = mutableStateOf<FeatureChoice?>(null)
+    val currentFeatureChoice: State<FeatureChoice?> = _currentFeatureChoice
     val version: String = BuildConfig.VERSION_NAME
     val build: String = BuildConfig.BUILD_TYPE
     
@@ -96,10 +109,75 @@ class SettingsViewModel @Inject constructor(
 
     fun startBilling(item: String, onSuccess: () -> Unit) {
         if (settings.value.premiumUnlocked) {
+            Logger.info("Premium already unlocked, calling onSuccess")
             onSuccess()
         } else {
             billingProvider.getBillingInterface()?.showPurchaseDialog(item, onSuccess)
                 ?: Logger.error("BillingInterface not available - activity not set")
+        }
+    }
+
+    fun getProductPrice(productId: String): String? {
+        return billingProvider.getBillingInterface()?.getProductPrice(productId)
+    }
+
+    fun calculateOriginalPrice(currentPrice: String?): String? {
+        if (currentPrice == null) return null
+        // Extract numeric value from price string (e.g., "$4.99" -> 4.99)
+        val numericPrice = currentPrice.replace(Regex("[^\\d.]"), "").toDoubleOrNull()
+        return if (numericPrice != null) {
+            val originalPrice = numericPrice * 1.2 // 20% higher
+            val currencySymbol = currentPrice.replace(Regex("[\\d.]"), "")
+            String.format("%.2f", originalPrice).let { 
+                currencySymbol + it
+            }
+        } else currentPrice
+    }
+
+    fun showFeatureChoiceDialog(
+        featureName: String,
+        featureDescription: String,
+        productId: String,
+        onSuccess: () -> Unit
+    ) {
+        // Check if already unlocked before showing dialog
+        if (settings.value.premiumUnlocked) {
+            Logger.info("Premium already unlocked, executing onSuccess without showing dialog")
+            onSuccess()
+            return
+        }
+
+        println("DEBUG: SettingsViewModel(${this.hashCode()}) - Setting dialog state to true")
+        _currentFeatureChoice.value = FeatureChoice(
+            featureName = featureName,
+            featureDescription = featureDescription,
+            productId = productId,
+            onSuccess = onSuccess
+        )
+        _showFeatureChoiceDialog.value = true
+        println("DEBUG: SettingsViewModel(${this.hashCode()}) - Dialog state is now: ${_showFeatureChoiceDialog.value}")
+    }
+
+    fun dismissFeatureChoiceDialog() {
+        _showFeatureChoiceDialog.value = false
+        _currentFeatureChoice.value = null
+    }
+
+    fun purchaseSingleFeature() {
+        currentFeatureChoice.value?.let { choice ->
+            startBilling(choice.productId, choice.onSuccess)
+            dismissFeatureChoiceDialog()
+        }
+    }
+
+    fun purchaseFullPremium() {
+        currentFeatureChoice.value?.let { choice ->
+            startBilling("all_features") {
+                choice.onSuccess()
+                // Also unlock premium globally
+                update(settings.value.copy(premiumUnlocked = true))
+            }
+            dismissFeatureChoiceDialog()
         }
     }
 
@@ -216,5 +294,13 @@ class SettingsViewModel @Inject constructor(
         }
 
         return LocaleListCompat.forLanguageTags(tagsList.joinToString(","))
+    }
+    
+    suspend fun isPremiumFeatureEnabled(featureKey: String): Boolean {
+        return settings.value.premiumUnlocked
+    }
+
+    suspend fun validatePremiumStatus(): Boolean {
+        return settings.value.premiumUnlocked
     }
 }

@@ -25,7 +25,7 @@ import com.kin.athena.core.utils.constants.AppConstants
 
 @Entity(
     tableName = "applications",
-    indices = [Index(value = ["uid"])]
+    indices = [Index(value = ["uid"]), Index(value = ["display_name"]), Index(value = ["package_id"])]
 )
 
 data class Application(
@@ -46,5 +46,14 @@ data class Application(
     val cellularAccess: Boolean = true,
 
     @ColumnInfo(name = "uses_google_play_services")
-    val usesGooglePlayServices: Boolean = false
+    val usesGooglePlayServices: Boolean = false,
+
+    @ColumnInfo(name = "display_name")
+    val displayName: String = "",
+
+    @ColumnInfo(name = "last_updated")
+    val lastUpdated: Long = System.currentTimeMillis(),
+
+    @ColumnInfo(name = "requires_network")
+    val requiresNetwork: Boolean = true
 )

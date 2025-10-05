@@ -24,6 +24,8 @@ interface ApplicationRepository {
     suspend fun getAllApplications(): List<Application>
 
     suspend fun insertApplication(application: Application)
+    
+    suspend fun insertApplications(applications: List<Application>)
 
     suspend fun updateApplication(application: Application)
 
@@ -32,4 +34,20 @@ interface ApplicationRepository {
     suspend fun getApplicationByID(packageId: String): Application?
 
     suspend fun isPackageIdExists(packageId: String): Boolean
+    
+    suspend fun getExistingPackageIds(packageIds: List<String>): List<String>
+    
+    suspend fun getFilteredApplications(
+        showSystemPackages: Boolean,
+        showOfflinePackages: Boolean,
+        searchQuery: String,
+        limit: Int,
+        offset: Int
+    ): List<Application>
+    
+    suspend fun getFilteredApplicationsCount(
+        showSystemPackages: Boolean,
+        showOfflinePackages: Boolean,
+        searchQuery: String
+    ): Int
 }

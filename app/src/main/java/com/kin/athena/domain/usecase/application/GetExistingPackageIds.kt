@@ -13,17 +13,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
+
 package com.kin.athena.domain.usecase.application
 
-data class ApplicationUseCases(
-    val getApplications: GetApplications,
-    val deleteApplication: DeleteApplication,
-    val addApplication: AddApplication,
-    val addApplications: AddApplications,
-    val updateApplication: UpdateApplication,
-    val getApplication: GetApplication,
-    val checkApplicationExists: CheckApplicationExists,
-    val getExistingPackageIds: GetExistingPackageIds,
-    val getFilteredApplications: GetFilteredApplications
-)
+import com.kin.athena.domain.repository.ApplicationRepository
+import javax.inject.Inject
+import com.kin.athena.core.utils.Result
+import com.kin.athena.core.utils.Error
+
+class GetExistingPackageIds @Inject constructor(
+    private val applicationRepository: ApplicationRepository
+) {
+    suspend fun execute(packageIds: List<String>): List<String> {
+        return applicationRepository.getExistingPackageIds(packageIds)
+    }
+}

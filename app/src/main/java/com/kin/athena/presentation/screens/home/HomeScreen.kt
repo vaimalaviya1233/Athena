@@ -22,11 +22,27 @@ import android.app.Activity
 import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.Icons
@@ -87,6 +103,8 @@ import com.kin.athena.presentation.screens.home.components.BottomMenu
 import com.kin.athena.presentation.screens.settings.viewModel.SettingsViewModel
 import com.kin.athena.presentation.screens.home.components.SearchBar
 import com.kin.athena.presentation.screens.home.viewModel.HomeViewModel
+import com.kin.athena.presentation.screens.home.viewModel.ApplicationListState
+import android.graphics.drawable.Drawable
 import com.kin.athena.presentation.screens.settings.components.IconType
 import com.kin.athena.presentation.screens.settings.components.SettingDialog
 import com.kin.athena.presentation.screens.settings.components.SettingType
@@ -98,10 +116,12 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.dimensionResource
 import com.kin.athena.core.utils.extensions.toBitmap
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -112,6 +132,8 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.ExperimentalFoundationApi
+import com.kin.athena.core.logging.Logger
 import com.kin.athena.presentation.screens.settings.subSettings.dns.components.MagiskSystemlessHostsDialog
 import com.kin.athena.presentation.screens.settings.subSettings.dns.root.HostsManager
 import com.kin.athena.service.firewall.utils.FirewallStatus
@@ -142,8 +164,8 @@ fun HomeScreen(
     // Track security icon position for onboarding
     var securityIconPosition by remember { mutableStateOf(Offset.Zero) }
 
-    LaunchedEffect(true) {
-        homeViewModel.observePackages()
+    LaunchedEffect(Unit) {
+        homeViewModel.initialize(settingsViewModel)
     }
 
     val firewallColor = getFirewallColor(isFirewallManager.value)
@@ -180,8 +202,8 @@ fun HomeScreen(
             SearchBar(
                 showStartInfo = false,
                 query = homeViewModel.searchQuery.value,
-                onQueryChange = { homeViewModel.updateSearchQueryStatus(it) },
-                onClearClick = { homeViewModel.clearSearchQueryStatus() },
+                onQueryChange = { homeViewModel.updateSearchQuery(it) },
+                onClearClick = { homeViewModel.clearSearchQuery() },
                 button = {
                     if (settingsViewModel.settings.value.logs) {
                         MaterialButton(
@@ -324,174 +346,320 @@ private fun HomeScreenContent(
     context: Context,
     onApplicationClicked: (String) -> Unit,
 ) {
-    Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-        // Get ALL packages but don't filter them here - let individual items handle visibility
-        val allPackages = homeViewModel.packages.value.sortedBy { application ->
-            application.getApplicationName(context.packageManager)?.lowercase() ?: application.packageID.lowercase()
+    val applicationState = homeViewModel.applicationState.value
+    val searchQuery = homeViewModel.searchQuery.value
+
+    // Track if we should animate - initial load or search change
+    var animationKey by remember { mutableStateOf(0) }
+    var previousSearchQuery by remember { mutableStateOf(searchQuery) }
+    var previousAppList by remember { mutableStateOf<List<String>>(emptyList()) }
+    var isFirstLoad by remember { mutableStateOf(true) }
+
+    // Only animate when the actual application list changes
+    LaunchedEffect(applicationState) {
+        if (applicationState is ApplicationListState.Success) {
+            val currentAppList = applicationState.applications.map { it.packageID }
+
+            if (isFirstLoad) {
+                isFirstLoad = false
+                animationKey++
+                previousAppList = currentAppList
+            } else if (searchQuery != previousSearchQuery && currentAppList != previousAppList) {
+                // Only animate if search query changed AND the list actually changed
+                previousSearchQuery = searchQuery
+                previousAppList = currentAppList
+                animationKey++
+            } else if (currentAppList != previousAppList && searchQuery == previousSearchQuery) {
+                // List changed but search didn't - don't animate (e.g., toggle wifi/cellular)
+                previousAppList = currentAppList
+            }
+        }
+    }
+
+    when (applicationState) {
+        is ApplicationListState.Loading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(48.dp),
+                        strokeWidth = 3.dp
+                    )
+                    Text(
+                        text = "Loading applications...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
 
-        AnimatedPackageList(
-            allPackages = allPackages,
-            viewModel = homeViewModel,
-            context = context,
-            onApplicationClicked = onApplicationClicked,
-            settingsViewModel = settingsViewModel
-        )
+        is ApplicationListState.Error -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(32.dp)
+                ) {
+                    Text(
+                        text = "Error loading applications",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = applicationState.message,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    Button(
+                        onClick = { homeViewModel.loadApplications(reset = true, settingsViewModel = settingsViewModel) }
+                    ) {
+                        Text("Retry")
+                    }
+                }
+            }
+        }
+
+        is ApplicationListState.Success -> {
+            ProfessionalApplicationList(
+                applications = applicationState.applications,
+                hasMore = applicationState.hasMore,
+                isLoadingMore = applicationState.isLoadingMore,
+                viewModel = homeViewModel,
+                settingsViewModel = settingsViewModel,
+                onApplicationClicked = onApplicationClicked,
+                animationKey = animationKey
+            )
+        }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun AnimatedPackageList(
-    allPackages: List<Application>,
+private fun ProfessionalApplicationList(
+    applications: List<Application>,
+    hasMore: Boolean,
+    isLoadingMore: Boolean,
     viewModel: HomeViewModel,
-    context: Context,
+    settingsViewModel: SettingsViewModel,
     onApplicationClicked: (String) -> Unit,
-    settingsViewModel: SettingsViewModel
+    animationKey: Int = 0
 ) {
-    val scrollState = rememberScrollState()
-    
-    Column(
-        modifier = Modifier
-            .clip(RoundedCornerShape(18.dp, 18.dp, 0.dp, 0.dp))
-            .verticalScroll(scrollState)
-    ) {
-        allPackages.forEachIndexed { index, packageEntity ->
-            val title = packageEntity.getApplicationName(context.packageManager)
-            val icon = viewModel.iconMap.value[packageEntity.packageID]
-            
-            // Add staggered delay for smoother appearance
-            val staggerDelay = (index * 25).coerceAtMost(200)
-            
-            val isVisible = remember(
-                viewModel.searchQuery.value, 
-                packageEntity, 
-                settingsViewModel.settings.value.showSystemPackages,
-                settingsViewModel.settings.value.showOfflinePackages
-            ) {
-                // First check settings filters
-                val showSystemPackages = settingsViewModel.settings.value.showSystemPackages
-                val showOfflinePackages = settingsViewModel.settings.value.showOfflinePackages
-                
-                val passesSettingsFilter = when {
-                    !showSystemPackages && packageEntity.systemApp -> false
-                    !showOfflinePackages && !packageEntity.requiresNetworkPermissions(context.packageManager) -> false
-                    else -> true
-                }
-                
-                if (!passesSettingsFilter) {
-                    false
-                } else if (viewModel.searchQuery.value.isBlank()) {
-                    true
-                } else {
-                    // Then check search query
-                    val query = viewModel.searchQuery.value.lowercase()
-                    val appName = title?.lowercase() ?: ""
-                    val packageName = packageEntity.packageID.lowercase()
-                    val uidString = packageEntity.uid.toString()
-                    
-                    appName.contains(query) || 
-                    packageName.contains(query) || 
-                    uidString.contains(query)
+    val lazyListState = rememberLazyListState()
+
+    // Track visible items for animation
+    val visibleItems = remember(animationKey) { mutableStateMapOf<String, Boolean>() }
+
+    LaunchedEffect(animationKey, applications) {
+        if (animationKey > 0) {
+            // Reset visibility for new animation
+            visibleItems.clear()
+            // Stagger the visibility with a smoother delay
+            applications.forEachIndexed { index, app ->
+                delay(15L) // Smooth stagger timing
+                visibleItems[app.packageID] = true
+            }
+        } else {
+            // No animation, make everything visible immediately
+            applications.forEach { app ->
+                visibleItems[app.packageID] = true
+            }
+        }
+    }
+
+    // Load icons for visible applications
+    val primaryColor = MaterialTheme.colorScheme.primary
+    LaunchedEffect(applications.size) {
+        Logger.info("HomeScreen: Applications list size changed to ${applications.size}")
+        if (applications.isNotEmpty()) {
+            viewModel.loadIcons(
+                applications = applications,
+                settingsViewModel = settingsViewModel,
+                color = primaryColor
+            )
+        }
+    }
+
+    // Handle pagination
+    LaunchedEffect(lazyListState, applications.size, hasMore, isLoadingMore) {
+        snapshotFlow {
+            val firstVisibleIndex = lazyListState.firstVisibleItemIndex
+            val lastVisibleIndex = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
+            val totalItems = lazyListState.layoutInfo.totalItemsCount
+            Triple(firstVisibleIndex, lastVisibleIndex, totalItems)
+        }
+            .collect { (firstIndex, lastIndex, totalItems) ->
+                Logger.info("HomeScreen: Scroll state - firstIndex=$firstIndex, lastIndex=$lastIndex, totalItems=$totalItems, appSize=${applications.size}, hasMore=$hasMore, isLoadingMore=$isLoadingMore")
+                if (lastIndex != null && lastIndex >= applications.size - 3 && hasMore && !isLoadingMore) {
+                    Logger.info("HomeScreen: ✓ PAGINATION TRIGGERED - lastIndex=$lastIndex, appSize=${applications.size}")
+                    viewModel.loadMoreApplications(settingsViewModel)
+                } else if (lastIndex != null) {
+                    Logger.info("HomeScreen: ✗ Pagination NOT triggered - lastIndex=$lastIndex < threshold=${applications.size - 3} OR hasMore=$hasMore OR isLoadingMore=$isLoadingMore")
                 }
             }
+    }
+    
+    LazyColumn(
+        state = lazyListState,
+        modifier = Modifier
+            .padding(horizontal = 12.dp)
+            .clip(RoundedCornerShape(18.dp, 18.dp, 0.dp, 0.dp)),
+        contentPadding = PaddingValues(bottom = 16.dp)
+    ) {
+        itemsIndexed(
+            items = applications,
+            key = { _, application -> application.packageID },
+            contentType = { _, _ -> "application_item" }
+        ) { index, application ->
+            val icon = viewModel.iconMap.value[application.packageID]
 
             val shape = when {
-                0 == allPackages.lastIndex -> RoundedCornerShape(32.dp)
+                applications.size == 1 -> RoundedCornerShape(32.dp)
                 index == 0 -> RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
-                index == allPackages.lastIndex -> RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                index == applications.lastIndex && !hasMore -> RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
                 else -> RoundedCornerShape(0.dp)
             }
 
-            AnimatedVisibility(
-                visible = isVisible,
-                enter = slideInVertically(
-                    animationSpec = spring(
-                        dampingRatio = 0.75f,
-                        stiffness = 400f
-                    ),
-                    initialOffsetY = { it / 4 }
-                ) + fadeIn(
-                    animationSpec = tween(
-                        durationMillis = 400,
-                        delayMillis = staggerDelay,
-                        easing = androidx.compose.animation.core.FastOutSlowInEasing
-                    )
-                ) + scaleIn(
-                    animationSpec = spring(
-                        dampingRatio = 0.8f,
-                        stiffness = 500f
-                    ),
-                    initialScale = 0.95f
-                ),
-                exit = slideOutVertically(
-                    animationSpec = spring(
-                        dampingRatio = 0.9f,
-                        stiffness = 600f
-                    ),
-                    targetOffsetY = { -it / 4 }
-                ) + fadeOut(
-                    animationSpec = tween(
-                        durationMillis = 300,
-                        easing = androidx.compose.animation.core.FastOutLinearInEasing
-                    )
-                ) + scaleOut(
-                    animationSpec = spring(
-                        dampingRatio = 0.9f,
-                        stiffness = 600f
-                    ),
-                    targetScale = 0.95f
-                )
-            ) {
-                Column(modifier = Modifier.clip(shape)) {
-                    if (title != null && icon != null) {
-                        val description = if (packageEntity.usesGooglePlayServices()) {
-                            "${packageEntity.packageID}\nIncoming messages are fetched from GMS"
-                        } else {
-                            packageEntity.packageID
-                        }
-                        
-                        CustomSettingsBox(
-                            title = title,
-                            description = description,
-                            icon = IconType.DrawableIcon(icon),
-                            actionType = SettingType.CUSTOM,
-                            circleWrapperColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            circleWrapperSize = if (settingsViewModel.settings.value.useDynamicIcons) 6.dp else 0.dp,
-                            customButton = { AccessControlButtons(packageEntity = packageEntity, viewModel = viewModel)},
-                            customAction = { onApplicationClicked(packageEntity.packageID) },
-                            usesGMS = packageEntity.usesGooglePlayServices()
+            if (icon != null) {
+                val description = if (application.usesGooglePlayServices) {
+                    "${application.packageID}\nIncoming messages are fetched from GMS"
+                } else {
+                    application.packageID
+                }
+
+                val isVisible = visibleItems[application.packageID] == true
+
+                AnimatedVisibility(
+                    visible = isVisible,
+                    enter = if (animationKey > 0) {
+                        fadeIn(
+                            animationSpec = tween(400)
+                        ) + slideInVertically(
+                            animationSpec = tween(400),
+                            initialOffsetY = { it / 4 }
                         )
                     } else {
-                        viewModel.deleteApplication(packageEntity)
+                        EnterTransition.None
+                    },
+                    exit = ExitTransition.None,
+                    modifier = Modifier.animateItemPlacement(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness = Spring.StiffnessMediumLow
+                        )
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.clip(shape)
+                    ) {
+                        ProfessionalApplicationItem(
+                            application = application,
+                            displayName = application.displayName.ifEmpty { application.packageID },
+                            description = description,
+                            icon = icon,
+                            settingsViewModel = settingsViewModel,
+                            viewModel = viewModel,
+                            onApplicationClicked = onApplicationClicked
+                        )
                     }
                 }
             }
         }
         
-        Spacer(modifier = Modifier.height(14.dp))
+        if (isLoadingMore) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                }
+            }
+        }
     }
 }
 
 
 @Composable
+private fun ProfessionalApplicationItem(
+    application: Application,
+    displayName: String,
+    description: String,
+    icon: Drawable,
+    settingsViewModel: SettingsViewModel,
+    viewModel: HomeViewModel,
+    onApplicationClicked: (String) -> Unit
+) {
+    CustomSettingsBox(
+        title = displayName,
+        description = description,
+        icon = IconType.DrawableIcon(icon),
+        actionType = SettingType.CUSTOM,
+        circleWrapperColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        circleWrapperSize = if (settingsViewModel.settings.value.useDynamicIcons) 6.dp else 0.dp,
+        customButton = {
+            AccessControlButtons(
+                packageEntity = application,
+                viewModel = viewModel
+            )
+        },
+        customAction = { onApplicationClicked(application.packageID) },
+        usesGMS = application.usesGooglePlayServices
+    )
+}
+
+@Composable
 private fun AccessControlButtons(
     packageEntity: Application,
-    viewModel: HomeViewModel,
+    viewModel: HomeViewModel
 ) {
-    IconButton(onClick = { viewModel.updatePackage(packageEntity.copy(internetAccess = !packageEntity.internetAccess)) }) {
+    // Use local state to prevent parent list recomposition and animation
+    var wifiAccess by remember(packageEntity.packageID) { mutableStateOf(packageEntity.internetAccess) }
+    var cellularAccess by remember(packageEntity.packageID) { mutableStateOf(packageEntity.cellularAccess) }
+
+    // Sync with parent state when it changes externally (e.g., from search/filter)
+    LaunchedEffect(packageEntity.internetAccess) {
+        wifiAccess = packageEntity.internetAccess
+    }
+    LaunchedEffect(packageEntity.cellularAccess) {
+        cellularAccess = packageEntity.cellularAccess
+    }
+
+    IconButton(onClick = {
+        wifiAccess = !wifiAccess
+        // Update without triggering full list recomposition
+        viewModel.updatePackage(packageEntity.copy(internetAccess = wifiAccess), updateUI = false)
+    }) {
         Icon(
             imageVector = Icons.Rounded.Wifi,
             contentDescription = null,
-            tint = getAccessControlTint(packageEntity.internetAccess),
+            tint = getAccessControlTint(wifiAccess),
             modifier = Modifier.padding(horizontal = 6.dp)
         )
     }
 
-    IconButton(onClick = { viewModel.updatePackage(packageEntity.copy(cellularAccess = !packageEntity.cellularAccess)) }) {
+    IconButton(onClick = {
+        cellularAccess = !cellularAccess
+        // Update without triggering full list recomposition
+        viewModel.updatePackage(packageEntity.copy(cellularAccess = cellularAccess), updateUI = false)
+    }) {
         Icon(
             imageVector = Icons.Rounded.SignalCellularAlt,
             contentDescription = null,
-            tint = getAccessControlTint(packageEntity.cellularAccess)
+            tint = getAccessControlTint(cellularAccess)
         )
     }
 }

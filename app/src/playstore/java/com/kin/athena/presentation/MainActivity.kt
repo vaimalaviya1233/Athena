@@ -37,7 +37,6 @@ import androidx.work.WorkManager
 import com.kin.athena.core.logging.Logger
 import com.kin.athena.core.utils.extensions.popUpToTop
 import com.kin.athena.data.service.billing.BillingProvider
-import com.kin.athena.presentation.components.CrashFixAnnouncementDialog
 import com.kin.athena.presentation.theme.EasyWallTheme
 import com.kin.athena.presentation.navigation.AppNavHost
 import com.kin.athena.presentation.navigation.routes.HomeRoutes
@@ -104,17 +103,27 @@ class MainActivity : AppCompatActivity() {
             settings = hiltViewModel<SettingsViewModel>().apply {
                 val homeViewModel = hiltViewModel<HomeViewModel>()
 
+                // Check for existing purchases on startup
+                LaunchedEffect(Unit) {
+                    billingProvider.getBillingInterface()?.checkExistingPurchases {
+                        // User already owns premium, update settings
+                        if (!settings.value.premiumUnlocked) {
+                            Logger.info("Restoring premium purchase from Play Store")
+                            update(settings.value.copy(premiumUnlocked = true))
+                        }
+                    }
+                }
+
                 EasyWallTheme(this) {
                     val iconsColor = MaterialTheme.colorScheme.background
 
                     LaunchedEffect(homeViewModel) {
                         homeViewModel.initialize(this@apply)
-                        homeViewModel.loadIcons(settingsViewModel = this@apply, iconsColor)
                     }
                     
                     // Watch for when apps are loaded and hide splash screen
-                    LaunchedEffect(homeViewModel.showSplashScreen.value) {
-                        if (!homeViewModel.showSplashScreen.value) {
+                    LaunchedEffect(homeViewModel.applicationState.value) {
+                        if (homeViewModel.applicationState.value is com.kin.athena.presentation.screens.home.viewModel.ApplicationListState.Success) {
                             viewModel.showSlashScreen(true)
                         }
                     }
@@ -128,24 +137,6 @@ class MainActivity : AppCompatActivity() {
                             homeViewModel = homeViewModel,
                             navController = navController
                         )
-                        
-                        // Play Store builds use native billing dialogs
-                        // No Ko-fi fallback dialog needed
-                        
-                        // Show crash fix announcement dialog
-                        if (this@apply.shouldShowCrashFixDialog()) {
-                            CrashFixAnnouncementDialog(
-                                onDismiss = {
-                                    this@apply.markCrashFixDialogShown()
-                                },
-                                onUpdateReview = {
-                                    this@apply.markCrashFixDialogShown()
-                                },
-                                onMaybeLater = {
-                                    // Don't mark as shown, so it appears again later
-                                }
-                            )
-                        }
                     }
                 }
             }

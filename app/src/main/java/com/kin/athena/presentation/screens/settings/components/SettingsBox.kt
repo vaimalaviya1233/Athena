@@ -68,6 +68,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -105,6 +106,8 @@ sealed class IconType {
 fun SettingBoxSmall(
     title: String,
     description: String,
+    originalPrice: String? = null,
+    salePrice: String? = null,
     onAction: () -> Unit
 ) {
     Row(
@@ -140,12 +143,32 @@ fun SettingBoxSmall(
             color = MaterialTheme.colorScheme.background
         )
         Spacer(modifier = Modifier.weight(1f))
-        Text(
-            fontWeight = FontWeight.Light,
-            fontSize = 12.sp,
-            text = description,
-            color = MaterialTheme.colorScheme.background
-        )
+        if (originalPrice != null && salePrice != null) {
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    fontWeight = FontWeight.Light,
+                    fontSize = 10.sp,
+                    text = originalPrice,
+                    color = MaterialTheme.colorScheme.background.copy(alpha = 0.7f),
+                    textDecoration = TextDecoration.LineThrough
+                )
+                Text(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    text = salePrice,
+                    color = MaterialTheme.colorScheme.background
+                )
+            }
+        } else {
+            Text(
+                fontWeight = FontWeight.Light,
+                fontSize = 12.sp,
+                text = description,
+                color = MaterialTheme.colorScheme.background
+            )
+        }
         Spacer(modifier = Modifier.width(12.dp))
         CircleWrapper(
             size = 3.dp,

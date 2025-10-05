@@ -38,6 +38,32 @@ class DatabaseProvider(private val application: Application) {
         }
     }
 
+    private val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add new columns for professional architecture
+            database.execSQL("ALTER TABLE applications ADD COLUMN display_name TEXT NOT NULL DEFAULT ''")
+            database.execSQL("ALTER TABLE applications ADD COLUMN last_updated INTEGER NOT NULL DEFAULT ${System.currentTimeMillis()}")
+            database.execSQL("ALTER TABLE applications ADD COLUMN requires_network INTEGER NOT NULL DEFAULT 1")
+            
+            // Update display_name for existing apps using package_id as fallback
+            database.execSQL("UPDATE applications SET display_name = package_id WHERE display_name = ''")
+            // Set last_updated to current time for all existing apps
+            database.execSQL("UPDATE applications SET last_updated = ${System.currentTimeMillis()}")
+            
+            // Create indexes for better performance
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_applications_display_name ON applications(display_name)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_applications_package_id ON applications(package_id)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_applications_uid ON applications(uid)")
+        }
+    }
+    
+    private val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Fix any remaining empty display names
+            database.execSQL("UPDATE applications SET display_name = package_id WHERE display_name = '' OR display_name IS NULL")
+        }
+    }
+
     @Synchronized
     fun instance(): AppDatabase {
         return database ?: synchronized(this) {
@@ -49,7 +75,7 @@ class DatabaseProvider(private val application: Application) {
         return Room.databaseBuilder(application.applicationContext,
             AppDatabase::class.java,
             AppConstants.DatabaseConstants.DATABASE_NAME)
-            .addMigrations(MIGRATION_2_3)
+            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             .build()
     }
 
