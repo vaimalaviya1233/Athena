@@ -100,7 +100,7 @@ class DetailsViewModel @Inject constructor(
 
     fun updatePackage(packageEntity: Application) {
         viewModelScope.launch {
-            Logger.info("DetailsViewModel: Updating package ${packageEntity.packageID}, wifi=${packageEntity.internetAccess}, cellular=${packageEntity.cellularAccess}")
+            Logger.info("DetailsViewModel: Updating package ${packageEntity.packageID}, wifi=${packageEntity.internetAccess}, cellular=${packageEntity.cellularAccess}, bypassVpn=${packageEntity.bypassVpn}")
             applicationUseCases.updateApplication.execute(packageEntity)
             Logger.info("DetailsViewModel: Package updated in database")
             // The observeApplication flow will automatically update the UI
@@ -108,5 +108,9 @@ class DetailsViewModel @Inject constructor(
                 firewallManager.updateFirewallRules(packageEntity)
             }
         }
+    }
+
+    fun isVpnMode(): Boolean {
+        return firewallManager.rulesLoaded.value == FirewallStatus.ONLINE
     }
 }

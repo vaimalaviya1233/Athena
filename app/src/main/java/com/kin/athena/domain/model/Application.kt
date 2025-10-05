@@ -45,6 +45,9 @@ data class Application(
     @ColumnInfo(name = "cellular_access")
     val cellularAccess: Boolean = true,
 
+    @ColumnInfo(name = "bypass_vpn")
+    val bypassVpn: Boolean = false,
+
     @ColumnInfo(name = "uses_google_play_services")
     val usesGooglePlayServices: Boolean = false,
 

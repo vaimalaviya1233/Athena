@@ -39,27 +39,42 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun NetworkOption(icon: ImageVector, label: String, cornerShape: RoundedCornerShape, onClick: () -> Unit, color: Color) {
+fun NetworkOption(
+    icon: ImageVector,
+    label: String,
+    cornerShape: RoundedCornerShape,
+    onClick: () -> Unit,
+    color: Color,
+    enabled: Boolean = true
+) {
+    val backgroundColor = if (enabled) {
+        MaterialTheme.colorScheme.surfaceContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerLowest
+    }
+
+    val contentColor = if (enabled) color else MaterialTheme.colorScheme.outlineVariant
+
     Column(
         modifier = Modifier
             .clip(cornerShape)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .background(backgroundColor)
             .height(84.dp)
-            .clickable { onClick() }
-            .width(128.dp),
+            .clickable(enabled = enabled) { onClick() }
+            .width(100.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(36.dp),
-            tint = color
+            modifier = Modifier.size(32.dp),
+            tint = contentColor
         )
         Text(
             text = label,
-            color = color,
-            fontSize = 12.sp
+            color = contentColor,
+            fontSize = 11.sp
         )
     }
 }

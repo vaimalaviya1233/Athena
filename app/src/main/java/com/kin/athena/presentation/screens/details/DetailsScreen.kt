@@ -41,6 +41,7 @@ import androidx.compose.material.icons.rounded.RuleFolder
 import androidx.compose.material.icons.rounded.SignalCellularAlt
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.Update
+import androidx.compose.material.icons.rounded.VpnLock
 import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -188,23 +189,47 @@ private fun PackageDetails(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
+                if (!packageEntity.bypassVpn) {
+                    // Show WiFi button only if not bypassing VPN
+                    NetworkOption(
+                        icon = Icons.Rounded.Wifi,
+                        label = "WiFi",
+                        cornerShape = RoundedCornerShape(topStart = 32.dp, bottomStart = 32.dp),
+                        onClick = {
+                            viewModel.updatePackage(packageEntity.copy(internetAccess = !packageEntity.internetAccess))
+                        },
+                        color = if (packageEntity.internetAccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                    )
+                    Spacer(modifier = Modifier.width(1.dp))
+                }
+
+                // Always show VPN bypass button (with rounded corners if alone)
                 NetworkOption(
-                    icon = Icons.Rounded.Wifi,
-                    label = "WiFi",
-                    cornerShape = RoundedCornerShape(topStart = 32.dp, bottomStart = 32.dp),
-                    onClick = {
-                        viewModel.updatePackage(packageEntity.copy(internetAccess = !packageEntity.internetAccess))
+                    icon = Icons.Rounded.VpnLock,
+                    label = "Bypass VPN",
+                    cornerShape = if (packageEntity.bypassVpn) {
+                        RoundedCornerShape(32.dp)
+                    } else {
+                        RoundedCornerShape(0.dp)
                     },
-                    color = if (packageEntity.internetAccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                    onClick = {
+                        viewModel.updatePackage(packageEntity.copy(bypassVpn = !packageEntity.bypassVpn))
+                    },
+                    color = if (packageEntity.bypassVpn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                    enabled = viewModel.isVpnMode() && settings.settings.value.useRootMode != true
                 )
-                Spacer(modifier = Modifier.width(1.dp))
-                NetworkOption(
-                    icon = Icons.Rounded.SignalCellularAlt,
-                    label = "Cellular",
-                    cornerShape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp),
-                    onClick = { viewModel.updatePackage(packageEntity.copy(cellularAccess = !packageEntity.cellularAccess)) },
-                    color = if (packageEntity.cellularAccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                )
+
+                if (!packageEntity.bypassVpn) {
+                    // Show Cellular button only if not bypassing VPN
+                    Spacer(modifier = Modifier.width(1.dp))
+                    NetworkOption(
+                        icon = Icons.Rounded.SignalCellularAlt,
+                        label = "Cellular",
+                        cornerShape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp),
+                        onClick = { viewModel.updatePackage(packageEntity.copy(cellularAccess = !packageEntity.cellularAccess)) },
+                        color = if (packageEntity.cellularAccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                    )
+                }
             }
         }
         packageInfo?.let {

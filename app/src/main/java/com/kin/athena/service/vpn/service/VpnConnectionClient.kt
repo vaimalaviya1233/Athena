@@ -39,6 +39,7 @@ class VpnConnectionClient : VpnService() {
 
     @Inject @ApplicationContext lateinit var context: Context
     @Inject lateinit var preferencesUseCases: PreferencesUseCases
+    @Inject lateinit var applicationUseCases: com.kin.athena.domain.usecase.application.ApplicationUseCases
 
 
     private var settings: Settings? = null
@@ -102,10 +103,30 @@ class VpnConnectionClient : VpnService() {
         setBlocking(true)
         setSession(getString(R.string.app_name))
         addDisallowedApplication(context.packageName)
-        addDisallowedApplication("com.google.android.projection.gearhead").apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                setMetered(false)
-            }
+        addDisallowedApplication("com.google.android.projection.gearhead")
+
+        // Add VPN bypass for apps that have bypassVpn=true
+        runBlocking {
+            applicationUseCases.getApplications.execute().fold(
+                ifSuccess = { apps: List<com.kin.athena.domain.model.Application> ->
+                    apps.filter { app: com.kin.athena.domain.model.Application -> app.bypassVpn }
+                        .forEach { app: com.kin.athena.domain.model.Application ->
+                            try {
+                                addDisallowedApplication(app.packageID)
+                                Logger.info("VPN: Bypassing VPN for ${app.packageID}")
+                            } catch (e: Exception) {
+                                Logger.error("VPN: Failed to bypass VPN for ${app.packageID}: ${e.message}")
+                            }
+                        }
+                },
+                ifFailure = { error: com.kin.athena.core.utils.Error ->
+                    Logger.error("VPN: Failed to load apps for VPN bypass: ${error.message}")
+                }
+            )
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            setMetered(false)
         }
     }
 

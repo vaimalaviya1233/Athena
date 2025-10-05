@@ -49,9 +49,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.SignalCellularAlt
+import androidx.compose.material.icons.rounded.VpnLock
 import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
@@ -588,22 +590,26 @@ private fun ProfessionalApplicationItem(
     viewModel: HomeViewModel,
     onApplicationClicked: (String) -> Unit
 ) {
-    CustomSettingsBox(
-        title = displayName,
-        description = description,
-        icon = IconType.DrawableIcon(icon),
-        actionType = SettingType.CUSTOM,
-        circleWrapperColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        circleWrapperSize = if (settingsViewModel.settings.value.useDynamicIcons) 6.dp else 0.dp,
-        customButton = {
-            AccessControlButtons(
-                packageEntity = application,
-                viewModel = viewModel
-            )
-        },
-        customAction = { onApplicationClicked(application.packageID) },
-        usesGMS = application.usesGooglePlayServices
-    )
+    Box(
+        modifier = Modifier.alpha(if (application.bypassVpn) 0.5f else 1f)
+    ) {
+        CustomSettingsBox(
+            title = displayName,
+            description = description,
+            icon = IconType.DrawableIcon(icon),
+            actionType = SettingType.CUSTOM,
+            circleWrapperColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            circleWrapperSize = if (settingsViewModel.settings.value.useDynamicIcons) 6.dp else 0.dp,
+            customButton = {
+                AccessControlButtons(
+                    packageEntity = application,
+                    viewModel = viewModel
+                )
+            },
+            customAction = { onApplicationClicked(application.packageID) },
+            usesGMS = application.usesGooglePlayServices
+        )
+    }
 }
 
 @Composable
@@ -618,27 +624,45 @@ private fun AccessControlButtons(
         mutableStateOf(packageEntity.cellularAccess)
     }
 
-    IconButton(onClick = {
-        wifiAccess = !wifiAccess
-        viewModel.updatePackage(packageEntity.copy(internetAccess = wifiAccess), updateUI = true)
-    }) {
-        Icon(
-            imageVector = Icons.Rounded.Wifi,
-            contentDescription = null,
-            tint = getAccessControlTint(wifiAccess),
-            modifier = Modifier.padding(horizontal = 6.dp)
-        )
-    }
+    // Check if app is bypassing VPN
+    val isBypassed = packageEntity.bypassVpn
 
-    IconButton(onClick = {
-        cellularAccess = !cellularAccess
-        viewModel.updatePackage(packageEntity.copy(cellularAccess = cellularAccess), updateUI = true)
-    }) {
+    if (isBypassed) {
+        // Show only VPN bypass icon for bypassed apps
         Icon(
-            imageVector = Icons.Rounded.SignalCellularAlt,
-            contentDescription = null,
-            tint = getAccessControlTint(cellularAccess)
+            imageVector = Icons.Rounded.VpnLock,
+            contentDescription = "VPN Bypassed",
+            tint = MaterialTheme.colorScheme.tertiary,
+            modifier = Modifier
+                .padding(horizontal = 12.dp)
+                .size(24.dp)
         )
+    } else {
+        // Show normal wifi/cellular controls
+        Row {
+            IconButton(onClick = {
+                wifiAccess = !wifiAccess
+                viewModel.updatePackage(packageEntity.copy(internetAccess = wifiAccess), updateUI = true)
+            }) {
+                Icon(
+                    imageVector = Icons.Rounded.Wifi,
+                    contentDescription = null,
+                    tint = getAccessControlTint(wifiAccess),
+                    modifier = Modifier.padding(horizontal = 6.dp)
+                )
+            }
+
+            IconButton(onClick = {
+                cellularAccess = !cellularAccess
+                viewModel.updatePackage(packageEntity.copy(cellularAccess = cellularAccess), updateUI = true)
+            }) {
+                Icon(
+                    imageVector = Icons.Rounded.SignalCellularAlt,
+                    contentDescription = null,
+                    tint = getAccessControlTint(cellularAccess)
+                )
+            }
+        }
     }
 }
 

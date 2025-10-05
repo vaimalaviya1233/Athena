@@ -28,7 +28,7 @@ object AppConstants {
 
     object DatabaseConstants {
         const val DATABASE_NAME: String = "packages"
-        const val DATABASE_VERSION: Int = 5
+        const val DATABASE_VERSION: Int = 6
         const val SETTINGS_DATABASE_NAME: String = "settings"
     }
 
