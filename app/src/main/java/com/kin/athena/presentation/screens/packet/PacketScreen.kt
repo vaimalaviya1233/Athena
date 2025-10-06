@@ -85,14 +85,14 @@ private fun PacketDetails(log: Log, packetViewModel: PacketViewModel) {
         settingsContainer {
             SettingsBox(
                 icon = IconType.VectorIcon(Icons.Rounded.Check),
-                title = stringResource(id = R.string.firewall_status),
+                title = stringResource(id = R.string.packet_firewall_status),
                 description = log.packetStatus.toString(),
                 actionType = SettingType.TEXT
             )
             SettingsBox(
                 icon = IconType.VectorIcon(Icons.Rounded.Block),
-                title = stringResource(id = R.string.block),
-                description = stringResource(id = R.string.block_description, log.destinationIP),
+                title = stringResource(id = R.string.packet_block),
+                description = stringResource(id = R.string.packet_block_desc, log.destinationIP),
                 actionType = SettingType.SWITCH,
                 variable = packetViewModel.blockedIps.value.contains(Ip(ip = log.destinationIP)),
                 onSwitchEnabled = {
@@ -107,14 +107,14 @@ private fun PacketDetails(log: Log, packetViewModel: PacketViewModel) {
         settingsContainer {
             SettingsBox(
                 icon = IconType.VectorIcon(Icons.Rounded.NetworkCheck),
-                title = stringResource(id = R.string.protocol),
+                title = stringResource(id = R.string.packet_protocol),
                 description = log.protocol,
                 actionType = SettingType.TEXT
             )
             if (application != null) {
                 SettingsBox(
                     icon = IconType.VectorIcon(Icons.Rounded.Apps),
-                    title = stringResource(id = R.string.sender),
+                    title = stringResource(id = R.string.packet_sender),
                     description = context.getAppNameFromPackage(application.packageID),
                     actionType = SettingType.TEXT
                 )
@@ -123,13 +123,13 @@ private fun PacketDetails(log: Log, packetViewModel: PacketViewModel) {
         settingsContainer {
             SettingsBox(
                 icon = IconType.VectorIcon(Icons.Rounded.LocationOn),
-                title = stringResource(id = R.string.source),
+                title = stringResource(id = R.string.packet_source),
                 description = "${log.sourceIP}:${log.sourcePort}",
                 actionType = SettingType.TEXT
             )
             SettingsBox(
                 icon = IconType.VectorIcon(Icons.Rounded.LocationOn),
-                title = stringResource(id = R.string.destination),
+                title = stringResource(id = R.string.packet_destination),
                 description = "${log.destinationIP}:${log.destinationPort}",
                 actionType = SettingType.TEXT
             )
@@ -138,7 +138,7 @@ private fun PacketDetails(log: Log, packetViewModel: PacketViewModel) {
             log.destinationAddress?.let {
                 SettingsBox(
                     icon = IconType.VectorIcon(Icons.Rounded.Storage),
-                    title = stringResource(id = R.string.destination_address),
+                    title = stringResource(id = R.string.packet_dest_address),
                     description = log.destinationAddress,
                     actionType = SettingType.TEXT
                 )
@@ -147,7 +147,7 @@ private fun PacketDetails(log: Log, packetViewModel: PacketViewModel) {
             port?.let {
                 SettingsBox(
                     icon = IconType.VectorIcon(Icons.Rounded.Lan),
-                    title = stringResource(id = R.string.destination_type),
+                    title = stringResource(id = R.string.packet_dest_type),
                     description = port.uppercase(Locale.ROOT),
                     actionType = SettingType.TEXT
                 )
@@ -156,7 +156,7 @@ private fun PacketDetails(log: Log, packetViewModel: PacketViewModel) {
         settingsContainer {
             SettingsBox(
                 icon = IconType.VectorIcon(Icons.Rounded.Timer),
-                title = stringResource(id = R.string.time),
+                title = stringResource(id = R.string.packet_time),
                 description = log.time.toFormattedDateTime(),
                 actionType = SettingType.TEXT
             )

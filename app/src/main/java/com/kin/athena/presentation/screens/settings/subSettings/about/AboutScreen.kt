@@ -119,25 +119,25 @@ fun AboutScreen(
         item {
             SettingsVerification(
                 isValid = settings.getAppSignature() == ProjectConstants.SHA_256_SIGNING,
-                title = stringResource(id = R.string.verified_as_official_build),
-                description = stringResource(id = R.string.maintained_by) + " " + ProjectConstants.DEVELOPER
+                title = stringResource(id = R.string.about_verified_build),
+                description = stringResource(id = R.string.about_maintained_by) + " " + ProjectConstants.DEVELOPER
             )
         }
         settingsContainer {
             SettingsBox(
-                title = stringResource(id = R.string.translator),
-                description = stringResource(id = R.string.your_name),
+                title = stringResource(id = R.string.about_translator),
+                description = stringResource(id = R.string.about_your_name),
                 actionType = SettingType.TEXT,
                 icon = IconType.VectorIcon(Icons.Rounded.Translate),
             )
             SettingsBox(
-                title = stringResource(id = R.string.version),
+                title = stringResource(id = R.string.details_version),
                 description = settings.version,
                 icon = IconType.VectorIcon(Icons.Rounded.Info),
                 actionType = SettingType.TEXT,
             )
             SettingsBox(
-                title = stringResource(id = R.string.build_type),
+                title = stringResource(id = R.string.about_build_type),
                 description = settings.build,
                 icon = IconType.VectorIcon(Icons.Rounded.Build),
                 actionType = SettingType.TEXT,
@@ -145,19 +145,19 @@ fun AboutScreen(
         }
         settingsContainer {
             SettingsBox(
-                title = stringResource(id = R.string.latest_release),
+                title = stringResource(id = R.string.about_latest_release),
                 icon = IconType.VectorIcon(Icons.Rounded.Verified),
                 actionType = SettingType.LINK,
                 onLinkClicked = { uriHandler.openUri(ProjectConstants.PROJECT_DOWNLOADS) },
             )
             SettingsBox(
-                title = stringResource(id = R.string.source_code),
+                title = stringResource(id = R.string.about_source_code),
                 icon = IconType.VectorIcon(Icons.Rounded.Download),
                 actionType = SettingType.LINK,
                 onLinkClicked = { uriHandler.openUri(ProjectConstants.PROJECT_SOURCE_CODE) }
             )
             SettingsBox(
-                title = stringResource(id = R.string.license),
+                title = stringResource(id = R.string.settings_license),
                 description = stringResource(id = R.string.license_description),
                 icon = IconType.VectorIcon(Icons.Rounded.Gavel),
                 actionType = SettingType.LINK,
@@ -166,19 +166,19 @@ fun AboutScreen(
         }
         settingsContainer {
             SettingsBox(
-                title = stringResource(id = R.string.email),
+                title = stringResource(id = R.string.about_email),
                 icon = IconType.VectorIcon(Icons.Rounded.Email),
                 clipboardText = ProjectConstants.SUPPORT_MAIL,
                 actionType = SettingType.CLIPBOARD,
             )
             SettingsBox(
-                title = stringResource(id = R.string.discord),
+                title = stringResource(id = R.string.about_discord),
                 icon = IconType.VectorIcon(Icons.AutoMirrored.Rounded.ContactSupport),
                 actionType = SettingType.LINK,
                 onLinkClicked = { uriHandler.openUri(ProjectConstants.SUPPORT_DISCORD) },
             )
             SettingsBox(
-                title = stringResource(id = R.string.feature),
+                title = stringResource(id = R.string.about_feature),
                 icon = IconType.VectorIcon(Icons.Rounded.BugReport),
                 onLinkClicked = { uriHandler.openUri(ProjectConstants.GITHUB_FEATURE_REQUEST) },
                 actionType = SettingType.LINK,
@@ -186,15 +186,15 @@ fun AboutScreen(
         }
         settingsContainer {
             SettingsBox(
-                title = stringResource(id = R.string.rate_app),
-                description = stringResource(id = R.string.rate_app_description),
+                title = stringResource(id = R.string.about_rate_app),
+                description = stringResource(id = R.string.about_rate_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.Star),
                 actionType = SettingType.LINK,
                 onLinkClicked = { openRateApp() }
             )
             SettingsBox(
-                title = stringResource(id = R.string.help_translate),
-                description = stringResource(id = R.string.help_translate_description),
+                title = stringResource(id = R.string.about_translate),
+                description = stringResource(id = R.string.about_translate_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.Translate),
                 actionType = SettingType.LINK,
                 onLinkClicked = { uriHandler.openUri(AppConstants.Links.TRANSLATE) }
@@ -316,7 +316,7 @@ fun PremiumCodeDialog(
                 enabled = !isVerifying && code.text.isNotBlank(),
                 modifier = Modifier.align(Alignment.End)
             ) {
-                Text(text = if (isVerifying) "Verifying..." else stringResource(id = R.string.done))
+                Text(text = if (isVerifying) "Verifying..." else stringResource(id = R.string.common_done))
             }
             Spacer(modifier = Modifier.height(8.dp))
         }

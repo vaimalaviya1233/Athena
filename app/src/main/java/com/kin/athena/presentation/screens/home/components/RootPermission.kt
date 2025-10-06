@@ -59,7 +59,7 @@ fun RootPermission(
     if (viewModel.rootPermissionRequested.value) {
         PermissionModal(
             sheetState = sheetState,
-            permissionName = stringResource(id = R.string.root_permission),
+            permissionName = stringResource(id = R.string.permissions_root),
             permissionDescription = stringResource(id = R.string.root_permission_description),
             onPermissionRequest = {
                 scope.launch(Dispatchers.Main) {
@@ -77,7 +77,7 @@ fun RootPermission(
                 onEnd()
                 onPermissionResult(rootResut.VPN)
             },
-            permissionAlternative = stringResource(id = R.string.deny_root),
+            permissionAlternative = stringResource(id = R.string.permissions_deny_root),
             onDismiss = {
                 onPermissionResult(rootResut.CLOSED)
                 onEnd()

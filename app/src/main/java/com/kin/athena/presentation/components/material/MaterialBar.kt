@@ -62,7 +62,7 @@ fun MaterialBar(
             onBackNavClicked?.let {
                 MaterialButton(
                     imageVector = Icons.AutoMirrored.Rounded.ArrowBackIos,
-                    contentDescription = stringResource(R.string.back_button_description),
+                    contentDescription = stringResource(R.string.misc_back_description),
                     scale = 0.8f
                 ) {
                     onBackNavClicked()

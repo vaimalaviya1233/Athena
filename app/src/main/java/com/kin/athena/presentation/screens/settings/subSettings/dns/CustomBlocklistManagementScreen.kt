@@ -153,7 +153,7 @@ fun CustomBlocklistManagementScreen(
     MaterialScaffold(
         topBar = {
             MaterialBar(
-                title = stringResource(R.string.custom_blocklist),
+                title = stringResource(R.string.blocklist_custom),
                 onBackNavClicked = { navController.navigateUp() }
             )
         },
@@ -163,7 +163,7 @@ fun CustomBlocklistManagementScreen(
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Add,
-                    contentDescription = stringResource(R.string.custom_blocklist)
+                    contentDescription = stringResource(R.string.blocklist_custom)
                 )
             }
         }
@@ -175,7 +175,7 @@ fun CustomBlocklistManagementScreen(
             if (customBlocklists.isEmpty()) {
                 settingsContainer {
                     Text(
-                        text = stringResource(R.string.no_custom_blocklists_message),
+                        text = stringResource(R.string.blocklist_no_lists),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
@@ -298,7 +298,7 @@ fun CustomBlocklistManagementScreen(
     
     // Download Dialog
     DownloadDialog(
-        title = stringResource(R.string.custom_blocklist),
+        title = stringResource(R.string.blocklist_custom),
         isVisible = showDownloadDialog,
         downloadState = downloadState ?: DownloadState.Downloading,
         onDismiss = { blockListViewModel.dismissDownloadDialog() },
@@ -400,7 +400,7 @@ private fun ImprovedBlocklistTile(
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.DeleteOutline,
-                            contentDescription = stringResource(R.string.delete_button),
+                            contentDescription = stringResource(R.string.common_delete),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -435,7 +435,7 @@ private fun ImprovedBlocklistTile(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Delete,
-                        contentDescription = stringResource(R.string.delete_button),
+                        contentDescription = stringResource(R.string.common_delete),
                         tint = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.padding(8.dp)
                     )
@@ -448,9 +448,9 @@ private fun ImprovedBlocklistTile(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text(stringResource(R.string.delete_blocklist_title)) },
+            title = { Text(stringResource(R.string.blocklist_delete_title)) },
             text = { 
-                Text(stringResource(R.string.delete_blocklist_confirmation, entry.name)) 
+                Text(stringResource(R.string.blocklist_delete_confirm, entry.name)) 
             },
             confirmButton = {
                 TextButton(
@@ -462,12 +462,12 @@ private fun ImprovedBlocklistTile(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text(stringResource(R.string.delete_button))
+                    Text(stringResource(R.string.common_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text(stringResource(R.string.cancel))
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )

@@ -231,7 +231,7 @@ fun HomeScreen(
                     if (settingsViewModel.settings.value.logs) {
                         MaterialButton(
                             imageVector = Icons.Rounded.MoreVert,
-                            contentDescription = stringResource(R.string.open_menu_description)
+                            contentDescription = stringResource(R.string.home_open_menu)
                         ) {
                             if (homeViewModel.menuStatus.value) {
                                 onMenuClosed()
@@ -242,7 +242,7 @@ fun HomeScreen(
                     } else {
                         MaterialButton(
                             imageVector = Icons.Rounded.Settings,
-                            contentDescription = stringResource(R.string.settings)
+                            contentDescription = stringResource(R.string.common_settings)
                         ) {
                             onSettingsClicked()
                         }
@@ -277,9 +277,9 @@ fun HomeScreen(
                             }
                         }
                         PermissionModal(
-                            permissionName = stringResource(id = R.string.firewall_terminated),
+                            permissionName = stringResource(id = R.string.home_firewall_terminated),
                             permissionDescription = stringResource(id = R.string.firewall_terminated_description),
-                            permissionRequest = stringResource(id = R.string.clear),
+                            permissionRequest = stringResource(id = R.string.common_clear),
                             onDismiss = {
                                 onClick()
                             },
@@ -288,7 +288,7 @@ fun HomeScreen(
                                 onClick()
                             },
                             sheetState = rootState,
-                            permissionAlternative = stringResource(id = R.string.cancel),
+                            permissionAlternative = stringResource(id = R.string.common_cancel),
                             onPermissionAlternativeRequest = {
                                 onClick()
                             }
@@ -310,9 +310,9 @@ fun HomeScreen(
                 }
                 if (settingsViewModel.settings.value.showDialog) {
                     PermissionModal(
-                        permissionName = stringResource(id = R.string.firewall_disable),
-                        permissionDescription = stringResource(id = R.string.firewall_permission_description),
-                        permissionRequest = stringResource(id = R.string.disable),
+                        permissionName = stringResource(id = R.string.home_firewall_disable),
+                        permissionDescription = stringResource(id = R.string.home_firewall_permission_desc),
+                        permissionRequest = stringResource(id = R.string.common_disable),
                         onDismiss = {
                             onClick()
                         },
@@ -321,7 +321,7 @@ fun HomeScreen(
                             onClick()
                         },
                         sheetState = disableState,
-                        permissionAlternative = stringResource(id = R.string.cancel),
+                        permissionAlternative = stringResource(id = R.string.common_cancel),
                         onPermissionAlternativeRequest = {
                             onClick()
                         }
@@ -798,7 +798,7 @@ private fun MaterialYouProgressDialog(
                             modifier = Modifier.size(32.dp)
                         )
                         Text(
-                            text = stringResource(R.string.applying_firewall_rules),
+                            text = stringResource(R.string.home_applying_rules),
                             style = MaterialTheme.typography.headlineSmall,
                             color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.SemiBold
@@ -859,13 +859,13 @@ private fun MaterialYouProgressDialog(
                             )
                             Column {
                                 Text(
-                                    text = stringResource(R.string.important_warning_title),
+                                    text = stringResource(R.string.home_warning_title),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.error,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    text = stringResource(R.string.firewall_setup_warning_message),
+                                    text = stringResource(R.string.home_setup_warning),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     lineHeight = 20.sp
@@ -885,9 +885,9 @@ private fun getProgressStageText(progress: Float): String {
     val totalCommands = 685
     
     return when {
-        progress < 0.01f -> stringResource(R.string.preparing_firewall_commands)
-        progress < 1.0f -> stringResource(R.string.executing_commands_progress, currentCommand, totalCommands)
-        else -> stringResource(R.string.firewall_rules_applied_successfully)
+        progress < 0.01f -> stringResource(R.string.home_preparing_commands)
+        progress < 1.0f -> stringResource(R.string.home_executing_commands, currentCommand, totalCommands)
+        else -> stringResource(R.string.home_rules_applied)
     }
 }
 
@@ -976,7 +976,7 @@ private fun CustomSettingsBox(
                             modifier = Modifier.padding(bottom = 3.dp)
                         )
                         Text(
-                            text = stringResource(R.string.google_play_services_warning),
+                            text = stringResource(R.string.home_gms_warning),
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 9.sp),
                             color = MaterialTheme.colorScheme.outline,
                             modifier = Modifier.padding(bottom = 3.dp)

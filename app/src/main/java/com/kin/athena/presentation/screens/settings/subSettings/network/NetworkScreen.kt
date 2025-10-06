@@ -62,13 +62,13 @@ fun NetworkScreen(
 
     SettingsScaffold(
         settings = settings,
-        title = stringResource(id = R.string.network_title),
+        title = stringResource(id = R.string.settings_network),
         onBackNavClicked = { navController.navigateUp() }
     ) {
         settingsContainer {
             SettingsBox(
-                title = stringResource(id = R.string.manage_ips),
-                description = stringResource(id = R.string.manage_ips_description),
+                title = stringResource(id = R.string.network_manage_ips),
+                description = stringResource(id = R.string.network_manage_ips_desc),
                 icon = IconType.VectorIcon(Icons.Filled.MultipleStop),
                 actionType = SettingType.CUSTOM,
                 customAction = {
@@ -76,8 +76,8 @@ fun NetworkScreen(
                 },
             )
             SettingsBox(
-                title = stringResource(id = R.string.always_allow_ips),
-                description = stringResource(id = R.string.always_allow_ips_description),
+                title = stringResource(id = R.string.network_always_allow),
+                description = stringResource(id = R.string.network_always_allow_desc),
                 icon = IconType.VectorIcon(Icons.AutoMirrored.Filled.CallMissedOutgoing),
                 actionType = SettingType.SWITCH,
                 variable = settings.settings.value.allowLocal,
@@ -86,8 +86,8 @@ fun NetworkScreen(
         }
         settingsContainer {
             SettingsBox(
-                title = stringResource(R.string.interface_ipv4),
-                description = stringResource(R.string.interface_ipv4_description),
+                title = stringResource(R.string.network_interface_ipv4),
+                description = stringResource(R.string.network_interface_ipv4_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.ArrowDropUp),
                 actionType = SettingType.CUSTOM,
                 isEnabled = !(settings.settings.value.useRootMode ?: false),
@@ -117,8 +117,8 @@ fun NetworkScreen(
             )
 
             SettingsBox(
-                title = stringResource(R.string.interface_ipv6),
-                description = stringResource(R.string.interface_ipv6_description),
+                title = stringResource(R.string.network_interface_ipv6),
+                description = stringResource(R.string.network_interface_ipv6_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.ArrowDropDown),
                 isEnabled = !(settings.settings.value.useRootMode ?: false),
                 actionType = SettingType.CUSTOM,
@@ -145,8 +145,8 @@ fun NetworkScreen(
         }
         settingsContainer {
             SettingsBox(
-                title = stringResource(R.string.block_wifi_when_screen_off),
-                description = stringResource(R.string.block_wifi_when_screen_off_description),
+                title = stringResource(R.string.network_block_wifi_screen_off),
+                description = stringResource(R.string.network_block_wifi_screen_off_desc),
                 icon = IconType.VectorIcon(Icons.Filled.WifiOff),
                 actionType = SettingType.SWITCH,
                 isEnabled = settings.settings.value.useRootMode != true,
@@ -160,8 +160,8 @@ fun NetworkScreen(
                 },
             )
             SettingsBox(
-                title = stringResource(R.string.block_cellular_when_screen_off),
-                description = stringResource(R.string.block_cellular_when_screen_off_description),
+                title = stringResource(R.string.network_block_cellular_screen_off),
+                description = stringResource(R.string.network_block_cellular_screen_off_desc),
                 icon = IconType.VectorIcon(Icons.Filled.SignalCellularConnectedNoInternet0Bar),
                 actionType = SettingType.SWITCH,
                 isEnabled = settings.settings.value.useRootMode != true,
@@ -177,8 +177,8 @@ fun NetworkScreen(
         }
         settingsContainer {
             SettingsBox(
-                title = stringResource(R.string.kill_switch),
-                description = stringResource(R.string.kill_switch_description),
+                title = stringResource(R.string.network_kill_switch),
+                description = stringResource(R.string.network_kill_switch_desc),
                 icon = IconType.VectorIcon(Icons.Filled.StopCircle),
                 actionType = SettingType.CUSTOM,
                 isEnabled = settings.settings.value.useRootMode != true,

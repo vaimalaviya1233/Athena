@@ -60,7 +60,7 @@ import com.kin.athena.presentation.components.onIconPositioned
 @Composable
 fun SearchBar(
     showStartInfo: Boolean = false,
-    text: String = stringResource(R.string.search),
+    text: String = stringResource(R.string.common_search),
     query: String,
     onQueryChange: (String) -> Unit,
     onClearClick: () -> Unit,
@@ -86,7 +86,7 @@ fun SearchBar(
             .padding(24.dp, 0.dp, 24.dp, 18.dp)
             .scale(searchBarScale),
         query = query,
-        placeholder = { Text(text = if (showStartInfo) LocalContext.current.getString(R.string.search_bar_start) else text) },
+        placeholder = { Text(text = if (showStartInfo) LocalContext.current.getString(R.string.search_bar_placeholder) else text) },
         leadingIcon = {
             if (onFirewallClicked != null && firewallColor != null) {
                 Row(
@@ -99,13 +99,13 @@ fun SearchBar(
                         } ?: Modifier,
                         onClick = { onFirewallClicked() }
                     ) {
-                        Icon(Icons.Rounded.Security, tint = firewallColor, contentDescription = stringResource(R.string.firewall_description))
+                        Icon(Icons.Rounded.Security, tint = firewallColor, contentDescription = stringResource(R.string.search_bar_firewall_desc))
                     }
                 }
             } else {
                 if (onBackClicked != null) {
                     IconButton(onClick = {onBackClicked() }) {
-                        Icon(Icons.Rounded.ArrowBackIosNew, contentDescription = stringResource(R.string.back_button_description), modifier = Modifier.scale(0.8f))
+                        Icon(Icons.Rounded.ArrowBackIosNew, contentDescription = stringResource(R.string.misc_back_description), modifier = Modifier.scale(0.8f))
                     }
                 }
             }
@@ -143,7 +143,7 @@ fun SearchBar(
                 ) {
                     MaterialButton(
                         imageVector = Icons.Rounded.Close,
-                        contentDescription = stringResource(R.string.close_description)
+                        contentDescription = stringResource(R.string.misc_close_description)
                     ) {
                         onClearClick()
                     }

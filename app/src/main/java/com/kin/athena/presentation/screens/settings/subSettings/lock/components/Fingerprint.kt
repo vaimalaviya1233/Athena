@@ -133,9 +133,9 @@ fun showBiometricPrompt(
         })
 
     val promptInfo = BiometricPrompt.PromptInfo.Builder()
-        .setTitle(context.getString(R.string.fingerprint_name))
+        .setTitle(context.getString(R.string.lock_fingerprint))
         .setSubtitle(context.getString(R.string.app_name))
-        .setNegativeButtonText(context.getString(R.string.cancel))
+        .setNegativeButtonText(context.getString(R.string.common_cancel))
         .setConfirmationRequired(true)
         .build()
 

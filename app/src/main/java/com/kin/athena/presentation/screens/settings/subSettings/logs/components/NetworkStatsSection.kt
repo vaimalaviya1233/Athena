@@ -47,9 +47,9 @@ fun LazyListScope.networkStatsSection(networkStats: NetworkStatsState) {
     settingsContainer {
         SettingsBox(
             icon = IconType.VectorIcon(Icons.Rounded.CheckCircle),
-            title = stringResource(id = R.string.allowed_requests),
+            title = stringResource(id = R.string.logs_allowed_requests),
             description = stringResource(
-                id = R.string.allowed_requests_description,
+                id = R.string.logs_allowed_desc,
                 NumberFormatter.formatCount(networkStats.allowedCount)
             ),
             actionType = SettingType.TEXT,
@@ -58,9 +58,9 @@ fun LazyListScope.networkStatsSection(networkStats: NetworkStatsState) {
         
         SettingsBox(
             icon = IconType.VectorIcon(Icons.Rounded.Block),
-            title = stringResource(id = R.string.blocked_requests),
+            title = stringResource(id = R.string.logs_blocked_requests),
             description = stringResource(
-                id = R.string.blocked_requests_description,
+                id = R.string.logs_blocked_desc,
                 NumberFormatter.formatCount(networkStats.blockedCount)
             ),
             actionType = SettingType.TEXT,
@@ -69,7 +69,7 @@ fun LazyListScope.networkStatsSection(networkStats: NetworkStatsState) {
         
         SettingsBox(
             icon = IconType.VectorIcon(Icons.Rounded.Analytics),
-            title = stringResource(id = R.string.total_activity),
+            title = stringResource(id = R.string.logs_total_activity),
             description = getSessionDescription(networkStats),
             actionType = SettingType.TEXT,
             customText = NumberFormatter.formatCount(networkStats.totalCount)
@@ -90,9 +90,9 @@ fun NetworkStatsSection(networkStats: NetworkStatsState) {
     ) {
         SettingsBox(
             icon = IconType.VectorIcon(Icons.Rounded.CheckCircle),
-            title = stringResource(id = R.string.allowed_requests),
+            title = stringResource(id = R.string.logs_allowed_requests),
             description = stringResource(
-                id = R.string.allowed_requests_description,
+                id = R.string.logs_allowed_desc,
                 NumberFormatter.formatCount(networkStats.allowedCount)
             ),
             actionType = SettingType.TEXT,
@@ -101,9 +101,9 @@ fun NetworkStatsSection(networkStats: NetworkStatsState) {
         
         SettingsBox(
             icon = IconType.VectorIcon(Icons.Rounded.Block),
-            title = stringResource(id = R.string.blocked_requests),
+            title = stringResource(id = R.string.logs_blocked_requests),
             description = stringResource(
-                id = R.string.blocked_requests_description,
+                id = R.string.logs_blocked_desc,
                 NumberFormatter.formatCount(networkStats.blockedCount)
             ),
             actionType = SettingType.TEXT,
@@ -112,7 +112,7 @@ fun NetworkStatsSection(networkStats: NetworkStatsState) {
         
         SettingsBox(
             icon = IconType.VectorIcon(Icons.Rounded.Analytics),
-            title = stringResource(id = R.string.total_activity),
+            title = stringResource(id = R.string.logs_total_activity),
             description = getSessionDescription(networkStats),
             actionType = SettingType.TEXT,
             customText = NumberFormatter.formatCount(networkStats.totalCount)

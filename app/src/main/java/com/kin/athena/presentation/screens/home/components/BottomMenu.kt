@@ -57,7 +57,7 @@ fun BottomMenu(
                 SettingsBox(
                     size = 8.dp,
                     isCentered = true,
-                    title = stringResource(R.string.logs),
+                    title = stringResource(R.string.common_logs),
                     icon = IconType.VectorIcon(Icons.Rounded.Code),
                     actionType = SettingType.CUSTOM,
                     customAction = {
@@ -68,7 +68,7 @@ fun BottomMenu(
                     }
                 )
                 SettingsBox(
-                    title = stringResource(R.string.settings),
+                    title = stringResource(R.string.common_settings),
                     size = 8.dp,
                     isCentered = true,
                     icon = IconType.VectorIcon(Icons.Rounded.Settings),

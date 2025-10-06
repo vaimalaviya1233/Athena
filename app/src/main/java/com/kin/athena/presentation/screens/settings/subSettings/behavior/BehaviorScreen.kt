@@ -57,15 +57,15 @@ fun BehaviorScreen(
 ) {
     SettingsScaffold(
         settings = settings,
-        title = stringResource(id = R.string.behavior_title),
+        title = stringResource(id = R.string.settings_behavior),
         onBackNavClicked = { navController.navigateUp() }
     ) {
         settingsContainer {
-            val notificationTitle = stringResource(id = R.string.notification_on_install)
-            val notificationDescription = stringResource(id = R.string.notification_on_install_description)
+            val notificationTitle = stringResource(id = R.string.behavior_notify_install)
+            val notificationDescription = stringResource(id = R.string.behavior_notify_install_desc)
             
             SettingsBox(
-                title = notificationTitle + " " + stringResource(id = R.string.premium_setting),
+                title = notificationTitle + " " + stringResource(id = R.string.premium_feature_indicator),
                 description = notificationDescription,
                 icon = IconType.VectorIcon(Icons.Rounded.InstallMobile),
                 actionType = SettingType.SWITCH,
@@ -87,8 +87,8 @@ fun BehaviorScreen(
         }
         settingsContainer {
             SettingsBox(
-                title = stringResource(id = R.string.use_root),
-                description = stringResource(id = R.string.use_root_description),
+                title = stringResource(id = R.string.behavior_use_root),
+                description = stringResource(id = R.string.behavior_use_root_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.Key),
                 actionType = SettingType.SWITCH,
                 isEnabled = behaviorViewModel.firewallManager.rulesLoaded.value.name() == FirewallStatus.OFFLINE.name(),
@@ -105,11 +105,11 @@ fun BehaviorScreen(
                     }
                 }
             )
-            val logsTitle = stringResource(id = R.string.logs)
-            val logsDescription = stringResource(id = R.string.logs_description)
+            val logsTitle = stringResource(id = R.string.common_logs)
+            val logsDescription = stringResource(id = R.string.behavior_logs_desc)
             
             SettingsBox(
-                title = logsTitle + " " + stringResource(id = R.string.premium_setting),
+                title = logsTitle + " " + stringResource(id = R.string.premium_feature_indicator),
                 description = logsDescription,
                 icon = IconType.VectorIcon(Icons.Rounded.Code),
                 actionType = SettingType.SWITCH,
@@ -133,8 +133,8 @@ fun BehaviorScreen(
         }
         settingsContainer {
             SettingsBox(
-                title = stringResource(id = R.string.manage_system_apps),
-                description = stringResource(id = R.string.manage_system_apps_description),
+                title = stringResource(id = R.string.behavior_show_system_apps),
+                description = stringResource(id = R.string.behavior_show_system_apps_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.SettingsApplications),
                 actionType = SettingType.SWITCH,
                 variable = settings.settings.value.showSystemPackages,
@@ -143,8 +143,8 @@ fun BehaviorScreen(
                 }
             )
             SettingsBox(
-                title = stringResource(id = R.string.network_permissions_setting),
-                description = stringResource(id = R.string.network_permissions_setting_description),
+                title = stringResource(id = R.string.behavior_show_offline_apps),
+                description = stringResource(id = R.string.behavior_show_offline_apps_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.SignalWifiBad),
                 actionType = SettingType.SWITCH,
                 variable = settings.settings.value.showOfflinePackages,
@@ -155,8 +155,8 @@ fun BehaviorScreen(
         }
         settingsContainer {
             SettingsBox(
-                title = stringResource(id = R.string.block_wifi),
-                description = stringResource(id = R.string.block_wifi_description),
+                title = stringResource(id = R.string.behavior_block_wifi_default),
+                description = stringResource(id = R.string.behavior_block_wifi_default_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.WifiOff),
                 actionType = SettingType.SWITCH,
                 variable = !settings.settings.value.wiFiDefault,
@@ -170,8 +170,8 @@ fun BehaviorScreen(
                 }
             )
             SettingsBox(
-                title = stringResource(id = R.string.block_cellular),
-                description = stringResource(id = R.string.block_cellular_description),
+                title = stringResource(id = R.string.behavior_block_cellular_default),
+                description = stringResource(id = R.string.behavior_block_cellular_default_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.SignalCellularOff),
                 actionType = SettingType.SWITCH,
                 variable = !settings.settings.value.cellularDefault,
@@ -187,8 +187,8 @@ fun BehaviorScreen(
         }
         settingsContainer {
             SettingsBox(
-                title = stringResource(id = R.string.start_on_boot),
-                description = stringResource(id = R.string.start_on_boot_description),
+                title = stringResource(id = R.string.behavior_start_on_boot),
+                description = stringResource(id = R.string.behavior_start_on_boot_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.RestartAlt),
                 actionType = SettingType.SWITCH,
                 variable = settings.settings.value.startOnBoot,
@@ -197,8 +197,8 @@ fun BehaviorScreen(
                 }
             )
             SettingsBox(
-                title = stringResource(id = R.string.permanent_notification),
-                description = stringResource(id = R.string.permanent_notification_description),
+                title = stringResource(id = R.string.behavior_permanent_notification),
+                description = stringResource(id = R.string.behavior_permanent_notification_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.Timer),
                 actionType = SettingType.SWITCH,
                 variable = !settings.settings.value.permanentNotification,

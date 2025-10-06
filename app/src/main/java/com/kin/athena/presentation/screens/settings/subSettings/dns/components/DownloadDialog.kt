@@ -116,7 +116,7 @@ fun DownloadDialog(
                     ) {
                         Icon(
                             Icons.Rounded.CloudDownload,
-                            contentDescription = stringResource(R.string.downloading_description),
+                            contentDescription = stringResource(R.string.download_downloading),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
                                 .size(40.dp)
@@ -125,7 +125,7 @@ fun DownloadDialog(
                     }
                     
                     Text(
-                        text = stringResource(R.string.downloading_processing_rules),
+                        text = stringResource(R.string.download_processing),
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurface.copy(0.8f)
@@ -148,7 +148,7 @@ fun DownloadDialog(
                     }
                     
                     Text(
-                        text = stringResource(R.string.please_wait),
+                        text = stringResource(R.string.download_please_wait),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(0.6f),
                         textAlign = TextAlign.Center
@@ -166,14 +166,14 @@ fun DownloadDialog(
                     ) {
                         Icon(
                             Icons.Rounded.CheckCircle,
-                            contentDescription = stringResource(R.string.success_description),
+                            contentDescription = stringResource(R.string.download_success),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(40.dp)
                         )
                     }
                     
                     Text(
-                        text = stringResource(R.string.success_message),
+                        text = stringResource(R.string.download_success_message),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -181,7 +181,7 @@ fun DownloadDialog(
                     )
                     
                     Text(
-                        text = stringResource(R.string.rules_downloaded_successfully),
+                        text = stringResource(R.string.download_rules_downloaded),
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurface.copy(0.7f)
@@ -198,14 +198,14 @@ fun DownloadDialog(
                     ) {
                         Icon(
                             Icons.Rounded.Close,
-                            contentDescription = stringResource(R.string.network_error_title),
+                            contentDescription = stringResource(R.string.download_network_error),
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(40.dp)
                         )
                     }
                     
                     Text(
-                        text = stringResource(R.string.network_error_title),
+                        text = stringResource(R.string.download_network_error),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -213,7 +213,7 @@ fun DownloadDialog(
                     )
                     
                     Text(
-                        text = stringResource(R.string.check_internet_connection),
+                        text = stringResource(R.string.download_check_internet),
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurface.copy(0.7f)
@@ -274,7 +274,7 @@ fun DownloadDialog(
                             )
                         ) {
                             Text(
-                                stringResource(R.string.done),
+                                stringResource(R.string.common_done),
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 fontWeight = FontWeight.Medium
                             )
@@ -291,7 +291,7 @@ fun DownloadDialog(
                                 contentColor = MaterialTheme.colorScheme.onSurface.copy(0.7f)
                             )
                         ) {
-                            Text(stringResource(R.string.cancel))
+                            Text(stringResource(R.string.common_cancel))
                         }
                         
                         if (onRetry != null) {
@@ -305,7 +305,7 @@ fun DownloadDialog(
                                 )
                             ) {
                                 Text(
-                                    stringResource(R.string.retry_button),
+                                    stringResource(R.string.common_retry),
                                     color = MaterialTheme.colorScheme.onPrimary,
                                     fontWeight = FontWeight.Medium
                                 )

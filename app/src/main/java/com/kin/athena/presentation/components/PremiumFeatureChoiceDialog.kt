@@ -70,20 +70,20 @@ fun PremiumFeatureChoiceDialog(
             
             // Title
             Text(
-                text = "Unlock $featureName",
+                text = stringResource(R.string.premium_unlock_feature, featureName),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             // Description
             Text(
                 text = if (BuildConfig.USE_PLAY_BILLING) {
-                    "This feature unlocks only $featureDescription. Choose your preferred option:"
+                    stringResource(R.string.premium_feature_description, featureDescription)
                 } else {
-                    "This is a premium feature. Support development via Ko-fi to unlock $featureName and all other premium features!"
+                    stringResource(R.string.premium_kofi_description, featureName)
                 },
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
@@ -97,9 +97,9 @@ fun PremiumFeatureChoiceDialog(
                 // Single Feature Option
                 PremiumOptionCard(
                     icon = Icons.Rounded.Lock,
-                    title = "Just $featureName",
-                    description = "Unlock only this feature",
-                    price = singleFeaturePrice ?: "Loading...",
+                    title = stringResource(R.string.premium_just_feature, featureName),
+                    description = stringResource(R.string.premium_unlock_only_feature),
+                    price = singleFeaturePrice ?: stringResource(R.string.common_loading),
                     onClick = onSingleFeaturePurchase
                 )
 
@@ -108,9 +108,9 @@ fun PremiumFeatureChoiceDialog(
                 // Full Premium Option with Badge
                 PremiumOptionCard(
                     icon = Icons.Rounded.Star,
-                    title = "Lifetime Premium",
-                    description = "all premium features",
-                    price = fullPremiumPrice ?: "Loading...",
+                    title = stringResource(R.string.premium_lifetime),
+                    description = stringResource(R.string.premium_all_features),
+                    price = fullPremiumPrice ?: stringResource(R.string.common_loading),
                     onClick = onFullPremiumPurchase,
                     isBestValue = true
                 )
@@ -118,9 +118,9 @@ fun PremiumFeatureChoiceDialog(
                 // F-Droid: Only show Ko-fi option
                 PremiumOptionCard(
                     icon = Icons.Rounded.Star,
-                    title = "Support via Ko-fi",
-                    description = "all premium features",
-                    price = "One-time",
+                    title = stringResource(R.string.premium_kofi_support),
+                    description = stringResource(R.string.premium_all_features),
+                    price = stringResource(R.string.premium_one_time),
                     onClick = onFullPremiumPurchase,
                     isBestValue = true
                 )

@@ -84,7 +84,7 @@ fun KofiFallbackDialog(
             }
             
             Text(
-                text = stringResource(R.string.fdroid_premium_message),
+                text = stringResource(R.string.settings_fdroid_premium),
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -107,7 +107,7 @@ fun KofiFallbackDialog(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = stringResource(R.string.logs),
+                        text = stringResource(R.string.common_logs),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Medium
@@ -124,7 +124,7 @@ fun KofiFallbackDialog(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = stringResource(R.string.app_notifications_feature_label),
+                        text = stringResource(R.string.premium_app_notifications_feature),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Medium
@@ -141,7 +141,7 @@ fun KofiFallbackDialog(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = stringResource(R.string.dns_lists_feature_label),
+                        text = stringResource(R.string.premium_dns_lists_feature),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Medium
@@ -173,7 +173,7 @@ fun KofiFallbackDialog(
             }
             
             Text(
-                text = stringResource(R.string.premium_benefits_text),
+                text = stringResource(R.string.premium_benefits),
                 style = MaterialTheme.typography.labelSmall,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),

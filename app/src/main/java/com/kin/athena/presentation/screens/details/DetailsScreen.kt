@@ -93,28 +93,29 @@ fun DetailsScreen(
     onBack: () -> Unit,
     settings: SettingsViewModel,
     navController: NavController,
+    homeViewModel: com.kin.athena.presentation.screens.home.viewModel.HomeViewModel,
 ) {
     val uiState = viewModel.uiState.value
     val context = LocalContext.current
 
     when (uiState) {
-        is DetailsUiState.Success -> { ApplicationContent(application = uiState.application, context = context, onBack, viewModel, settings, navController) }
+        is DetailsUiState.Success -> { ApplicationContent(application = uiState.application, context = context, onBack, viewModel, settings, navController, homeViewModel) }
         else -> { /* Don't do anything */ }
     }
 }
 
 
 @Composable
-fun ApplicationContent(application: Application, context: Context, onBack: () -> Unit, viewModel: DetailsViewModel, settings: SettingsViewModel, navController: NavController) {
+fun ApplicationContent(application: Application, context: Context, onBack: () -> Unit, viewModel: DetailsViewModel, settings: SettingsViewModel, navController: NavController, homeViewModel: com.kin.athena.presentation.screens.home.viewModel.HomeViewModel) {
     MaterialScaffold(
         topBar = {
             MaterialBar(
-                title = stringResource(id = R.string.details),
+                title = stringResource(id = R.string.details_title),
                 onBackNavClicked = { onBack() }
             )
         },
         content = {
-            PackageDetails(packageEntity = application, context = context, viewModel = viewModel, settings = settings, navController = navController)
+            PackageDetails(packageEntity = application, context = context, viewModel = viewModel, settings = settings, navController = navController, homeViewModel = homeViewModel)
         }
     )
 }
@@ -126,7 +127,8 @@ private fun PackageDetails(
     packageEntity: Application,
     context: Context,
     settings: SettingsViewModel,
-    navController: NavController
+    navController: NavController,
+    homeViewModel: com.kin.athena.presentation.screens.home.viewModel.HomeViewModel
 ) {
     val packageInfo = packageEntity.toPackageInfo(context.packageManager)
     val title = packageEntity.getApplicationName(context.packageManager)
@@ -193,40 +195,50 @@ private fun PackageDetails(
                     // Show WiFi button only if not bypassing VPN
                     NetworkOption(
                         icon = Icons.Rounded.Wifi,
-                        label = "WiFi",
+                        label = stringResource(id = R.string.network_wifi),
                         cornerShape = RoundedCornerShape(topStart = 32.dp, bottomStart = 32.dp),
                         onClick = {
-                            viewModel.updatePackage(packageEntity.copy(internetAccess = !packageEntity.internetAccess))
+                            val updated = packageEntity.copy(internetAccess = !packageEntity.internetAccess)
+                            viewModel.updatePackage(updated)
+                            homeViewModel.updatePackage(updated, updateUI = true)
                         },
                         color = if (packageEntity.internetAccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                     )
                     Spacer(modifier = Modifier.width(1.dp))
                 }
 
-                // Always show VPN bypass button (with rounded corners if alone)
-                NetworkOption(
-                    icon = Icons.Rounded.VpnLock,
-                    label = "Bypass VPN",
-                    cornerShape = if (packageEntity.bypassVpn) {
-                        RoundedCornerShape(32.dp)
-                    } else {
-                        RoundedCornerShape(0.dp)
-                    },
-                    onClick = {
-                        viewModel.updatePackage(packageEntity.copy(bypassVpn = !packageEntity.bypassVpn))
-                    },
-                    color = if (packageEntity.bypassVpn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                    enabled = viewModel.isVpnMode() && settings.settings.value.useRootMode != true
-                )
+                // Only show VPN bypass option when NOT in root mode
+                val isRootMode = settings.settings.value.useRootMode == true
+                if (!isRootMode) {
+                    NetworkOption(
+                        icon = Icons.Rounded.VpnLock,
+                        label = stringResource(id = R.string.network_bypass_vpn),
+                        cornerShape = if (packageEntity.bypassVpn) {
+                            RoundedCornerShape(32.dp)
+                        } else {
+                            RoundedCornerShape(0.dp)
+                        },
+                        onClick = {
+                            val updated = packageEntity.copy(bypassVpn = !packageEntity.bypassVpn)
+                            viewModel.updatePackage(updated)
+                            homeViewModel.updatePackage(updated, updateUI = true)
+                        },
+                        color = if (packageEntity.bypassVpn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                    )
+                }
 
                 if (!packageEntity.bypassVpn) {
                     // Show Cellular button only if not bypassing VPN
                     Spacer(modifier = Modifier.width(1.dp))
                     NetworkOption(
                         icon = Icons.Rounded.SignalCellularAlt,
-                        label = "Cellular",
+                        label = stringResource(id = R.string.network_cellular),
                         cornerShape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp),
-                        onClick = { viewModel.updatePackage(packageEntity.copy(cellularAccess = !packageEntity.cellularAccess)) },
+                        onClick = {
+                            val updated = packageEntity.copy(cellularAccess = !packageEntity.cellularAccess)
+                            viewModel.updatePackage(updated)
+                            homeViewModel.updatePackage(updated, updateUI = true)
+                        },
                         color = if (packageEntity.cellularAccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                     )
                 }
@@ -236,13 +248,13 @@ private fun PackageDetails(
             settingsContainer {
                 SettingsBox(
                     icon = IconType.VectorIcon(Icons.Rounded.Numbers),
-                    title = stringResource(id = R.string.uid),
+                    title = stringResource(id = R.string.details_uid),
                     description = packageEntity.uid.toString(),
                     actionType = SettingType.TEXT
                 )
                 SettingsBox(
                     icon = IconType.VectorIcon(Icons.Rounded.Info),
-                    title = stringResource(id = R.string.version),
+                    title = stringResource(id = R.string.details_version),
                     description = it.versionName,
                     actionType = SettingType.TEXT
                 )
@@ -250,13 +262,13 @@ private fun PackageDetails(
             settingsContainer {
                 SettingsBox(
                     icon = IconType.VectorIcon(Icons.Rounded.Timer),
-                    title = stringResource(id = R.string.installation_time),
+                    title = stringResource(id = R.string.details_installation_time),
                     description = it.firstInstallTime.toFormattedDateTime(),
                     actionType = SettingType.TEXT
                 )
                 SettingsBox(
                     icon = IconType.VectorIcon(Icons.Rounded.Update),
-                    title = stringResource(id = R.string.last_updated_time),
+                    title = stringResource(id = R.string.details_last_updated),
                     description = it.lastUpdateTime.toFormattedDateTime(),
                     actionType = SettingType.TEXT
                 )
@@ -265,13 +277,13 @@ private fun PackageDetails(
             settingsContainer {
                 SettingsBox(
                     icon = IconType.VectorIcon(Icons.Rounded.RuleFolder),
-                    title = stringResource(id = R.string.permissions),
+                    title = stringResource(id = R.string.details_permissions),
                     description = permissions.size.toString(),
                     actionType = SettingType.CUSTOM,
                     customAction = { onExit ->
                         if (permissions.isNotEmpty()) {
                             ListDialog(
-                                text = stringResource(id = R.string.permissions),
+                                text = stringResource(id = R.string.details_permissions),
                                 list = permissions,
                                 onExit = { onExit() },
                                 extractDisplayData = { it },
@@ -296,7 +308,7 @@ private fun PackageDetails(
 
                 SettingsBox(
                     icon = IconType.VectorIcon(Icons.Rounded.InstallMobile),
-                    title = stringResource(id = R.string.installed),
+                    title = stringResource(id = R.string.details_installed),
                     isEnabled = installedBy != null,
                     description = installedBy,
                     actionType = SettingType.TEXT
@@ -313,7 +325,7 @@ private fun PackageDetails(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = stringResource(R.string.most_established_connections),
+                            text = stringResource(R.string.details_most_connections),
                             textAlign = TextAlign.Center,
                             fontSize = 16.sp,
                             fontWeight = FontWeight(530)

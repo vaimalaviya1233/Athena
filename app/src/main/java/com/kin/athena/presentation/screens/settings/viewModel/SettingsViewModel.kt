@@ -90,10 +90,10 @@ class SettingsViewModel @Inject constructor(
                 ifSuccess = { licenseResponse ->
                     if (licenseResponse.valid == true) {
                         update(settings.value.copy(premiumUnlocked = true))
-                        Toast.makeText(context, context.getString(R.string.premium_activated_successfully), Toast.LENGTH_LONG).show()
-                        onResult(true, context.getString(R.string.premium_activated_successfully))
+                        Toast.makeText(context, context.getString(R.string.premium_activation_success), Toast.LENGTH_LONG).show()
+                        onResult(true, context.getString(R.string.premium_activation_success))
                     } else {
-                        val errorMessage = licenseResponse.error ?: context.getString(R.string.invalid_license)
+                        val errorMessage = licenseResponse.error ?: context.getString(R.string.premium_invalid_license)
                         Toast.makeText(context, context.getString(R.string.premium_activation_error, errorMessage), Toast.LENGTH_LONG).show()
                         onResult(false, context.getString(R.string.premium_activation_error, errorMessage))
                     }
@@ -205,6 +205,14 @@ class SettingsViewModel @Inject constructor(
     fun update(newSettings: Settings, onSuccess: (() -> Unit)? = null) {
         val oldSettings = _settings.value
         _settings.value = newSettings.copy()
+
+        // Check if app filtering settings changed and trigger reload IMMEDIATELY
+        if (oldSettings.showSystemPackages != newSettings.showSystemPackages ||
+            oldSettings.showOfflinePackages != newSettings.showOfflinePackages) {
+            Logger.info("SettingsViewModel: App filtering settings changed, triggering immediate app reload")
+            onAppFilteringSettingsChanged?.invoke()
+        }
+
         viewModelScope.launch {
             try {
                 preferenceUseCases.saveSettings.execute(newSettings).fold(
@@ -213,14 +221,7 @@ class SettingsViewModel @Inject constructor(
                         if (oldSettings.blockPort80 != newSettings.blockPort80) {
                             firewallManager.updateHttpSettings()
                         }
-                        
-                        // Check if app filtering settings changed
-                        if (oldSettings.showSystemPackages != newSettings.showSystemPackages ||
-                            oldSettings.showOfflinePackages != newSettings.showOfflinePackages) {
-                            Logger.info("SettingsViewModel: App filtering settings changed, triggering app reload")
-                            onAppFilteringSettingsChanged?.invoke()
-                        }
-                        
+
                         onSuccess?.invoke()
                     },
                     ifFailure = { error ->

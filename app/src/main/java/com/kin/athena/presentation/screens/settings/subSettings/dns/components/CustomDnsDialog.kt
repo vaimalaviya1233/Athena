@@ -63,7 +63,7 @@ fun CustomDnsDialog(
     }
 
     SettingDialog(
-        text = stringResource(R.string.custom_dns),
+        text = stringResource(R.string.dns_custom),
         onExit = { onExit() }
     ) {
         Column {
@@ -113,12 +113,12 @@ fun CustomDnsDialog(
                         onDone(dns1.text, dns2.text)
                         onExit()
                     } else {
-                        Toast.makeText(context, context.getString(R.string.invalid_dns), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.dns_invalid), Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier.align(Alignment.End)
             ) {
-                Text(text = stringResource(R.string.done))
+                Text(text = stringResource(R.string.common_done))
             }
             Spacer(modifier = Modifier.height(8.dp))
         }

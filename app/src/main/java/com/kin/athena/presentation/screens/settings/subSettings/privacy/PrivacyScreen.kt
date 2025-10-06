@@ -55,21 +55,21 @@ fun PrivacyScreen(
 ) {
     SettingsScaffold(
         settings = settings,
-        title = stringResource(id = R.string.privacy_title),
+        title = stringResource(id = R.string.settings_privacy),
         onBackNavClicked = { navController.navigateUp() }
     ) {
         settingsContainer {
             SettingsBox(
-                title = stringResource(id = R.string.screen_protection),
-                description = stringResource(id = R.string.screen_protection_description),
+                title = stringResource(id = R.string.privacy_screen_protection),
+                description = stringResource(id = R.string.privacy_screen_protection_desc),
                 icon = IconType.VectorIcon(Icons.Filled.RemoveRedEye),
                 actionType = SettingType.SWITCH,
                 variable = settings.settings.value.screenProtection,
                 onSwitchEnabled = { settings.update(settings.settings.value.copy(screenProtection = it)) },
             )
             SettingsBox(
-                title = stringResource(id = R.string.app_lock),
-                description = stringResource(id = R.string.app_lock_description),
+                title = stringResource(id = R.string.privacy_app_lock),
+                description = stringResource(id = R.string.privacy_app_lock_desc),
                 icon = IconType.VectorIcon(Icons.Filled.Lock),
                 actionType = SettingType.CUSTOM,
                 customAction = { onExit ->
@@ -78,8 +78,8 @@ fun PrivacyScreen(
             )
             SettingsBox(
                 isEnabled = settings.settings.value.passcode != null || settings.settings.value.pattern != null || settings.settings.value.fingerprint,
-                title = stringResource(id = R.string.lock_on_resume),
-                description = stringResource(id = R.string.lock_on_resume_description),
+                title = stringResource(id = R.string.privacy_lock_on_resume),
+                description = stringResource(id = R.string.privacy_lock_on_resume_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.LockReset),
                 actionType = SettingType.SWITCH,
                 variable = settings.settings.value.lockImmediately,
@@ -88,22 +88,22 @@ fun PrivacyScreen(
         }
         settingsContainer {
             SettingsBox(
-                title = stringResource(id = R.string.block_port_80),
-                description = stringResource(id = R.string.block_port_80_description),
+                title = stringResource(id = R.string.privacy_block_port_80),
+                description = stringResource(id = R.string.privacy_block_port_80_desc),
                 icon = IconType.VectorIcon(Icons.Filled.Report),
                 actionType = SettingType.SWITCH,
                 variable = settings.settings.value.blockPort80,
                 onSwitchEnabled = { settings.update(settings.settings.value.copy(blockPort80 = it)) },
             )
             SettingsBox(
-                title = stringResource(id = R.string.arp_spoofing_protection),
-                description = stringResource(id = R.string.in_development),
+                title = stringResource(id = R.string.privacy_arp_spoofing),
+                description = stringResource(id = R.string.privacy_in_development),
                 icon = IconType.VectorIcon(Icons.Filled.Carpenter),
                 actionType = SettingType.TEXT,
             )
             SettingsBox(
                 title = stringResource(id = R.string.dns_rebind_protection),
-                description = stringResource(id = R.string.in_development),
+                description = stringResource(id = R.string.privacy_in_development),
                 icon = IconType.VectorIcon(Icons.Filled.Security),
                 actionType = SettingType.TEXT,
             )
@@ -120,13 +120,13 @@ private fun OnLockClicked(
     val context = LocalContext.current
 
     CustomListDialog(
-        text = stringResource(id = R.string.app_lock),
+        text = stringResource(id = R.string.privacy_app_lock),
         onExit = onExit
     ) {
         item {
             CreateSettingBox(
-                title = stringResource(id = R.string.passcode),
-                description = stringResource(id = R.string.authorize_passcode),
+                title = stringResource(id = R.string.privacy_passcode),
+                description = stringResource(id = R.string.privacy_authorize_passcode),
                 isEnabled = settings.settings.value.passcode.isNullOrBlank(),
                 onAction = {
                     onExit()
@@ -145,8 +145,8 @@ private fun OnLockClicked(
             )
             if (context.isFingerprintSupported()) {
                 CreateSettingBox(
-                    title = stringResource(id = R.string.fingerprint),
-                    description = stringResource(id = R.string.authorize_fingerprint),
+                    title = stringResource(id = R.string.lock_fingerprint),
+                    description = stringResource(id = R.string.privacy_authorize_fingerprint),
                     isEnabled = !settings.settings.value.fingerprint,
                     onAction = {
                         onExit()
@@ -165,8 +165,8 @@ private fun OnLockClicked(
                 )
             }
             CreateSettingBox(
-                title = stringResource(id = R.string.pattern),
-                description = stringResource(id = R.string.authorize_pattern),
+                title = stringResource(id = R.string.privacy_pattern),
+                description = stringResource(id = R.string.privacy_authorize_pattern),
                 isEnabled = settings.settings.value.pattern.isNullOrBlank(),
                 onAction = {
                     onExit()

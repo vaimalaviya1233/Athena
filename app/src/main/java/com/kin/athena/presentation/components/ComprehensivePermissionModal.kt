@@ -138,7 +138,7 @@ private fun VpnMethodSelection(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = stringResource(R.string.vpn_permission),
+            text = stringResource(R.string.vpn_permission_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
@@ -156,7 +156,7 @@ private fun VpnMethodSelection(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = stringResource(R.string.use_vpn_method),
+                text = stringResource(R.string.method_use_vpn),
                 fontWeight = FontWeight.Bold
             )
         }
@@ -173,7 +173,7 @@ private fun VpnMethodSelection(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = stringResource(R.string.use_root_method),
+                    text = stringResource(R.string.permissions_use_root_method),
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -215,7 +215,7 @@ private fun VpnPermissionRequest(
         Spacer(modifier = Modifier.height(24.dp))
         
         Text(
-            text = stringResource(R.string.setting_up_permissions),
+            text = stringResource(R.string.permissions_setup),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -223,7 +223,7 @@ private fun VpnPermissionRequest(
         Spacer(modifier = Modifier.height(8.dp))
         
         Text(
-            text = stringResource(R.string.grant_required_permissions_message),
+            text = stringResource(R.string.permissions_grant_required),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant

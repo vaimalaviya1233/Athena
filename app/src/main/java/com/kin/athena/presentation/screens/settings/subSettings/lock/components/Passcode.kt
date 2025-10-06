@@ -96,8 +96,8 @@ fun PasscodeLock(
         ) {
             Spacer(modifier = Modifier.fillMaxHeight(0.2f))
 
-            val text = if (settingsViewModel.settings.value.passcode.isNullOrBlank()) stringResource(id = R.string.setup_password) else stringResource(
-                id = R.string.enter_password
+            val text = if (settingsViewModel.settings.value.passcode.isNullOrBlank()) stringResource(id = R.string.lock_setup_password) else stringResource(
+                id = R.string.lock_enter_password
             )
 
             TitleText(text = text)

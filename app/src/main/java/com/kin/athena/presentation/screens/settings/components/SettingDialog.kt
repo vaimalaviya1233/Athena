@@ -121,7 +121,7 @@ fun IpDialog(
     }
 
     SettingDialog(
-        text = stringResource(R.string.add_ip),
+        text = stringResource(R.string.dialog_add_ip),
         onExit = { onExit() }
     ) {
         Row(
@@ -146,7 +146,7 @@ fun IpDialog(
                     } else {
                         Toast.makeText(
                             context,
-                            context.getString(R.string.invalid_ip),
+                            context.getString(R.string.dialog_invalid_ip),
                             Toast.LENGTH_SHORT
                         ).show()
                     }

@@ -78,7 +78,7 @@ fun PermissionModal(
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = { onPermissionRequest() }) {
                     Text(
-                        text = permissionRequest?.let { it } ?: stringResource(id = R.string.allow),
+                        text = permissionRequest?.let { it } ?: stringResource(id = R.string.common_allow),
                         fontWeight = FontWeight.Bold
                     )
                 }

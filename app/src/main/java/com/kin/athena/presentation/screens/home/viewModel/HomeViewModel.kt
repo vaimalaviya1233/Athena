@@ -347,13 +347,8 @@ class HomeViewModel @Inject constructor(
     fun updatePackage(packageEntity: Application, updateUI: Boolean = true) {
         viewModelScope.launch {
             Logger.info("HomeViewModel: updatePackage called for ${packageEntity.packageID}, wifi=${packageEntity.internetAccess}, cellular=${packageEntity.cellularAccess}")
-            // Update database on IO thread and wait for completion
-            withContext(Dispatchers.IO) {
-                applicationUseCases.updateApplication.execute(packageEntity)
-            }
-            Logger.info("HomeViewModel: Database updated for ${packageEntity.packageID}")
 
-            // Only update UI state if requested (to prevent unnecessary recomposition)
+            // Update UI state IMMEDIATELY before database update for instant feedback
             if (updateUI) {
                 val currentState = _applicationState.value
                 if (currentState is ApplicationListState.Success) {
@@ -361,8 +356,15 @@ class HomeViewModel @Inject constructor(
                         if (app.packageID == packageEntity.packageID) packageEntity else app
                     }
                     _applicationState.value = currentState.copy(applications = updatedApplications)
+                    Logger.info("HomeViewModel: UI state updated immediately for ${packageEntity.packageID}")
                 }
             }
+
+            // Update database on IO thread and wait for completion
+            withContext(Dispatchers.IO) {
+                applicationUseCases.updateApplication.execute(packageEntity)
+            }
+            Logger.info("HomeViewModel: Database updated for ${packageEntity.packageID}")
 
             if (firewallManager.rulesLoaded.value == FirewallStatus.ONLINE) {
                 withContext(Dispatchers.IO) {

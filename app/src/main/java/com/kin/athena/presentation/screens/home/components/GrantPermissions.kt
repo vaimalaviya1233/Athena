@@ -65,7 +65,7 @@ fun GrantPermissions(
         PermissionModal(
             sheetState = sheetState,
             permissionName = stringResource(id = R.string.permissions_request),
-            permissionDescription = stringResource(id = R.string.permissions_request_description),
+            permissionDescription = stringResource(id = R.string.permissions_request_desc),
             onPermissionRequest = {
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             },

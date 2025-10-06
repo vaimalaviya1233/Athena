@@ -80,7 +80,7 @@ fun PatternLock(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         val text = when {
-            settingsViewModel.settings.value.pattern == null -> stringResource(id = R.string.setup_pattern)
+            settingsViewModel.settings.value.pattern == null -> stringResource(id = R.string.lock_setup_pattern)
             settingsViewModel.settings.value.pattern != null -> stringResource(id = R.string.lock_pattern)
             else -> "Unknown action"
         }

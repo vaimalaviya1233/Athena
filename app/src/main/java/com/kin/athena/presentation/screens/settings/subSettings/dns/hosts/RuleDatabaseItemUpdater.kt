@@ -55,7 +55,7 @@ class RuleDatabaseItemUpdate(
         try {
             url = URL(item.data)
         } catch (e: MalformedURLException) {
-            worker.addError(item, context.getString(R.string.invalid_url_s) + item.data)
+            worker.addError(item, context.getString(R.string.rule_invalid_url) + item.data)
             return false
         }
 
@@ -75,14 +75,14 @@ class RuleDatabaseItemUpdate(
                 Logger.error("run: Permission requested for ${item.data}")
             } catch (e: SecurityException) {
                 Logger.error("run: Error taking permission", e)
-                worker.addError(item, context.getString(R.string.permission_denied))
+                worker.addError(item, context.getString(R.string.rule_permission_denied))
             } catch (e: FileNotFoundException) {
                 Logger.error("run: File not found", e)
-                worker.addError(item, context.getString(R.string.file_not_found))
+                worker.addError(item, context.getString(R.string.rule_file_not_found))
             } catch (e: IOException) {
                 worker.addError(
                     item,
-                    context.getString(R.string.unknown_error_s) + e.localizedMessage
+                    context.getString(R.string.rule_unknown_error) + e.localizedMessage
                 )
             }
             return
@@ -105,11 +105,11 @@ class RuleDatabaseItemUpdate(
             // Only mark as done if download succeeded (no exception thrown)
             worker.addDone(item)
         } catch (_: SocketTimeoutException) {
-            worker.addError(item, context.getString(R.string.requested_timed_out))
+            worker.addError(item, context.getString(R.string.rule_timeout))
         } catch (e: IOException) {
-            worker.addError(item, context.getString(R.string.unknown_error_s) + e.toString())
+            worker.addError(item, context.getString(R.string.rule_unknown_error) + e.toString())
         } catch (e: NullPointerException) {
-            worker.addError(item, context.getString(R.string.unknown_error_s) + e.toString())
+            worker.addError(item, context.getString(R.string.rule_unknown_error) + e.toString())
         } finally {
             connection?.disconnect()
         }
@@ -162,12 +162,12 @@ class RuleDatabaseItemUpdate(
             )
 
             if (connection.responseCode == 404) {
-                worker.addError(item, context.getString(R.string.file_not_found))
+                worker.addError(item, context.getString(R.string.rule_file_not_found))
             } else if (connection.responseCode != 304) {
-                context.resources.getString(R.string.host_update_error_item)
+                context.resources.getString(R.string.rule_update_error)
                 worker.addError(
                     item,
-                    context.resources.getString(R.string.host_update_error_item) + connection.getResponseCode() + connection.getResponseMessage()
+                    context.resources.getString(R.string.rule_update_error) + connection.getResponseCode() + connection.getResponseMessage()
                 )
             }
             return false

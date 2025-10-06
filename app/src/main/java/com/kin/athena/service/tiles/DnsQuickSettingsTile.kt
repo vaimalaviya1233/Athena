@@ -57,31 +57,31 @@ class DnsQuickSettingsTile : TileService() {
             if (!isVpnActive()) {
                 // VPN is not running, cannot toggle DNS blocking
                 Logger.warn("Quick Settings: VPN not active, cannot toggle DNS blocking")
-                showToast("VPN must be running to toggle DNS blocking")
+                showToast(getString(R.string.error_vpn_not_running))
                 openApp()
                 return
             }
-            
+
             val isDnsBlockingEnabled = firewallManager.isDnsBlockingEnabled()
-            
+
             if (isDnsBlockingEnabled) {
                 // DNS blocking is enabled, disable it
                 Logger.info("Quick Settings: Disabling DNS blocking")
                 firewallManager.setDnsBlocking(false)
-                showToast("DNS Blocking Disabled")
+                showToast(getString(R.string.dns_status_disabled))
             } else {
                 // DNS blocking is disabled, enable it
                 Logger.info("Quick Settings: Enabling DNS blocking")
                 firewallManager.setDnsBlocking(true)
-                showToast("DNS Blocking Enabled")
+                showToast(getString(R.string.dns_status_enabled))
             }
-            
+
             // Update tile state after action
             updateTileState()
-            
+
         } catch (e: Exception) {
             Logger.error("Quick Settings tile error: ${e.message}", e)
-            showToast("Error toggling DNS blocking")
+            showToast(getString(R.string.error_dns_toggle_failed))
         }
     }
 
@@ -96,35 +96,35 @@ class DnsQuickSettingsTile : TileService() {
                 isVpnActive && isDnsBlockingEnabled -> {
                     // VPN is running and DNS blocking is enabled
                     tile.state = Tile.STATE_ACTIVE
-                    tile.label = "DNS Blocking"
-                    tile.subtitle = getString(R.string.tile_active)
+                    tile.label = getString(R.string.dns_blocking_title)
+                    tile.subtitle = getString(R.string.tile_status_active)
                     tile.icon = Icon.createWithResource(applicationContext, R.drawable.ic_shield_check)
                 }
                 isVpnActive && !isDnsBlockingEnabled -> {
                     // VPN is running but DNS blocking is disabled
                     tile.state = Tile.STATE_INACTIVE
-                    tile.label = "DNS Blocking"
-                    tile.subtitle = getString(R.string.tile_tap_to_enable)
+                    tile.label = getString(R.string.dns_blocking_title)
+                    tile.subtitle = getString(R.string.tile_status_tap_enable)
                     tile.icon = Icon.createWithResource(applicationContext, R.drawable.ic_shield)
                 }
                 else -> {
                     // VPN is not running
                     tile.state = Tile.STATE_UNAVAILABLE
-                    tile.label = "DNS Blocking"
-                    tile.subtitle = getString(R.string.tile_vpn_required)
+                    tile.label = getString(R.string.dns_blocking_title)
+                    tile.subtitle = getString(R.string.tile_status_vpn_required)
                     tile.icon = Icon.createWithResource(applicationContext, R.drawable.ic_shield_off)
                 }
             }
-            
+
             tile.updateTile()
-            
+
         } catch (e: Exception) {
             Logger.error("Error updating tile state: ${e.message}", e)
-            
+
             // Fallback state
             tile.state = Tile.STATE_UNAVAILABLE
-            tile.label = "DNS Blocking"
-            tile.subtitle = getString(R.string.tile_error)
+            tile.label = getString(R.string.dns_blocking_title)
+            tile.subtitle = getString(R.string.tile_status_error)
             tile.icon = Icon.createWithResource(applicationContext, R.drawable.ic_shield_off)
             tile.updateTile()
         }

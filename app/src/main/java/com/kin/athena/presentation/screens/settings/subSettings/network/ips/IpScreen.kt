@@ -72,7 +72,7 @@ fun IpScreen(
     MaterialScaffold(
         floatingActionButton = {
             MaterialActionButton (
-                text = stringResource(R.string.enter_ip),
+                text = stringResource(R.string.network_enter_ip),
                 icon = Icons.Rounded.Add,
                 onClick = { ipViewModel.setAddDialog(true) }
             )
@@ -97,7 +97,7 @@ fun IpScreen(
                         modifier = Modifier.size(64.dp)
                     )
                 },
-                placeholderText = stringResource(R.string.no_ips_found)
+                placeholderText = stringResource(R.string.network_no_ips)
             )
         } else {
            LazyColumn(modifier = Modifier

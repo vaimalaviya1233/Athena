@@ -58,7 +58,7 @@ fun AdvancedCustomBlocklistDialog(
     onDone: (entry: BlocklistEntry) -> Unit,
     viewModel: CustomBlocklistViewModel = hiltViewModel()
 ) {
-    val importedCategoryLabel = stringResource(R.string.imported_category)
+    val importedCategoryLabel = stringResource(R.string.blocklist_imported_category)
     val dialogState by viewModel.dialogState.collectAsState()
     val currentEntry by viewModel.currentEntry.collectAsState()
     val validationState by viewModel.validationState.collectAsState()
@@ -75,11 +75,11 @@ fun AdvancedCustomBlocklistDialog(
     if (dialogState !is DialogState.Hidden) {
         SettingDialog(
             text = when (dialogState) {
-                is DialogState.AddingNew -> stringResource(R.string.add_custom_blocklist)
-                is DialogState.Editing -> stringResource(R.string.edit_blocklist)
-                is DialogState.ImportingFromFile -> stringResource(R.string.import_from_file)
-                is DialogState.ImportingFromUrl -> stringResource(R.string.import_multiple)
-                else -> stringResource(R.string.custom_blocklist)
+                is DialogState.AddingNew -> stringResource(R.string.blocklist_add)
+                is DialogState.Editing -> stringResource(R.string.blocklist_edit)
+                is DialogState.ImportingFromFile -> stringResource(R.string.blocklist_import_file)
+                is DialogState.ImportingFromUrl -> stringResource(R.string.blocklist_import_multiple)
+                else -> stringResource(R.string.blocklist_custom)
             },
             onExit = {
                 viewModel.hideDialog()
@@ -132,7 +132,7 @@ private fun AddEditBlocklistContent(
     viewModel: CustomBlocklistViewModel,
     onSave: (BlocklistEntry) -> Unit
 ) {
-    val customBlocklistDefault = stringResource(R.string.custom_blocklist)
+    val customBlocklistDefault = stringResource(R.string.blocklist_custom)
     var url by remember { mutableStateOf(TextFieldValue(entry?.url ?: "")) }
     var name by remember { mutableStateOf(TextFieldValue(entry?.name ?: "")) }
     var selectedCategory by remember { mutableStateOf(entry?.category ?: "Custom") }
@@ -213,7 +213,7 @@ private fun AddEditBlocklistContent(
             // Category Selection
             Column {
                 Text(
-                    text = stringResource(R.string.category_label),
+                    text = stringResource(R.string.blocklist_category),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium
                 )
@@ -273,7 +273,7 @@ private fun AddEditBlocklistContent(
                     },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(stringResource(R.string.cancel))
+                    Text(stringResource(R.string.common_cancel))
                 }
                 
                 Button(
@@ -292,7 +292,7 @@ private fun AddEditBlocklistContent(
                              viewModel.isValidUrl(url.text) &&
                              (validationState.isValid == true || !validationState.isValidating)
                 ) {
-                    Text(stringResource(R.string.custom_blocklist))
+                    Text(stringResource(R.string.blocklist_custom))
                 }
             }
         }
@@ -330,7 +330,7 @@ private fun ValidationStatusCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = stringResource(R.string.validating_message),
+                        text = stringResource(R.string.blocklist_validating),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -344,7 +344,7 @@ private fun ValidationStatusCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = stringResource(R.string.valid_blocklist_message),
+                            text = stringResource(R.string.blocklist_valid),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium
                         )
@@ -377,7 +377,7 @@ private fun ValidationStatusCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = stringResource(R.string.validation_failed_message),
+                            text = stringResource(R.string.blocklist_validation_failed),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium
                         )
@@ -399,7 +399,7 @@ private fun ValidationStatusCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = stringResource(R.string.enter_url_to_validate),
+                        text = stringResource(R.string.blocklist_enter_url),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -427,7 +427,7 @@ private fun ImportBlocklistContent(
     ) {
         item {
             Text(
-                text = stringResource(R.string.import_multiple_blocklists),
+                text = stringResource(R.string.blocklist_import_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -448,7 +448,7 @@ private fun ImportBlocklistContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = stringResource(R.string.paste_urls_button),
+                            text = stringResource(R.string.blocklist_paste_urls),
                             style = MaterialTheme.typography.titleSmall
                         )
                         
@@ -479,7 +479,7 @@ private fun ImportBlocklistContent(
                                 viewModel.importFromText(it.text)
                             }
                         },
-                        placeholder = stringResource(R.string.paste_urls_placeholder),
+                        placeholder = stringResource(R.string.blocklist_paste_placeholder),
                         singleLine = false
                     )
                 }
@@ -493,7 +493,7 @@ private fun ImportBlocklistContent(
                 ) {
                     CircularProgressIndicator(modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.parsing_urls_message))
+                    Text(stringResource(R.string.blocklist_parsing))
                 }
             }
         }
@@ -501,7 +501,7 @@ private fun ImportBlocklistContent(
         if (importResults.isNotEmpty()) {
             item {
                 Text(
-                    text = stringResource(R.string.found_valid_urls, importResults.size),
+                    text = stringResource(R.string.blocklist_found_urls, importResults.size),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium
                 )
@@ -571,7 +571,7 @@ private fun ImportBlocklistContent(
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            if (selectedUrls.size == importResults.size) stringResource(R.string.deselect_all) else stringResource(R.string.select_all)
+                            if (selectedUrls.size == importResults.size) stringResource(R.string.blocklist_deselect_all) else stringResource(R.string.blocklist_select_all)
                         )
                     }
                     
@@ -580,7 +580,7 @@ private fun ImportBlocklistContent(
                         enabled = selectedUrls.isNotEmpty(),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(stringResource(R.string.import_selected_button, selectedUrls.size))
+                        Text(stringResource(R.string.blocklist_import_selected, selectedUrls.size))
                     }
                 }
             }
@@ -588,7 +588,7 @@ private fun ImportBlocklistContent(
 
         item {
             Text(
-                text = stringResource(R.string.popular_preset_lists),
+                text = stringResource(R.string.blocklist_popular_presets),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium
             )
@@ -614,7 +614,7 @@ private fun ImportBlocklistContent(
                     onClick = { onImportSelected(selectedUrls.toList()) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(stringResource(R.string.import_selected_presets_button, selectedUrls.size))
+                    Text(stringResource(R.string.blocklist_import_presets, selectedUrls.size))
                 }
             }
         }
@@ -686,7 +686,7 @@ private fun PresetBlocklistCard(
                             onClick = { },
                             label = { 
                                 Text(
-                                    text = stringResource(R.string.entries_count, count / 1000),
+                                    text = stringResource(R.string.blocklist_entries, count / 1000),
                                     fontSize = 10.sp
                                 ) 
                             },

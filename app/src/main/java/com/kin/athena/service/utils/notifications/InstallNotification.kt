@@ -57,8 +57,8 @@ suspend fun Service.showInstallNotification(
     val channelID = CoreNotificationUtils.createNotificationChannel(
         context = this,
         channelId = "install_channel",
-        channelName = R.string.install_notification_channel_name,
-        channelDescription = R.string.install_notification_channel_description,
+        channelName = R.string.notification_install_channel,
+        channelDescription = R.string.notification_install_channel_desc,
         importance = NotificationManager.IMPORTANCE_MAX,
     )
 
@@ -125,7 +125,7 @@ private fun Service.createInstallNotification(
     return NotificationCompat.Builder(this, channelID).apply {
         setColor(Color.RED)
         setContentTitle(application.getApplicationName(packageManager))
-        setContentText(getString(R.string.install_notification_message))
+        setContentText(getString(R.string.notification_install_message))
         setSmallIcon(android.R.drawable.stat_sys_download_done)
         setPriority(NotificationCompat.PRIORITY_HIGH)
         setColorized(true)
@@ -186,5 +186,5 @@ private fun Service.createPendingIntent(
 }
 
 private fun Service.getEnableDisableText(isEnabled: Boolean): String {
-    return if (isEnabled) this.getString(R.string.disable) else this.getString(R.string.enable)
+    return if (isEnabled) this.getString(R.string.common_disable) else this.getString(R.string.common_enable)
 }

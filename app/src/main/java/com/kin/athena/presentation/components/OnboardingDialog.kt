@@ -179,7 +179,7 @@ private fun TutorialDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = stringResource(R.string.tap_security_icon_instruction),
+                            text = stringResource(R.string.onboarding_tap_security),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                             textAlign = TextAlign.Start

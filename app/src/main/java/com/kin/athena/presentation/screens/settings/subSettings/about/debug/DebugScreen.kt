@@ -43,19 +43,19 @@ fun DebugScreen(
     
     SettingsScaffold(
         settings = settingsViewModel,
-        title = stringResource(id = R.string.debug),
+        title = stringResource(id = R.string.debug_title),
         onBackNavClicked = { navController.navigateUp() }
     ) {
           settingsContainer {
               SettingsBox(
-                  title = stringResource(R.string.delete_iptables_chain),
+                  title = stringResource(R.string.debug_delete_iptables),
                   actionType = SettingType.CUSTOM,
                   customAction = { onExit ->
                         ClearChainSheet(onExit)
                   }
               )
               SettingsBox(
-                  title = stringResource(R.string.remove_all_hosts),
+                  title = stringResource(R.string.debug_remove_hosts),
                   actionType = SettingType.CUSTOM,
                   customAction = { onExit ->
                         ClearHostsSheet(context, onExit)
@@ -72,9 +72,9 @@ fun ClearChainSheet(onExit: () -> Unit) {
 
 
     PermissionModal(
-        permissionName = stringResource(id = R.string.firewall_terminated),
+        permissionName = stringResource(id = R.string.home_firewall_terminated),
         permissionDescription = stringResource(id = R.string.firewall_terminated_description),
-        permissionRequest = stringResource(id = R.string.clear),
+        permissionRequest = stringResource(id = R.string.common_clear),
         onDismiss = {
             onExit()
         },
@@ -83,7 +83,7 @@ fun ClearChainSheet(onExit: () -> Unit) {
             onExit()
         },
         sheetState = disableState,
-        permissionAlternative = stringResource(id = R.string.cancel),
+        permissionAlternative = stringResource(id = R.string.common_cancel),
         onPermissionAlternativeRequest = {
             onExit()
         }
@@ -96,9 +96,9 @@ fun ClearHostsSheet(context: android.content.Context, onExit: () -> Unit) {
     val disableState = rememberModalBottomSheetState()
 
     PermissionModal(
-        permissionName = stringResource(R.string.clear_hosts_file_title),
-        permissionDescription = stringResource(R.string.clear_hosts_file_description),
-        permissionRequest = stringResource(id = R.string.clear),
+        permissionName = stringResource(R.string.debug_clear_hosts_title),
+        permissionDescription = stringResource(R.string.debug_clear_hosts_desc),
+        permissionRequest = stringResource(id = R.string.common_clear),
         onDismiss = {
             onExit()
         },
@@ -113,7 +113,7 @@ fun ClearHostsSheet(context: android.content.Context, onExit: () -> Unit) {
             onExit()
         },
         sheetState = disableState,
-        permissionAlternative = stringResource(id = R.string.cancel),
+        permissionAlternative = stringResource(id = R.string.common_cancel),
         onPermissionAlternativeRequest = {
             onExit()
         }

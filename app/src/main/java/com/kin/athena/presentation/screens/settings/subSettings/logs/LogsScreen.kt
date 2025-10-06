@@ -113,7 +113,7 @@ fun LogsSearchBar(
     onBackClicked: () -> Unit
 ) {
     SearchBar(
-        text = stringResource(R.string.search_packets),
+        text = stringResource(R.string.logs_search_packets),
         query = query,
         onQueryChange = onQueryChange,
         onClearClick = onClearClick,
@@ -138,7 +138,7 @@ fun LogsContent(logs: List<List<Log>>, context: Context, navController: NavContr
                     tint = MaterialTheme.colorScheme.outline
                 )
             },
-            placeholderText = stringResource(R.string.no_logs_found)
+            placeholderText = stringResource(R.string.logs_no_logs)
         )
     } else {
         LazyColumn(

@@ -65,6 +65,7 @@ fun AppNavHost(
             DetailsScreen(
                 settings = settings,
                 navController = navController,
+                homeViewModel = homeViewModel,
                 onBack = { navController.navigateUp() }
             )
         }

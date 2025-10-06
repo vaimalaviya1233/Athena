@@ -56,21 +56,21 @@ fun ColorsScreen(
 ) {
     SettingsScaffold(
         settings = settings,
-        title = stringResource(id = R.string.colors_title),
+        title = stringResource(id = R.string.settings_colors),
         onBackNavClicked = { navController.navigateUp() }
     ) {
         settingsContainer {
             SettingsBox(
-                title = stringResource(id = R.string.system_theme),
-                description = stringResource(id = R.string.system_theme_description),
+                title = stringResource(id = R.string.colors_system_theme),
+                description = stringResource(id = R.string.colors_system_theme_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.HdrAuto),
                 actionType = SettingType.SWITCH,
                 variable = settings.settings.value.automaticTheme,
                 onSwitchEnabled = { settings.update(settings.settings.value.copy(automaticTheme = it)) }
             )
             SettingsBox(
-                title = stringResource(id = R.string.dark_theme),
-                description = stringResource(id = R.string.dark_theme_description),
+                title = stringResource(id = R.string.colors_dark_theme),
+                description = stringResource(id = R.string.colors_dark_theme_desc),
                 isEnabled = !settings.settings.value.automaticTheme,
                 icon = IconType.VectorIcon(Icons.Rounded.Palette),
                 actionType = SettingType.SWITCH,
@@ -87,8 +87,8 @@ fun ColorsScreen(
         }
         settingsContainer {
             SettingsBox(
-                title = stringResource(id = R.string.dynamic_colors),
-                description = stringResource(id = R.string.dynamic_colors_description),
+                title = stringResource(id = R.string.colors_dynamic),
+                description = stringResource(id = R.string.colors_dynamic_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.Colorize),
                 isEnabled = !settings.settings.value.automaticTheme,
                 actionType = SettingType.SWITCH,
@@ -104,8 +104,8 @@ fun ColorsScreen(
             )
             val iconColors =  MaterialTheme.colorScheme.primary
             SettingsBox(
-                title = stringResource(id = R.string.dynamic_icons),
-                description = stringResource(id = R.string.dynamic_icons_description),
+                title = stringResource(id = R.string.colors_dynamic_icons),
+                description = stringResource(id = R.string.colors_dynamic_icons_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.Apps),
                 actionType = SettingType.SWITCH,
                 variable = settings.settings.value.useDynamicIcons,
@@ -131,8 +131,8 @@ fun ColorsScreen(
         }
         settingsContainer {
             SettingsBox(
-                title = stringResource(id = R.string.amoled_colors),
-                description = stringResource(id = R.string.amoled_colors_description),
+                title = stringResource(id = R.string.colors_amoled),
+                description = stringResource(id = R.string.colors_amoled_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.DarkMode),
                 actionType = SettingType.SWITCH,
                 isEnabled = settings.settings.value.darkTheme,
@@ -140,8 +140,8 @@ fun ColorsScreen(
                 onSwitchEnabled = { settings.update(settings.settings.value.copy(amoledTheme = it)) }
             )
             SettingsBox(
-                title = stringResource(id = R.string.show_disable_dialog),
-                description = stringResource(id =  R.string.show_disable_dialog_description),
+                title = stringResource(id = R.string.colors_show_disable_dialog),
+                description = stringResource(id =  R.string.colors_show_disable_dialog_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.Security),
                 actionType = SettingType.SWITCH,
                 variable = settings.settings.value.showDialog,
@@ -150,7 +150,7 @@ fun ColorsScreen(
         }
         settingsContainer {
             SettingsBox(
-                title = stringResource(id = R.string.language),
+                title = stringResource(id = R.string.colors_language),
                 description = stringResource(id = R.string.language_description),
                 icon = IconType.VectorIcon(Icons.Rounded.Translate),
                 actionType = SettingType.CUSTOM,
@@ -169,11 +169,11 @@ private fun OnLanguageClicked(settingsViewModel: SettingsViewModel, onExit: () -
     val context = LocalContext.current
     val languages = settingsViewModel.getSupportedLanguages(context).toList()
     ListDialog(
-        text = stringResource(R.string.language),
+        text = stringResource(R.string.colors_language),
         list = languages,
         onExit = onExit,
         extractDisplayData = { it },
-        initialItem = Pair(context.getString(R.string.system_language), second = ""),
+        initialItem = Pair(context.getString(R.string.colors_system_language), second = ""),
         setting = { displayData ->
             SettingsBox(
                 size = 8.dp,

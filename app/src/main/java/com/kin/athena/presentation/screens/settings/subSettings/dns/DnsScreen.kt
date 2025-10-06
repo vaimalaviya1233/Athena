@@ -284,13 +284,13 @@ fun DnsScreen(
 
     SettingsScaffold(
         settings = settings,
-        title = stringResource(id = R.string.dns_title),
+        title = stringResource(id = R.string.settings_dns),
         onBackNavClicked = { navController.navigateUp() }
     ) {
         settingsContainer {
             SettingsBox(
-                title = stringResource(R.string.set_dns),
-                description = stringResource(R.string.set_dns_description),
+                title = stringResource(R.string.dns_set_custom),
+                description = stringResource(R.string.dns_set_custom_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.Dns),
                 actionType = SettingType.CUSTOM,
                 customAction = { onExit ->
@@ -306,8 +306,8 @@ fun DnsScreen(
             }
 
             SettingsBox(
-                title = stringResource(id = R.string.malware_protection),
-                description = stringResource(id = R.string.malware_protection_description),
+                title = stringResource(id = R.string.dns_malware_protection),
+                description = stringResource(id = R.string.dns_malware_protection_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.Security),
                 actionType = SettingType.SWITCH,
                 variable = localSwitchStates[AppConstants.DnsBlockLists.MALWARE_PROTECTION] 
@@ -317,8 +317,8 @@ fun DnsScreen(
                 }
             )
             SettingsBox(
-                title = stringResource(id = R.string.ad_protection),
-                description = stringResource(id = R.string.ad_blocker_description),
+                title = stringResource(id = R.string.dns_ad_protection),
+                description = stringResource(id = R.string.dns_ad_blocker_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.AdsClick),
                 actionType = SettingType.SWITCH,
                 variable = localSwitchStates[AppConstants.DnsBlockLists.AD_PROTECTION] 
@@ -328,8 +328,8 @@ fun DnsScreen(
                 }
             )
             SettingsBox(
-                title = stringResource(id = R.string.block_trackers),
-                description = stringResource(id = R.string.block_trackers_description),
+                title = stringResource(id = R.string.dns_block_trackers),
+                description = stringResource(id = R.string.dns_block_trackers_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.RemoveRedEye),
                 actionType = SettingType.SWITCH,
                 variable = localSwitchStates[AppConstants.DnsBlockLists.PRIVACY_PROTECTION] 
@@ -341,8 +341,8 @@ fun DnsScreen(
         }
         settingsContainer {
             SettingsBox(
-                title = stringResource(id = R.string.social_media),
-                description = stringResource(id = R.string.social_media_description),
+                title = stringResource(id = R.string.dns_social_media),
+                description = stringResource(id = R.string.dns_social_media_desc),
                 icon = IconType.VectorIcon(Icons.AutoMirrored.Rounded.Message),
                 actionType = SettingType.SWITCH,
                 variable = localSwitchStates[AppConstants.DnsBlockLists.SOCIAL_PROTECTION] 
@@ -352,8 +352,8 @@ fun DnsScreen(
                 }
             )
             SettingsBox(
-                title = stringResource(id = R.string.adult_content),
-                description = stringResource(id = R.string.block_adult_content),
+                title = stringResource(id = R.string.dns_adult_content),
+                description = stringResource(id = R.string.dns_block_adult),
                 icon = IconType.VectorIcon(Icons.Rounded.Man),
                 actionType = SettingType.SWITCH,
                 variable = localSwitchStates[AppConstants.DnsBlockLists.ADULT_PROTECTION] 
@@ -363,8 +363,8 @@ fun DnsScreen(
                 }
             )
             SettingsBox(
-                title = stringResource(id = R.string.gambling),
-                description = stringResource(id = R.string.block_gambling),
+                title = stringResource(id = R.string.dns_gambling),
+                description = stringResource(id = R.string.dns_block_gambling),
                 icon = IconType.VectorIcon(Icons.Rounded.Games),
                 actionType = SettingType.SWITCH,
                 variable = localSwitchStates[AppConstants.DnsBlockLists.GAMBLING_PROTECTION] 
@@ -376,11 +376,11 @@ fun DnsScreen(
         }
 
         settingsContainer {
-            val customBlocklistTitle = stringResource(id = R.string.custom_blocklist)
-            val customBlocklistDescription = stringResource(R.string.custom_blocklist_description)
+            val customBlocklistTitle = stringResource(id = R.string.blocklist_custom)
+            val customBlocklistDescription = stringResource(R.string.blocklist_custom_desc)
             
             SettingsBox(
-                title = customBlocklistTitle + " " + stringResource(id = R.string.premium_setting),
+                title = customBlocklistTitle + " " + stringResource(id = R.string.premium_feature_indicator),
                 description = customBlocklistDescription,
                 icon = IconType.VectorIcon(Icons.Rounded.Add),
                 actionType = SettingType.CUSTOM,
@@ -395,7 +395,7 @@ fun DnsScreen(
                 },
             )
             SettingsBox(
-                title = stringResource(id = R.string.blocked_domains),
+                title = stringResource(id = R.string.dns_blocked_domains),
                 description = run {
                     val currentCount = blockList.value.value.count()
                     when {
@@ -447,7 +447,7 @@ fun DnsScreen(
     if (showPremiumDialog) {
         PremiumFeatureChoiceDialog(
             featureName = "Custom Blocklist",
-            featureDescription = stringResource(R.string.custom_blocklist_description),
+            featureDescription = stringResource(R.string.blocklist_custom_desc),
             singleFeaturePrice = settings.getProductPrice("custom_blocklist"),
             fullPremiumPrice = settings.getProductPrice("all_features"),
             onSingleFeaturePurchase = { 
@@ -485,15 +485,15 @@ private fun OnDNSClicked(settings: SettingsViewModel, onExit: () -> Unit) {
     }
 
     ListDialog(
-        text = stringResource(R.string.dns_title),
+        text = stringResource(R.string.settings_dns),
         list = list,
         onExit = onExit,
         extractDisplayData = { it },
         customItem = {
             SettingsBox(
                 size = 8.dp,
-                title = stringResource(R.string.custom_dns),
-                description = stringResource(R.string.set_custom_dns),
+                title = stringResource(R.string.dns_custom),
+                description = stringResource(R.string.dns_set_custom),
                 actionType = SettingType.CUSTOM,
                 customAction = { onExit ->
                     CustomDnsDialog(

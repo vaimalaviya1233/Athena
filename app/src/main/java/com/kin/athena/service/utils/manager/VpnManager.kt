@@ -65,7 +65,7 @@ object VpnManager {
 
         if (isVpnRequestPermission) {
             PermissionModal(
-                permissionName = stringResource(id = R.string.vpn_permission),
+                permissionName = stringResource(id = R.string.vpn_permission_title),
                 permissionDescription = stringResource(id = R.string.vpn_permission_description),
                 onPermissionRequest = {
                     askForPermission.value = true

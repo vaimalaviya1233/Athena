@@ -49,7 +49,7 @@ fun SettingsScreen(
 ) {
     SettingsScaffold(
         settings = settings,
-        title = stringResource(id = R.string.settings),
+        title = stringResource(id = R.string.common_settings),
         onBackNavClicked = { navController.navigateUp() }
     ) {
 
@@ -60,16 +60,16 @@ fun SettingsScreen(
                 val originalPrice = settings.calculateOriginalPrice(currentPrice)
 
                 SettingBoxSmall(
-                    title = stringResource(R.string.premium),
+                    title = stringResource(R.string.settings_premium),
                     description = currentPrice?.let {
-                        stringResource(R.string.support_development, it)
-                    } ?: stringResource(R.string.support_development, "Loading..."),
+                        stringResource(R.string.settings_support_dev, it)
+                    } ?: stringResource(R.string.settings_support_dev, "Loading..."),
                     originalPrice = originalPrice,
                     salePrice = null,
                     onAction = {
                         settings.showFeatureChoiceDialog(
-                            featureName = context.getString(R.string.all_premium_features),
-                            featureDescription = context.getString(R.string.fdroid_premium_message),
+                            featureName = context.getString(R.string.settings_all_premium),
+                            featureDescription = context.getString(R.string.settings_fdroid_premium),
                             productId = "all_features"
                         ) {
                             settings.update(settings.settings.value.copy(premiumUnlocked = true))
@@ -82,21 +82,21 @@ fun SettingsScreen(
             SectionBlock(
                 listOf(
                     SettingSection(
-                        title = stringResource(id = R.string.colors_title),
+                        title = stringResource(id = R.string.settings_colors),
                         features = listOf(
-                            stringResource(id = R.string.colors_option_theme),
-                            stringResource(id = R.string.colors_option_radius),
-                            stringResource(id = R.string.colors_option_sort)
+                            stringResource(id = R.string.settings_colors_option_theme),
+                            stringResource(id = R.string.settings_colors_option_radius),
+                            stringResource(id = R.string.settings_colors_option_sort)
                         ),
                         icon = Icons.Rounded.Palette,
                         onClick = { navController.safeNavigate(SettingRoutes.Colors.route) }
                     ),
                     SettingSection(
-                        title = stringResource(id = R.string.behavior_title),
+                        title = stringResource(id = R.string.settings_behavior),
                         features = listOf(
-                            stringResource(id = R.string.behavior_option_system),
-                            stringResource(id = R.string.behavior_option_rules),
-                            stringResource(id = R.string.behavior_option_logging)
+                            stringResource(id = R.string.settings_behavior_option_system),
+                            stringResource(id = R.string.settings_behavior_option_rules),
+                            stringResource(id = R.string.settings_behavior_option_logging)
                         ),
                         icon = Icons.Rounded.RuleFolder,
                         onClick = { navController.safeNavigate(SettingRoutes.Behavior.route) }
@@ -108,20 +108,20 @@ fun SettingsScreen(
             SectionBlock(
                 listOf(
                     SettingSection(
-                        title = stringResource(id = R.string.network_title),
+                        title = stringResource(id = R.string.settings_network),
                         features = listOf(
-                            stringResource(id = R.string.network_option_lockdown),
-                            stringResource(id = R.string.network_option_calling)
+                            stringResource(id = R.string.settings_network_option_lockdown),
+                            stringResource(id = R.string.settings_network_option_calling)
                         ),
                         icon = Icons.Rounded.Wifi,
                         onClick = { navController.safeNavigate(SettingRoutes.Network.route) }
                     ),
                     SettingSection(
-                        title = stringResource(id = R.string.dns_title),
+                        title = stringResource(id = R.string.settings_dns),
                         features = listOf(
-                            stringResource(id = R.string.dns_option_block),
-                            stringResource(id = R.string.dns_option_hostname),
-                            stringResource(id = R.string.dns_option_updates)
+                            stringResource(id = R.string.settings_dns_option_block),
+                            stringResource(id = R.string.settings_dns_option_hostname),
+                            stringResource(id = R.string.settings_dns_option_updates)
                         ),
                         icon = Icons.Rounded.Dns,
                         onClick = { navController.safeNavigate(SettingRoutes.Dns.route) }
@@ -133,11 +133,11 @@ fun SettingsScreen(
             SectionBlock(
                 listOf(
                     SettingSection(
-                        title = stringResource(id = R.string.privacy_title),
+                        title = stringResource(id = R.string.settings_privacy),
                         features = listOf(
-                            stringResource(id = R.string.privacy_option_lock),
-                            stringResource(id = R.string.privacy_option_hide_screen),
-                            stringResource(id = R.string.privacy_title)
+                            stringResource(id = R.string.settings_privacy_option_lock),
+                            stringResource(id = R.string.settings_privacy_option_hide),
+                            stringResource(id = R.string.settings_privacy)
                         ),
                         icon = ImageVector.vectorResource(id = R.drawable.incognito),
                         onClick = { navController.safeNavigate(SettingRoutes.Privacy.route) }
@@ -145,9 +145,9 @@ fun SettingsScreen(
                     SettingSection(
                         title = stringResource(id = R.string.about_title),
                         features = listOf(
-                            stringResource(id = R.string.version),
-                            stringResource(id = R.string.about_option_developers),
-                            stringResource(id = R.string.license)
+                            stringResource(id = R.string.details_version),
+                            stringResource(id = R.string.settings_about_option_devs),
+                            stringResource(id = R.string.settings_license)
                         ),
                         icon = Icons.Rounded.Info,
                         onClick = { navController.safeNavigate(SettingRoutes.About.route) }
