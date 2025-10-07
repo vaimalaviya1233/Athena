@@ -20,6 +20,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.Data
+import androidx.work.workDataOf
 import com.kin.athena.core.logging.Logger
 import com.kin.athena.presentation.config
 import com.kin.athena.service.utils.manager.FirewallManager
@@ -58,26 +59,29 @@ class RuleDatabaseUpdateWorker @AssistedInject constructor(
     private val done = ArrayList<String>()
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        Logger.info("DNS Manager Starting")
-        _isRefreshing.value = true
         val start = System.currentTimeMillis()
-        val jobs = mutableListOf<Deferred<Unit>>()
-        
+        _isRefreshing.value = true
+
         // Check if we should update specific lists only
         val targetLists = inputData.getStringArray("target_lists")
         val hostsToProcess = if (targetLists != null && targetLists.isNotEmpty()) {
-            // Only process specific lists
             config.hosts.items.filter { targetLists.contains(it.data) }
         } else {
-            // Process all lists (default behavior)
             config.hosts.items
         }
-        
-        Logger.info("DNS Manager: Processing ${hostsToProcess.size} out of ${config.hosts.items.size} lists")
-        
+
+        Logger.info("DNS blocklist update started: ${hostsToProcess.size} lists to process")
+
+        // Set initial progress
+        setProgress(workDataOf("progress" to 0, "stage" to "downloading"))
+
+        // Process downloads in parallel
+        val jobs = mutableListOf<Deferred<Unit>>()
+        var totalJobs = 0
         hostsToProcess.forEach {
             val update = RuleDatabaseItemUpdate(context, this@RuleDatabaseUpdateWorker, it)
             if (update.shouldDownload()) {
+                totalJobs++
                 val job = async { update.run() }
                 job.start()
                 jobs.add(job)
@@ -86,31 +90,66 @@ class RuleDatabaseUpdateWorker @AssistedInject constructor(
 
         releaseGarbagePermissions()
 
+        // Wait for all downloads with timeout and update progress
         try {
             withTimeout(DATABASE_UPDATE_TIMEOUT) {
-                jobs.awaitAll()
+                jobs.forEachIndexed { index, job ->
+                    job.await()
+                    // Update progress: 0-70% for downloading
+                    val downloadProgress = ((index + 1) * 70) / totalJobs.coerceAtLeast(1)
+                    setProgress(workDataOf("progress" to downloadProgress, "stage" to "downloading"))
+                }
             }
         } catch (_: TimeoutCancellationException) {
+            Logger.warn("DNS update timeout: Some downloads did not complete within ${DATABASE_UPDATE_TIMEOUT}ms")
         }
-        val end = System.currentTimeMillis()
-        Logger.info("DNS Manager Finished (${end - start} milliseconds)")
+
+        // Update progress for parsing stage
+        setProgress(workDataOf("progress" to 75, "stage" to "parsing"))
+
+        // Update domains once after all downloads complete with progress callback
+        Logger.info("Reloading domain rules from downloaded files")
+        firewallManager.updateDomains { progress ->
+            setProgress(workDataOf("progress" to progress, "stage" to "parsing"))
+        }
+
+        val duration = System.currentTimeMillis() - start
+        val successCount = done.size
+        val errorCount = errors.size
+
+        Logger.info("DNS blocklist update completed: ${successCount} succeeded, ${errorCount} failed (${duration}ms total)")
+
         postExecute()
-        if (errors.isNotEmpty()) {
+
+        // Consider it a success if:
+        // 1. There were no errors at all, OR
+        // 2. There were some errors but at least some succeeded (partial success is still success)
+        // This handles both fresh downloads and cases where download fails but cached file was loaded
+        if (errors.isNotEmpty() && successCount == 0) {
+            // Only fail if ALL operations failed with no successes
+            Logger.warn("All downloads failed with ${errorCount} errors")
             Result.failure()
         } else {
+            // Set final progress to 100% on success
+            setProgress(workDataOf("progress" to 100, "stage" to "complete"))
+            if (errors.isNotEmpty()) {
+                Logger.info("Completed with ${successCount} successes and ${errorCount} errors (partial success)")
+            }
             Result.success()
         }
     }
 
     private fun releaseGarbagePermissions() {
         val contentResolver = context.contentResolver
+        var releasedCount = 0
         for (permission in contentResolver.persistedUriPermissions) {
             if (isGarbage(permission.uri)) {
-                Logger.info("releaseGarbagePermissions: Releasing permission for ${permission.uri}")
                 contentResolver.releasePersistableUriPermission(permission.uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            } else {
-                Logger.info("releaseGarbagePermissions: Keeping permission for ${permission.uri}")
+                releasedCount++
             }
+        }
+        if (releasedCount > 0) {
+            Logger.debug("Released $releasedCount unused URI permissions")
         }
     }
 
@@ -144,20 +183,18 @@ class RuleDatabaseUpdateWorker @AssistedInject constructor(
 
     @Synchronized
     fun addError(item: Host, message: String) {
-        Logger.error("error: ${item.title}:$message")
+        Logger.warn("${item.title}: $message")
         errors.add("${item.title}\n$message")
     }
 
     @Synchronized
     fun addDone(item: Host) {
-        firewallManager.updateDomains()
+        // Don't update domains here - wait until all downloads complete
         pending.remove(item.title)
         done.add(item.title)
         doneNames.value = doneNames.value.toMutableList().apply { add(item.title) }
         updateProgressNotification()
     }
-
-
     @Synchronized
     fun addBegin(item: Host) {
         pending.add(item.title)

@@ -96,8 +96,8 @@ class VpnConnectionServer : Service(), CoroutineScope by MainScope(), AppChangeC
     }
 
 
-    override fun updateDomains() {
-        ruleManager.updateBlocklist()
+    override suspend fun updateDomains(progressCallback: (suspend (Int) -> Unit)?) {
+        ruleManager.updateBlocklist(progressCallback)
     }
 
     override fun updateHttpSettings() {

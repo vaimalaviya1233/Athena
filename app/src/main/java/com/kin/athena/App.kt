@@ -44,7 +44,12 @@ class App : Application(), Configuration.Provider {
         super.onCreate()
         App.applicationContext = this
         instance = this
-        domainCacheService.initializeGlobally()
+        // Don't initialize domains on app startup - they'll be loaded when needed
+        // This significantly improves app startup time
+        // Domains will be loaded when:
+        // 1. VPN service starts
+        // 2. User navigates to DNS settings
+        // 3. User manually triggers a refresh
     }
 
     companion object {

@@ -34,6 +34,7 @@ class RuleDatabase {
         private const val IPV6_LOOPBACK = "::1"
         private const val NO_ROUTE = "0.0.0.0"
 
+        @Deprecated("Use BlocklistParser.parseLine() instead")
         fun parseLine(line: String): String? {
             if (line.isEmpty() || line.isBlank()) {
                 return null
@@ -86,13 +87,43 @@ class RuleDatabase {
     }
 
     var blockedHosts = MutableStateFlow(atomic(intSetOf()))
+    private val wildcardRules = mutableListOf<BlocklistRule.WildcardDomain>()
+    private val regexRules = mutableListOf<BlocklistRule.RegexPattern>()
+    private val whitelistedHosts = mutableSetOf<String>()
 
-    fun isBlocked(host: String): Boolean = blockedHosts.value.value.contains(host.hashCode())
+    fun isBlocked(host: String): Boolean {
+        val lowerHost = host.lowercase()
+
+        // Check if whitelisted first
+        if (whitelistedHosts.contains(lowerHost)) {
+            return false
+        }
+
+        // Check exact match in blocked hosts
+        if (blockedHosts.value.value.contains(lowerHost.hashCode())) {
+            return true
+        }
+
+        // Check wildcard rules
+        for (rule in wildcardRules) {
+            if (rule.regex.matches(lowerHost)) {
+                return true
+            }
+        }
+
+        // Check regex rules
+        for (rule in regexRules) {
+            if (rule.regex.matches(lowerHost)) {
+                return true
+            }
+        }
+
+        return false
+    }
 
 
-    @Synchronized
     @Throws(InterruptedException::class)
-    fun initialize(rootMode: Boolean = false): List<String>? {
+    suspend fun initialize(rootMode: Boolean = false, progressCallback: (suspend (Int) -> Unit)? = null): List<String>? {
 
         val sortedHostItems = config.hosts.items
             .mapNotNull {
@@ -103,7 +134,13 @@ class RuleDatabase {
         val newHosts = MutableIntSet(sortedHostItems.size + config.hosts.exceptions.size)
         val allHosts = mutableListOf<String>()
 
-        for (item in sortedHostItems) {
+        // Clear previous wildcard and regex rules
+        wildcardRules.clear()
+        regexRules.clear()
+        whitelistedHosts.clear()
+
+        val totalItems = sortedHostItems.size
+        for ((index, item) in sortedHostItems.withIndex()) {
             if (Thread.interrupted()) {
                 throw InterruptedException("Interrupted")
             }
@@ -111,6 +148,9 @@ class RuleDatabase {
             if (rootMode && hostsFromItem != null) {
                 allHosts.addAll(hostsFromItem)
             }
+
+            // Report progress: 75-95% for parsing
+            progressCallback?.invoke(75 + ((index + 1) * 20) / totalItems.coerceAtLeast(1))
         }
 
         if (rootMode) {
@@ -125,6 +165,8 @@ class RuleDatabase {
         }
 
         blockedHosts.value = atomic(newHosts)
+        val totalRules = newHosts.size + wildcardRules.size + regexRules.size
+        Logger.info("Domain rules loaded: $totalRules total (${newHosts.size} domains, ${wildcardRules.size} wildcards, ${regexRules.size} regex, ${whitelistedHosts.size} whitelisted)")
         Runtime.getRuntime().gc()
         return null
     }
@@ -138,7 +180,7 @@ class RuleDatabase {
         val reader = try {
             FileHelper.openItemFile(item)
         } catch (e: FileNotFoundException) {
-            Logger.error("loadItem: File not found: ${item.data}", e)
+            Logger.warn("${item.title}: File not found, skipping")
             return null
         }
 
@@ -188,36 +230,72 @@ class RuleDatabase {
 
     @Throws(InterruptedException::class)
     private fun loadReader(set: MutableIntSet, item: Host, reader: Reader, rootMode: Boolean): List<String>? {
-        val hosts = mutableListOf<String>()
+        val hosts = if (rootMode) ArrayList<String>(10000) else null
         var count = 0
+        var wildcardCount = 0
+        var regexCount = 0
+        var whitelistCount = 0
+        val isDeny = item.state == HostState.DENY
+
         try {
-            Logger.error("loadBlockedHosts: Reading: ${item.data}")
-            BufferedReader(reader).use {
-                var line = it.readLine()
+            Logger.debug("Loading rules from ${item.title}")
+            BufferedReader(reader, 65536).use { bufferedReader ->
+                var line = bufferedReader.readLine()
                 while (line != null) {
-                    if (Thread.interrupted()) {
+                    // Check interruption every 1000 lines for better performance
+                    if (count % 1000 == 0 && Thread.interrupted()) {
                         throw InterruptedException("Interrupted")
                     }
 
-                    val host = parseLine(line)
-                    if (host != null) {
-                        count++
-                        val result = addHost(set, item, host, rootMode)
-                        if (rootMode && result != null) {
-                            hosts.add(result)
+                    // Use new parser
+                    val rule = BlocklistParser.parseLine(line)
+                    if (rule != null) {
+                        when (rule) {
+                            is BlocklistRule.PlainDomain -> {
+                                count++
+                                val result = addHost(set, item, rule.domain, rootMode)
+                                if (rootMode && result != null) {
+                                    hosts!!.add(result)
+                                }
+                            }
+                            is BlocklistRule.WildcardDomain -> {
+                                if (!rootMode) {
+                                    if (isDeny) {
+                                        wildcardRules.add(rule)
+                                        wildcardCount++
+                                    }
+                                } else {
+                                    hosts!!.add(rule.pattern)
+                                }
+                            }
+                            is BlocklistRule.RegexPattern -> {
+                                if (!rootMode) {
+                                    if (isDeny) {
+                                        regexRules.add(rule)
+                                        regexCount++
+                                    }
+                                } else {
+                                    hosts!!.add(rule.pattern)
+                                }
+                            }
+                            is BlocklistRule.WhitelistDomain -> {
+                                if (!rootMode) {
+                                    whitelistedHosts.add(rule.domain)
+                                    whitelistCount++
+                                } else {
+                                    hosts!!.add("!" + rule.domain)
+                                }
+                            }
                         }
                     }
-                    line = it.readLine()
+                    line = bufferedReader.readLine()
                 }
             }
-            Logger.error("loadBlockedHosts: Loaded $count hosts from ${item.data}")
-            return if (rootMode) hosts else null
+            Logger.info("${item.title}: Loaded $count domains, $wildcardCount wildcards, $regexCount regex, $whitelistCount whitelisted")
+            return hosts
         } catch (e: IOException) {
-            Logger.error(
-                "loadBlockedHosts: Error while reading ${item.data} after $count items",
-                e
-            )
-            return if (rootMode) hosts else null
+            Logger.error("${item.title}: Failed to read after $count items", e)
+            return hosts
         }
     }
 }

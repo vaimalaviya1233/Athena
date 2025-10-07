@@ -190,7 +190,7 @@ class RootConnectionService : Service(), CoroutineScope by CoroutineScope(Dispat
 
     }
 
-    override fun updateDomains() {
+    override suspend fun updateDomains(progressCallback: (suspend (Int) -> Unit)?) {
 
     }
 
@@ -236,7 +236,7 @@ class RootConnectionService : Service(), CoroutineScope by CoroutineScope(Dispat
         }
     }
     
-    private fun loadAndApplyDomains() {
+    private suspend fun loadAndApplyDomains() {
         Logger.info("RootConnectionService: Loading domains from RuleDatabase")
         domains = ruleManager.initialize(true)
         Logger.info("RootConnectionService: Loaded ${domains?.size ?: 0} domains from RuleDatabase")

@@ -51,6 +51,8 @@ fun DownloadDialog(
     title: String,
     isVisible: Boolean,
     downloadState: DownloadState,
+    progress: Int = 0,
+    stage: String = "",
     onDismiss: () -> Unit,
     onRetry: (() -> Unit)? = null
 ) {
@@ -124,13 +126,18 @@ fun DownloadDialog(
                         )
                     }
                     
+                    // Show stage text
                     Text(
-                        text = stringResource(R.string.download_processing),
+                        text = when (stage) {
+                            "downloading" -> stringResource(R.string.download_processing)
+                            "parsing" -> "Parsing domains..."
+                            else -> stringResource(R.string.download_processing)
+                        },
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurface.copy(0.8f)
                     )
-                    
+
                     // Modern progress indicator
                     Box(
                         modifier = Modifier
@@ -139,14 +146,24 @@ fun DownloadDialog(
                             .clip(RoundedCornerShape(4.dp))
                             .background(MaterialTheme.colorScheme.primary.copy(0.1f))
                     ) {
-                        LinearProgressIndicator(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(4.dp)),
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        if (progress > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(progress / 100f)
+                                    .fillMaxHeight()
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(MaterialTheme.colorScheme.primary)
+                            )
+                        } else {
+                            LinearProgressIndicator(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(4.dp)),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
-                    
+
                     Text(
                         text = stringResource(R.string.download_please_wait),
                         style = MaterialTheme.typography.bodySmall,

@@ -47,7 +47,7 @@ interface FirewallService {
     fun stopService(context: Context)
     fun updateLogs(enabled: Boolean)
     fun updateScreen(value: Boolean)
-    fun updateDomains()
+    suspend fun updateDomains(progressCallback: (suspend (Int) -> Unit)? = null)
     fun updateHttpSettings()
     fun setDnsBlocking(enabled: Boolean)
     fun isDnsBlockingEnabled(): Boolean
@@ -109,8 +109,8 @@ class FirewallManager @Inject constructor(
         currentService.value?.updateLogs(enabled)
     }
 
-    fun updateDomains() {
-        currentService.value?.updateDomains()
+    suspend fun updateDomains(progressCallback: (suspend (Int) -> Unit)? = null) {
+        currentService.value?.updateDomains(progressCallback)
     }
 
     fun updateHttpSettings() {

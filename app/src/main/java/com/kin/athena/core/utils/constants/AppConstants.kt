@@ -37,12 +37,28 @@ object AppConstants {
     }
 
     object DnsBlockLists {
-        val MALWARE_PROTECTION = "https://raw.githubusercontent.com/DandelionSprout/adfilt/master/Alternate%20versions%20Anti-Malware%20List/AntiMalwareHosts.txt"
-        val AD_PROTECTION = "https://adaway.org/hosts.txt"
-        val PRIVACY_PROTECTION = "https://hostfiles.frogeye.fr/firstparty-trackers-hosts.txt"
-        val GAMBLING_PROTECTION = "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/gambling-only/hosts"
-        val ADULT_PROTECTION = "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts"
-        val SOCIAL_PROTECTION = "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/social-only/hosts"
+        val MALWARE_PROTECTION = listOf(
+            // DandelionSprout: solid anti-malware coverage
+            "https://raw.githubusercontent.com/DandelionSprout/adfilt/master/Alternate%20versions%20Anti-Malware%20List/AntiMalwareHosts.txt",
+        )
+        val AD_PROTECTION = listOf(
+            "https://small.oisd.nl",
+        )
+        val PRIVACY_PROTECTION = listOf(
+            // Frogeye: first-party trackers (very lightweight and targeted)
+            "https://hostfiles.frogeye.fr/firstparty-trackers-hosts.txt",
+            // Perflyst – Android telemetry & analytics
+            "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/android-tracking.txt",
+        )
+        val GAMBLING_PROTECTION = listOf(
+            "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/gambling-only/hosts"
+        )
+        val ADULT_PROTECTION = listOf(
+            "https://raw.githubusercontent.com/blocklistproject/Lists/master/porn.txt"
+        )
+        val SOCIAL_PROTECTION = listOf(
+            "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/social-only/hosts",
+        )
     }
 
     object Links {

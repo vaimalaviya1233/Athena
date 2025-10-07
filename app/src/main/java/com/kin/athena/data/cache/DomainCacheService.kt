@@ -45,28 +45,28 @@ class DomainCacheService @Inject constructor(
     
     fun initializeGlobally() {
         val currentTime = System.currentTimeMillis()
-        
+
         // Skip if recently initialized and still valid
         if (_isInitialized.value && (currentTime - lastInitializationTime) < CACHE_VALIDITY_MS) {
-            Logger.info("DomainCache: Using cached data (${(currentTime - lastInitializationTime) / 1000}s old)")
+            Logger.debug("DomainCache: Using cached data (${(currentTime - lastInitializationTime) / 1000}s old)")
             return
         }
-        
+
         if (_isLoading.value) {
-            Logger.info("DomainCache: Already loading, skipping duplicate request")
+            Logger.debug("DomainCache: Already loading, skipping duplicate request")
             return
         }
-        
+
         _isLoading.value = true
+        Logger.info("DomainCache: Starting background domain initialization")
         serviceScope.launch {
             try {
-                Logger.info("DomainCache: Starting global domain initialization...")
                 ruleDatabase.initialize()
                 _isInitialized.value = true
                 lastInitializationTime = currentTime
-                Logger.info("DomainCache: Global domain initialization completed")
+                Logger.info("DomainCache: Background initialization completed")
             } catch (e: Exception) {
-                Logger.error("DomainCache: Failed to initialize domains globally", e)
+                Logger.error("DomainCache: Failed to initialize domains", e)
             } finally {
                 _isLoading.value = false
             }

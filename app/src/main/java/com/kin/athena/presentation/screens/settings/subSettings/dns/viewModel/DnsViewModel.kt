@@ -55,12 +55,18 @@ class BlockListViewModel @Inject constructor(
     private val _currentDownloadingRule = MutableStateFlow<String?>(null)
     val currentDownloadingRule: StateFlow<String?> = _currentDownloadingRule
 
+    private val _downloadProgress = MutableStateFlow(0)
+    val downloadProgress: StateFlow<Int> = _downloadProgress
+
+    private val _downloadStage = MutableStateFlow("")
+    val downloadStage: StateFlow<String> = _downloadStage
+
     val isLoading = domainCacheService.isLoading
     val isInitialized = domainCacheService.isInitialized
 
     init {
-        // Initialize domains globally with caching
-        domainCacheService.initializeGlobally()
+        // Domain initialization happens automatically in App.onCreate()
+        // No need to call it here - it would block the UI
     }
 
     fun showMagiskDialog() {
@@ -96,11 +102,18 @@ class BlockListViewModel @Inject constructor(
     fun downloadError() {
         _downloadState.value = DownloadState.Error
     }
-    
+
+    fun updateProgress(progress: Int, stage: String) {
+        _downloadProgress.value = progress
+        _downloadStage.value = stage
+    }
+
     fun dismissDownloadDialog() {
         _showDownloadDialog.value = false
         _downloadState.value = null
         _currentDownloadingRule.value = null
+        _downloadProgress.value = 0
+        _downloadStage.value = ""
     }
     
     fun isNetworkAvailable(): Boolean {

@@ -93,8 +93,10 @@ fun DnsScreen(
     val isDomainsInitialized by blockListViewModel.isInitialized.collectAsState()
     val showDownloadDialog by blockListViewModel.showDownloadDialog.collectAsState()
     val downloadState by blockListViewModel.downloadState.collectAsState()
+    val downloadProgress by blockListViewModel.downloadProgress.collectAsState()
+    val downloadStage by blockListViewModel.downloadStage.collectAsState()
     val currentDownloadingRule by blockListViewModel.currentDownloadingRule.collectAsState()
-    
+
     // Local dialog state for premium feature choice
     var showPremiumDialog by remember { mutableStateOf(false) }
     
@@ -132,8 +134,16 @@ fun DnsScreen(
             WorkManager.getInstance(context)
                 .getWorkInfoByIdLiveData(workRequest.id)
                 .observeForever { workInfo ->
-                    if (workInfo?.state?.isFinished == true) {
-                        callback(workInfo.state == WorkInfo.State.SUCCEEDED)
+                    if (workInfo != null) {
+                        // Update progress
+                        val progress = workInfo.progress.getInt("progress", 0)
+                        val stage = workInfo.progress.getString("stage") ?: ""
+                        blockListViewModel.updateProgress(progress, stage)
+
+                        // Check if finished
+                        if (workInfo.state.isFinished) {
+                            callback(workInfo.state == WorkInfo.State.SUCCEEDED)
+                        }
                     }
                 }
         }
@@ -144,9 +154,9 @@ fun DnsScreen(
         blockListViewModel.refreshDomains()
     }
 
-    fun updateList(enabled: Boolean, list: String) {
-        if (list.isBlank()) {
-            Logger.error("updateList: List parameter is blank or empty")
+    fun updateList(enabled: Boolean, lists: List<String>, listKey: String) {
+        if (lists.isEmpty()) {
+            Logger.error("updateList: Lists parameter is empty")
             return
         }
 
@@ -173,13 +183,13 @@ fun DnsScreen(
         if (!useRootMode || canUpdateHosts || !enabled) {
             // Show download dialog for enabling rules
             if (enabled) {
-                val ruleName = when (list) {
-                    AppConstants.DnsBlockLists.MALWARE_PROTECTION -> "Malware Protection"
-                    AppConstants.DnsBlockLists.AD_PROTECTION -> "Ad Protection"
-                    AppConstants.DnsBlockLists.PRIVACY_PROTECTION -> "Privacy Protection"
-                    AppConstants.DnsBlockLists.SOCIAL_PROTECTION -> "Social Media"
-                    AppConstants.DnsBlockLists.ADULT_PROTECTION -> "Adult Content"
-                    AppConstants.DnsBlockLists.GAMBLING_PROTECTION -> "Gambling"
+                val ruleName = when {
+                    lists.any { it in AppConstants.DnsBlockLists.MALWARE_PROTECTION } -> "Malware Protection"
+                    lists.any { it in AppConstants.DnsBlockLists.AD_PROTECTION } -> "Ad Protection"
+                    lists.any { it in AppConstants.DnsBlockLists.PRIVACY_PROTECTION } -> "Privacy Protection"
+                    lists.any { it in AppConstants.DnsBlockLists.SOCIAL_PROTECTION } -> "Social Media"
+                    lists.any { it in AppConstants.DnsBlockLists.ADULT_PROTECTION } -> "Adult Content"
+                    lists.any { it in AppConstants.DnsBlockLists.GAMBLING_PROTECTION } -> "Gambling"
                     else -> "Custom Rules"
                 }
                 blockListViewModel.startDownload(ruleName)
@@ -190,79 +200,108 @@ fun DnsScreen(
                     withContext(Dispatchers.Main) {
                         isDomainUpdateInProgress = true
                     }
-                    
+
                     if (enabled) {
-                        config.addURL(list, list, HostState.DENY)
-                        Logger.info("Added list: $list")
+                        // Add all URLs in the list
+                        lists.forEach { url ->
+                            config.addURL(url, url, HostState.DENY)
+                            Logger.info("Added list: $url")
+                        }
                     } else {
-                        // For disabling, immediately update switch and config
-                        RuleDatabaseUpdateWorker.doneNames.value =
-                            RuleDatabaseUpdateWorker.doneNames.value
-                                .filter { it != list }
-                                .toMutableList()
-                        config.removeURL(list)
-                        Logger.info("Removed list: $list")
+                        // For disabling, remove all URLs in the list
+                        lists.forEach { url ->
+                            RuleDatabaseUpdateWorker.doneNames.value =
+                                RuleDatabaseUpdateWorker.doneNames.value
+                                    .filter { it != url }
+                                    .toMutableList()
+                            config.removeURL(url)
+                            Logger.info("Removed list: $url")
+                        }
                         withContext(Dispatchers.Main) {
-                            localSwitchStates[list] = false
+                            localSwitchStates[listKey] = false
                         }
                     }
                     config.save()  // Persist changes to disk
                     blockListViewModel.invalidateDomainsCache() // Invalidate cache for next load
-                    
+
                     withContext(Dispatchers.Main) {
                         if (enabled) {
-                            // Only update this specific list, not all lists
-                            updateSpecificList(list) { success ->
-                                if (success) {
-                                    // Only turn switch ON after successful download
-                                    localSwitchStates[list] = true
-                                    blockListViewModel.downloadSuccess()
-                                } else {
-                                    // Download failed, revert the config changes made earlier
-                                    CoroutineScope(Dispatchers.IO).launch {
-                                        try {
-                                            // Remove the URL that was added
-                                            config.removeURL(list)
-                                            config.save()
-                                            Logger.info("Reverted list addition: $list")
-                                        } catch (e: Exception) {
-                                            Logger.error("Failed to revert config for '$list': ${e.message}", e)
+                            // Update all lists in the array
+                            val inputData = Data.Builder()
+                                .putStringArray("target_lists", lists.toTypedArray())
+                                .build()
+
+                            val workRequest = OneTimeWorkRequestBuilder<RuleDatabaseUpdateWorker>()
+                                .setInputData(inputData)
+                                .build()
+
+                            WorkManager.getInstance(context).enqueue(workRequest)
+
+                            WorkManager.getInstance(context)
+                                .getWorkInfoByIdLiveData(workRequest.id)
+                                .observeForever { workInfo ->
+                                    if (workInfo != null) {
+                                        // Update progress
+                                        val progress = workInfo.progress.getInt("progress", 0)
+                                        val stage = workInfo.progress.getString("stage") ?: ""
+                                        blockListViewModel.updateProgress(progress, stage)
+
+                                        // Check if finished
+                                        if (workInfo.state.isFinished) {
+                                            if (workInfo.state == WorkInfo.State.SUCCEEDED) {
+                                                // Only turn switch ON after successful download
+                                                localSwitchStates[listKey] = true
+                                                blockListViewModel.downloadSuccess()
+                                            } else {
+                                                // Download failed, revert the config changes made earlier
+                                                CoroutineScope(Dispatchers.IO).launch {
+                                                    try {
+                                                        // Remove all URLs that were added
+                                                        lists.forEach { url ->
+                                                            config.removeURL(url)
+                                                        }
+                                                        config.save()
+                                                        Logger.info("Reverted list additions")
+                                                    } catch (e: Exception) {
+                                                        Logger.error("Failed to revert config: ${e.message}", e)
+                                                    }
+                                                }
+
+                                                // Show appropriate error
+                                                if (!blockListViewModel.isNetworkAvailable()) {
+                                                    blockListViewModel.downloadNetworkError()
+                                                } else {
+                                                    blockListViewModel.downloadError()
+                                                }
+                                            }
+                                            isDomainUpdateInProgress = false
                                         }
                                     }
-                                    
-                                    // Show appropriate error
-                                    if (!blockListViewModel.isNetworkAvailable()) {
-                                        blockListViewModel.downloadNetworkError()
-                                    } else {
-                                        blockListViewModel.downloadError()
-                                    }
                                 }
-                                isDomainUpdateInProgress = false
-                            }
                         } else {
                             // For disabling, just refresh the domain cache
                             isDomainUpdateInProgress = false
                         }
                     }
-                    
+
                     // Only invalidate cache and update domains without full reload
                     // This avoids downloading all blocklists when only one was changed
                     blockListViewModel.invalidateDomainsCache()
-                    
+
                     // For disabling, no need to download - just update the domain cache
                     if (!enabled) {
                         blockListViewModel.refreshDomains()
                     }
                     // For enabling, the download happens in updateLists() callback
-                    
+
                 } catch (e: Exception) {
-                    Logger.error("Failed to update list '$list': ${e.message}", e)
-                    
+                    Logger.error("Failed to update lists: ${e.message}", e)
+
                     withContext(Dispatchers.Main) {
                         isDomainUpdateInProgress = false
-                        
+
                         // Don't set switch state on error - leave it in original position
-                        
+
                         // Show appropriate error dialog
                         if (enabled) {
                             if (!blockListViewModel.isNetworkAvailable()) {
@@ -277,7 +316,7 @@ fun DnsScreen(
                 }
             }
         } else {
-            Logger.warn("Skipping list update for '$list': Root mode enabled but hosts not writable")
+            Logger.warn("Skipping list update: Root mode enabled but hosts not writable")
             // Don't update switch state - leave it in original position
         }
     }
@@ -310,10 +349,10 @@ fun DnsScreen(
                 description = stringResource(id = R.string.dns_malware_protection_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.Security),
                 actionType = SettingType.SWITCH,
-                variable = localSwitchStates[AppConstants.DnsBlockLists.MALWARE_PROTECTION] 
-                    ?: (AppConstants.DnsBlockLists.MALWARE_PROTECTION in doneNames.value),
+                variable = localSwitchStates["MALWARE_PROTECTION"]
+                    ?: (AppConstants.DnsBlockLists.MALWARE_PROTECTION.any { it in doneNames.value }),
                 onSwitchEnabled = {
-                    updateList(it, AppConstants.DnsBlockLists.MALWARE_PROTECTION)
+                    updateList(it, AppConstants.DnsBlockLists.MALWARE_PROTECTION, "MALWARE_PROTECTION")
                 }
             )
             SettingsBox(
@@ -321,10 +360,10 @@ fun DnsScreen(
                 description = stringResource(id = R.string.dns_ad_blocker_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.AdsClick),
                 actionType = SettingType.SWITCH,
-                variable = localSwitchStates[AppConstants.DnsBlockLists.AD_PROTECTION] 
-                    ?: (AppConstants.DnsBlockLists.AD_PROTECTION in doneNames.value),
+                variable = localSwitchStates["AD_PROTECTION"]
+                    ?: (AppConstants.DnsBlockLists.AD_PROTECTION.any { it in doneNames.value }),
                 onSwitchEnabled = {
-                    updateList(it, AppConstants.DnsBlockLists.AD_PROTECTION)
+                    updateList(it, AppConstants.DnsBlockLists.AD_PROTECTION, "AD_PROTECTION")
                 }
             )
             SettingsBox(
@@ -332,10 +371,10 @@ fun DnsScreen(
                 description = stringResource(id = R.string.dns_block_trackers_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.RemoveRedEye),
                 actionType = SettingType.SWITCH,
-                variable = localSwitchStates[AppConstants.DnsBlockLists.PRIVACY_PROTECTION] 
-                    ?: (AppConstants.DnsBlockLists.PRIVACY_PROTECTION in doneNames.value),
+                variable = localSwitchStates["PRIVACY_PROTECTION"]
+                    ?: (AppConstants.DnsBlockLists.PRIVACY_PROTECTION.any { it in doneNames.value }),
                 onSwitchEnabled = {
-                    updateList(it, AppConstants.DnsBlockLists.PRIVACY_PROTECTION)
+                    updateList(it, AppConstants.DnsBlockLists.PRIVACY_PROTECTION, "PRIVACY_PROTECTION")
                 }
             )
         }
@@ -345,10 +384,10 @@ fun DnsScreen(
                 description = stringResource(id = R.string.dns_social_media_desc),
                 icon = IconType.VectorIcon(Icons.AutoMirrored.Rounded.Message),
                 actionType = SettingType.SWITCH,
-                variable = localSwitchStates[AppConstants.DnsBlockLists.SOCIAL_PROTECTION] 
-                    ?: (AppConstants.DnsBlockLists.SOCIAL_PROTECTION in doneNames.value),
+                variable = localSwitchStates["SOCIAL_PROTECTION"]
+                    ?: (AppConstants.DnsBlockLists.SOCIAL_PROTECTION.any { it in doneNames.value }),
                 onSwitchEnabled = {
-                    updateList(it, AppConstants.DnsBlockLists.SOCIAL_PROTECTION)
+                    updateList(it, AppConstants.DnsBlockLists.SOCIAL_PROTECTION, "SOCIAL_PROTECTION")
                 }
             )
             SettingsBox(
@@ -356,10 +395,10 @@ fun DnsScreen(
                 description = stringResource(id = R.string.dns_block_adult),
                 icon = IconType.VectorIcon(Icons.Rounded.Man),
                 actionType = SettingType.SWITCH,
-                variable = localSwitchStates[AppConstants.DnsBlockLists.ADULT_PROTECTION] 
-                    ?: (AppConstants.DnsBlockLists.ADULT_PROTECTION in doneNames.value),
+                variable = localSwitchStates["ADULT_PROTECTION"]
+                    ?: (AppConstants.DnsBlockLists.ADULT_PROTECTION.any { it in doneNames.value }),
                 onSwitchEnabled = {
-                    updateList(it, AppConstants.DnsBlockLists.ADULT_PROTECTION)
+                    updateList(it, AppConstants.DnsBlockLists.ADULT_PROTECTION, "ADULT_PROTECTION")
                 }
             )
             SettingsBox(
@@ -367,10 +406,10 @@ fun DnsScreen(
                 description = stringResource(id = R.string.dns_block_gambling),
                 icon = IconType.VectorIcon(Icons.Rounded.Games),
                 actionType = SettingType.SWITCH,
-                variable = localSwitchStates[AppConstants.DnsBlockLists.GAMBLING_PROTECTION] 
-                    ?: (AppConstants.DnsBlockLists.GAMBLING_PROTECTION in doneNames.value),
+                variable = localSwitchStates["GAMBLING_PROTECTION"]
+                    ?: (AppConstants.DnsBlockLists.GAMBLING_PROTECTION.any { it in doneNames.value }),
                 onSwitchEnabled = {
-                    updateList(it, AppConstants.DnsBlockLists.GAMBLING_PROTECTION)
+                    updateList(it, AppConstants.DnsBlockLists.GAMBLING_PROTECTION, "GAMBLING_PROTECTION")
                 }
             )
         }
@@ -424,20 +463,22 @@ fun DnsScreen(
         title = currentDownloadingRule ?: "Downloading Rules",
         isVisible = showDownloadDialog,
         downloadState = downloadState ?: DownloadState.Downloading,
+        progress = downloadProgress,
+        stage = downloadStage,
         onDismiss = { blockListViewModel.dismissDownloadDialog() },
         onRetry = {
             currentDownloadingRule?.let { ruleName ->
-                val listConstant = when (ruleName) {
-                    "Malware Protection" -> AppConstants.DnsBlockLists.MALWARE_PROTECTION
-                    "Ad Protection" -> AppConstants.DnsBlockLists.AD_PROTECTION
-                    "Privacy Protection" -> AppConstants.DnsBlockLists.PRIVACY_PROTECTION
-                    "Social Media" -> AppConstants.DnsBlockLists.SOCIAL_PROTECTION
-                    "Adult Content" -> AppConstants.DnsBlockLists.ADULT_PROTECTION
-                    "Gambling" -> AppConstants.DnsBlockLists.GAMBLING_PROTECTION
-                    else -> ""
+                val (listConstants, listKey) = when (ruleName) {
+                    "Malware Protection" -> AppConstants.DnsBlockLists.MALWARE_PROTECTION to "MALWARE_PROTECTION"
+                    "Ad Protection" -> AppConstants.DnsBlockLists.AD_PROTECTION to "AD_PROTECTION"
+                    "Privacy Protection" -> AppConstants.DnsBlockLists.PRIVACY_PROTECTION to "PRIVACY_PROTECTION"
+                    "Social Media" -> AppConstants.DnsBlockLists.SOCIAL_PROTECTION to "SOCIAL_PROTECTION"
+                    "Adult Content" -> AppConstants.DnsBlockLists.ADULT_PROTECTION to "ADULT_PROTECTION"
+                    "Gambling" -> AppConstants.DnsBlockLists.GAMBLING_PROTECTION to "GAMBLING_PROTECTION"
+                    else -> emptyList<String>() to ""
                 }
-                if (listConstant.isNotEmpty()) {
-                    updateList(true, listConstant)
+                if (listConstants.isNotEmpty()) {
+                    updateList(true, listConstants, listKey)
                 }
             }
         }

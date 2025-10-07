@@ -74,9 +74,9 @@ class RuleHandler @Inject constructor(
         }
     }
 
-    fun updateBlocklist() {
+    suspend fun updateBlocklist(progressCallback: (suspend (Int) -> Unit)? = null) {
         rules.filterIsInstance<DNSRule>().forEach {
-            it.updateBlocklist()
+            it.updateBlocklist(progressCallback)
         }
     }
 

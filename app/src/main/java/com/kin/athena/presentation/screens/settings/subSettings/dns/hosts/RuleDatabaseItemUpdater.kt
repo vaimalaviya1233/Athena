@@ -72,14 +72,15 @@ class RuleDatabaseItemUpdate(
                 )
 
                 context.contentResolver.openInputStream(uri)?.close()
-                Logger.error("run: Permission requested for ${item.data}")
+                Logger.info("Permission granted for content URI: ${item.title}")
             } catch (e: SecurityException) {
-                Logger.error("run: Error taking permission", e)
+                Logger.error("Permission denied for ${item.title}", e)
                 worker.addError(item, context.getString(R.string.rule_permission_denied))
             } catch (e: FileNotFoundException) {
-                Logger.error("run: File not found", e)
+                Logger.error("File not found: ${item.title}", e)
                 worker.addError(item, context.getString(R.string.rule_file_not_found))
             } catch (e: IOException) {
+                Logger.error("IO error for ${item.title}: ${e.localizedMessage}", e)
                 worker.addError(
                     item,
                     context.getString(R.string.rule_unknown_error) + e.localizedMessage
@@ -97,18 +98,22 @@ class RuleDatabaseItemUpdate(
             if (!validateResponse(connection)) {
                 // Handle 304 Not Modified as success (file already up to date)
                 if (connection.responseCode == 304) {
+                    Logger.info("${item.title}: Already up to date (304)")
                     worker.addDone(item)
                 }
                 return
             }
             downloadFile(file!!, singleWriterMultipleReaderFile, connection)
-            // Only mark as done if download succeeded (no exception thrown)
+            Logger.info("${item.title}: Download completed successfully")
             worker.addDone(item)
-        } catch (_: SocketTimeoutException) {
+        } catch (e: SocketTimeoutException) {
+            Logger.warn("${item.title}: Connection timeout")
             worker.addError(item, context.getString(R.string.rule_timeout))
         } catch (e: IOException) {
+            Logger.error("${item.title}: Download failed - ${e.message}", e)
             worker.addError(item, context.getString(R.string.rule_unknown_error) + e.toString())
         } catch (e: NullPointerException) {
+            Logger.error("${item.title}: Unexpected null pointer", e)
             worker.addError(item, context.getString(R.string.rule_unknown_error) + e.toString())
         } finally {
             connection?.disconnect()
@@ -146,33 +151,31 @@ class RuleDatabaseItemUpdate(
 
     @Throws(IOException::class)
     fun validateResponse(connection: HttpURLConnection): Boolean {
-        Logger.error(
-            """
-                validateResponse: ${item.title}
-                local = ${Date(connection.ifModifiedSince)}
-                remote = ${Date(connection.lastModified)}
-            """.trimIndent()
-        )
-        if (connection.responseCode != 200) {
-            Logger.error(
-                """
-                    validateResponse: ${item.title}: Skipping
-                    Server responded with ${connection.responseCode} for ${item.data}"
-                """.trimIndent()
-            )
+        val responseCode = connection.responseCode
 
-            if (connection.responseCode == 404) {
+        when (responseCode) {
+            200 -> {
+                Logger.debug("${item.title}: Server returned 200 OK")
+                return true
+            }
+            304 -> {
+                Logger.debug("${item.title}: Not modified (304)")
+                return false
+            }
+            404 -> {
+                Logger.warn("${item.title}: File not found (404) at ${item.data}")
                 worker.addError(item, context.getString(R.string.rule_file_not_found))
-            } else if (connection.responseCode != 304) {
-                context.resources.getString(R.string.rule_update_error)
+                return false
+            }
+            else -> {
+                Logger.warn("${item.title}: Server returned ${responseCode} ${connection.responseMessage}")
                 worker.addError(
                     item,
-                    context.resources.getString(R.string.rule_update_error) + connection.getResponseCode() + connection.getResponseMessage()
+                    context.resources.getString(R.string.rule_update_error) + responseCode + " " + connection.responseMessage
                 )
+                return false
             }
-            return false
         }
-        return true
     }
 
     @Throws(IOException::class)
@@ -184,13 +187,14 @@ class RuleDatabaseItemUpdate(
         val inStream = connection.inputStream
         var outStream: FileOutputStream? = singleWriterMultipleReaderFile.startWrite()
         try {
+            Logger.debug("${item.title}: Starting file download")
             copyStream(inStream, outStream!!)
 
             singleWriterMultipleReaderFile.finishWrite(outStream)
             outStream = null
 
             if (connection.lastModified == 0L || !file.setLastModified(connection.lastModified)) {
-                Logger.error("downloadFile: Could not set last modified")
+                Logger.debug("${item.title}: Could not set last modified timestamp")
             }
         } finally {
             if (outStream != null) {
@@ -201,7 +205,7 @@ class RuleDatabaseItemUpdate(
 
     @Throws(IOException::class)
     fun copyStream(inStream: InputStream, outStream: OutputStream) {
-        val buffer = ByteArray(4096)
+        val buffer = ByteArray(65536) // 64KB buffer for faster downloads
         var rc = inStream.read(buffer)
         while (rc != -1) {
             outStream.write(buffer, 0, rc)

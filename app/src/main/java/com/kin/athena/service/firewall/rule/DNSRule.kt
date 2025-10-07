@@ -29,13 +29,9 @@ class DNSRule @Inject constructor(
     private val ruleDatabase: RuleDatabase
 ) : FirewallRule {
     private var isDnsBlockingEnabled = true
-    
-    init {
-        updateBlocklist()
-    }
 
-    fun updateBlocklist() {
-        ruleDatabase.initialize()
+    suspend fun updateBlocklist(progressCallback: (suspend (Int) -> Unit)? = null) {
+        ruleDatabase.initialize(progressCallback = progressCallback)
     }
     
     fun enableDnsBlocking() {

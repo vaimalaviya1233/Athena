@@ -40,6 +40,7 @@ class VpnConnectionClient : VpnService() {
     @Inject @ApplicationContext lateinit var context: Context
     @Inject lateinit var preferencesUseCases: PreferencesUseCases
     @Inject lateinit var applicationUseCases: com.kin.athena.domain.usecase.application.ApplicationUseCases
+    @Inject lateinit var domainCacheService: com.kin.athena.data.cache.DomainCacheService
 
 
     private var settings: Settings? = null
@@ -73,6 +74,9 @@ class VpnConnectionClient : VpnService() {
     private fun startVpnIfNotRunning() {
         if (vpnInterface == null) {
             try {
+                // Initialize domain cache when VPN starts (lazy loading)
+                domainCacheService.initializeGlobally()
+
                 configureAndStartVpn()
             } catch (e: Exception) {
                 Logger.error("Error starting VPN", e)

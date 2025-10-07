@@ -69,6 +69,11 @@ import com.kin.athena.core.logging.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalContext
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.Data
+import androidx.lifecycle.Observer
 
 @Composable
 fun CustomBlocklistManagementScreen(
@@ -77,8 +82,11 @@ fun CustomBlocklistManagementScreen(
     blockListViewModel: BlockListViewModel = hiltViewModel(),
     customBlocklistViewModel: CustomBlocklistViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val showDownloadDialog by blockListViewModel.showDownloadDialog.collectAsState()
     val downloadState by blockListViewModel.downloadState.collectAsState()
+    val downloadProgress by blockListViewModel.downloadProgress.collectAsState()
+    val downloadStage by blockListViewModel.downloadStage.collectAsState()
     val deletingItems by customBlocklistViewModel.deletingItems.collectAsState()
     
     // Validation state for live updates
@@ -89,12 +97,12 @@ fun CustomBlocklistManagementScreen(
     var editingHostFile by remember { mutableStateOf<HostFile?>(null) }
     
     val predefinedLists = setOf(
-        AppConstants.DnsBlockLists.MALWARE_PROTECTION,
-        AppConstants.DnsBlockLists.AD_PROTECTION,
-        AppConstants.DnsBlockLists.PRIVACY_PROTECTION,
-        AppConstants.DnsBlockLists.SOCIAL_PROTECTION,
-        AppConstants.DnsBlockLists.ADULT_PROTECTION,
-        AppConstants.DnsBlockLists.GAMBLING_PROTECTION
+        *AppConstants.DnsBlockLists.MALWARE_PROTECTION.toTypedArray(),
+        *AppConstants.DnsBlockLists.AD_PROTECTION.toTypedArray(),
+        *AppConstants.DnsBlockLists.PRIVACY_PROTECTION.toTypedArray(),
+        *AppConstants.DnsBlockLists.SOCIAL_PROTECTION.toTypedArray(),
+        *AppConstants.DnsBlockLists.ADULT_PROTECTION.toTypedArray(),
+        *AppConstants.DnsBlockLists.GAMBLING_PROTECTION.toTypedArray()
     )
     
     // Use a state that triggers recomposition when the config is modified
@@ -117,34 +125,84 @@ fun CustomBlocklistManagementScreen(
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 if (enabled) {
-                    blockListViewModel.startDownload("Custom Blocklist")
+                    CoroutineScope(Dispatchers.Main).launch {
+                        blockListViewModel.startDownload(title)
+                    }
+
                     config.addURL(title, list, HostState.DENY)
-                    val currentList = RuleDatabaseUpdateWorker.doneNames.value.toMutableList()
-                    currentList.add(list)
-                    RuleDatabaseUpdateWorker.doneNames.value = currentList
+                    config.save()
+
+                    // Trigger actual download via WorkManager
+                    val inputData = Data.Builder()
+                        .putStringArray("target_lists", arrayOf(list))
+                        .build()
+
+                    val workRequest = OneTimeWorkRequestBuilder<RuleDatabaseUpdateWorker>()
+                        .setInputData(inputData)
+                        .build()
+
+                    Logger.info("Enqueueing work request: ${workRequest.id}")
+                    WorkManager.getInstance(context).enqueue(workRequest)
+
+                    // Monitor work completion and progress
+                    Logger.info("Setting up observer for work: ${workRequest.id}")
+                    val liveData = WorkManager.getInstance(context)
+                        .getWorkInfoByIdLiveData(workRequest.id)
+
+                    val observer = object : Observer<androidx.work.WorkInfo?> {
+                        override fun onChanged(workInfo: androidx.work.WorkInfo?) {
+                            Logger.info("Observer triggered - workInfo: ${workInfo?.state}")
+                            if (workInfo != null) {
+                                Logger.info("Work status: ${workInfo.state}, isFinished: ${workInfo.state.isFinished}, progress: ${workInfo.progress}")
+
+                                // Update progress
+                                val progress = workInfo.progress.getInt("progress", 0)
+                                val stage = workInfo.progress.getString("stage") ?: ""
+                                blockListViewModel.updateProgress(progress, stage)
+
+                                // Check if finished
+                                if (workInfo.state.isFinished) {
+                                    Logger.info("Work finished with state: ${workInfo.state}, comparing with SUCCEEDED: ${workInfo.state == androidx.work.WorkInfo.State.SUCCEEDED}")
+                                    if (workInfo.state == androidx.work.WorkInfo.State.SUCCEEDED) {
+                                        Logger.info("Calling downloadSuccess()")
+                                        blockListViewModel.downloadSuccess()
+                                    } else {
+                                        Logger.error("Work failed with state: ${workInfo.state}, calling downloadError()")
+                                        blockListViewModel.downloadError()
+                                    }
+                                    refreshTrigger++
+                                    // Remove observer to prevent memory leak
+                                    liveData.removeObserver(this)
+                                }
+                            } else {
+                                Logger.warn("Observer triggered but workInfo is null!")
+                            }
+                        }
+                    }
+
+                    // Post to main thread to ensure observer is set up properly
+                    CoroutineScope(Dispatchers.Main).launch {
+                        Logger.info("About to call observeForever for work: ${workRequest.id}")
+                        liveData.observeForever(observer)
+                        Logger.info("observeForever called successfully for work: ${workRequest.id}")
+                    }
                 } else {
-                    RuleDatabaseUpdateWorker.doneNames.value =
-                        RuleDatabaseUpdateWorker.doneNames.value
-                            .filter { it != list }
-                            .toMutableList()
                     config.removeURL(list)
-                }
-                config.save()
-                blockListViewModel.invalidateDomainsCache()
-                blockListViewModel.refreshDomains()
-                
-                // Trigger recomposition by updating the refresh trigger on the Main thread
-                CoroutineScope(Dispatchers.Main).launch {
-                    refreshTrigger++
-                }
-                
-                if (enabled) {
-                    blockListViewModel.downloadSuccess()
+                    config.save()
+                    blockListViewModel.invalidateDomainsCache()
+                    blockListViewModel.refreshDomains()
+
+                    // Trigger recomposition by updating the refresh trigger on the Main thread
+                    CoroutineScope(Dispatchers.Main).launch {
+                        refreshTrigger++
+                    }
                 }
             } catch (e: Exception) {
                 Logger.error("Failed to update custom blocklist '$list': ${e.message}", e)
-                if (enabled) {
-                    blockListViewModel.downloadError()
+                CoroutineScope(Dispatchers.Main).launch {
+                    if (enabled) {
+                        blockListViewModel.downloadError()
+                    }
                 }
             }
         }
@@ -301,6 +359,8 @@ fun CustomBlocklistManagementScreen(
         title = stringResource(R.string.blocklist_custom),
         isVisible = showDownloadDialog,
         downloadState = downloadState ?: DownloadState.Downloading,
+        progress = downloadProgress,
+        stage = downloadStage,
         onDismiss = { blockListViewModel.dismissDownloadDialog() },
         onRetry = { /* Retry logic if needed */ }
     )
