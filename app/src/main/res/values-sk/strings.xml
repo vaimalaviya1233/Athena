@@ -1,3 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="common_settings">Nastavenia</string>
+    <string name="common_search">Hľadať</string>
+    <string name="common_version">Verzia</string>
+    <string name="common_permissions">Povolenia</string>
+    <string name="common_logs">Záznamy</string>
+    <string name="details_last_updated_time">Posledná aktualizácia</string>
+    <string name="vpn_service_running">Presadzovanie pravidiel</string>
+    <string name="vpn_service_channel_name">Oznámenia o službe VPN</string>
+    <string name="details_version">Verzia</string>
+    <string name="details_permissions">Povolenia</string>
 </resources>
