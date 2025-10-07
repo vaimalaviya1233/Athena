@@ -50,8 +50,10 @@ data class Settings(
     val blockWifiWhenScreenOff: Boolean = false,
     val blockCellularWhenScreenOff: Boolean = false,
     val permanentNotification: Boolean = false,
-    val dnsServer1: String = NetworkConstants.DNS_SERVERS[0].second.first,
-    val dnsServer2: String = NetworkConstants.DNS_SERVERS[0].second.second,
+    val dnsServer1: String = NetworkConstants.DNS_SERVERS[0].ipv4Primary,
+    val dnsServer2: String = NetworkConstants.DNS_SERVERS[0].ipv4Secondary,
+    val dnsServer1v6: String = NetworkConstants.DNS_SERVERS[0].ipv6Primary,
+    val dnsServer2v6: String = NetworkConstants.DNS_SERVERS[0].ipv6Secondary,
 
     //Root
     val useRootMode: Boolean? = null,

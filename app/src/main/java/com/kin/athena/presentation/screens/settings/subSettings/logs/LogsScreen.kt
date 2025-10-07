@@ -85,8 +85,10 @@ fun LogsScreen(
 ) {
     val context = LocalContext.current
     val networkStats = logsViewModel.networkStats.collectAsState()
-    val pagerState = rememberPagerState(initialPage = 0, pageCount = { 3 })
+    val pagerState = rememberPagerState(initialPage = 1, pageCount = { 3 })
     val coroutineScope = rememberCoroutineScope()
+
+    val filteredLogs = logsViewModel.filteredLogs.collectAsState()
 
     MaterialScaffold(
         topBar = {
@@ -107,12 +109,12 @@ fun LogsScreen(
         ) { page ->
             when (page) {
                 0 -> DnsRequestsSection(
-                    logs = logsViewModel.filteredLogs.value,
+                    logs = filteredLogs.value,
                     context = context,
                     navController = navController
                 )
                 1 -> PacketsSection(
-                    logs = logsViewModel.filteredLogs.value,
+                    logs = filteredLogs.value,
                     context = context,
                     navController = navController
                 )

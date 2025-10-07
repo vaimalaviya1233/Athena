@@ -441,6 +441,7 @@ class LogsViewModel @Inject constructor(
                     logsUpdated?.collect { logs ->
                         val groupedLogs = groupConsecutiveLogs(logs).reversed()
                         _logs.value = groupedLogs
+                        _filteredLogs.value = groupedLogs // Set initial filtered logs immediately
                         // Apply filter which will update _filteredLogs and trigger statistics recalculation
                         applyFilter()
                     }
