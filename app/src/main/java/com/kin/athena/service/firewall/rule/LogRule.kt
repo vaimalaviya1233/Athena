@@ -86,7 +86,7 @@ class LogRule @Inject constructor(
                             NetworkConstants.ICMP_PROTOCOL -> "ICMP"
                             else -> "UKW"
                         },
-                        destinationAddress = packet.destinationIP.resolveIpToHostname()
+                        destinationAddress = dnsModel?.domainName ?: packet.destinationIP.resolveIpToHostname()
                     )
                     try {
                         logUseCases.addLog.execute(log)

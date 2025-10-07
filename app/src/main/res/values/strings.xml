@@ -626,6 +626,11 @@
     <string name="logs_blocked_requests">Blocked Requests</string>
     <string name="logs_blocked_desc">Requests that were blocked</string>
     <string name="logs_total_activity">Total Activity</string>
+    <string name="logs_packets">Packets</string>
+    <string name="logs_dns">DNS</string>
+    <string name="logs_stats">Stats</string>
+    <string name="logs_no_dns_requests">No DNS requests found</string>
+    <string name="logs_stats_info">Network statistics overview</string>
 
     <!-- Network Screen -->
     <string name="network_manage_ips">Manage IPs</string>

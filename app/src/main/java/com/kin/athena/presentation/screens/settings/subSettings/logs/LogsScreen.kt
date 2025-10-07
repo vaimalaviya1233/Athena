@@ -18,18 +18,27 @@
 package com.kin.athena.presentation.screens.settings.subSettings.logs
 
 import android.content.Context
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowForwardIos
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.FileCopy
+import androidx.compose.material.icons.rounded.Analytics
+import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.Dns
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +46,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -63,7 +73,10 @@ import com.kin.athena.presentation.navigation.routes.LogRoutes
 import com.kin.athena.presentation.screens.settings.subSettings.logs.components.NetworkStatsSection
 import com.kin.athena.service.firewall.model.FirewallResult
 import java.net.URL
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LogsScreen(
     onBackNavClicked: () -> Unit,
@@ -72,10 +85,14 @@ fun LogsScreen(
 ) {
     val context = LocalContext.current
     val networkStats = logsViewModel.networkStats.collectAsState()
-    
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { 3 })
+    val coroutineScope = rememberCoroutineScope()
+
     MaterialScaffold(
         topBar = {
-            LogsSearchBar(
+            LogsTopBar(
+                pagerState = pagerState,
+                coroutineScope = coroutineScope,
                 query = logsViewModel.query.value,
                 onQueryChange = logsViewModel::onQueryChanged,
                 onClearClick = logsViewModel::clearQuery,
@@ -84,46 +101,277 @@ fun LogsScreen(
             )
         }
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
-        ) {
-            // Network Statistics Section
-            NetworkStatsSection(networkStats = networkStats.value)
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Logs Content
-            LogsContent(
-                logs = logsViewModel.filteredLogs.value,
-                context = context,
-                navController
-            )
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            when (page) {
+                0 -> DnsRequestsSection(
+                    logs = logsViewModel.filteredLogs.value,
+                    context = context,
+                    navController = navController
+                )
+                1 -> PacketsSection(
+                    logs = logsViewModel.filteredLogs.value,
+                    context = context,
+                    navController = navController
+                )
+                2 -> StatsSection(networkStats = networkStats.value)
+            }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun LogsSearchBar(
+fun LogsTopBar(
+    pagerState: PagerState,
+    coroutineScope: CoroutineScope,
     query: String,
     onQueryChange: (String) -> Unit,
     onClearClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onBackClicked: () -> Unit
 ) {
-    SearchBar(
-        text = stringResource(R.string.logs_search_packets),
-        query = query,
-        onQueryChange = onQueryChange,
-        onClearClick = onClearClick,
-        button = {
-            IconButton(onClick = onDeleteClick) {
-                Icon(Icons.Rounded.Delete, contentDescription = null)
+    Column {
+        SearchBar(
+            text = stringResource(R.string.logs_search_packets),
+            query = query,
+            onQueryChange = onQueryChange,
+            onClearClick = onClearClick,
+            button = {
+                IconButton(onClick = onDeleteClick) {
+                    Icon(Icons.Rounded.Delete, contentDescription = null)
+                }
+            },
+            onBackClicked = onBackClicked
+        )
+
+        // Mode selection buttons
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(35.dp, 0.dp, 35.dp, 30.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            SectionButton(
+                pagerState = pagerState,
+                coroutineScope = coroutineScope,
+                pageIndex = 0,
+                icon = Icons.Rounded.Dns,
+                label = stringResource(R.string.logs_dns),
+                shape = RoundedCornerShape(topStart = 32.dp, bottomStart = 32.dp)
+            )
+            SectionButton(
+                pagerState = pagerState,
+                coroutineScope = coroutineScope,
+                pageIndex = 1,
+                icon = Icons.Rounded.Description,
+                label = stringResource(R.string.logs_packets),
+                shape = RoundedCornerShape(0.dp)
+            )
+            SectionButton(
+                pagerState = pagerState,
+                coroutineScope = coroutineScope,
+                pageIndex = 2,
+                icon = Icons.Rounded.Analytics,
+                label = stringResource(R.string.logs_stats),
+                shape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun RowScope.SectionButton(
+    pagerState: PagerState,
+    coroutineScope: CoroutineScope,
+    pageIndex: Int,
+    icon: ImageVector,
+    label: String,
+    shape: RoundedCornerShape
+) {
+    val isSelected = pagerState.currentPage == pageIndex
+
+    Box(
+        modifier = Modifier
+            .height(48.dp)
+            .weight(1f)
+            .clip(shape)
+            .background(
+                color = if (isSelected)
+                    MaterialTheme.colorScheme.surfaceContainer
+                else
+                    MaterialTheme.colorScheme.surfaceContainerLow
+            )
+            .clickable {
+                coroutineScope.launch {
+                    pagerState.animateScrollToPage(pageIndex)
+                }
             }
-        },
-        onBackClicked = onBackClicked
-    )
+            .padding(horizontal = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = if (isSelected)
+                    MaterialTheme.colorScheme.onSurface
+                else
+                    MaterialTheme.colorScheme.outline
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                maxLines = 1,
+                color = if (isSelected)
+                    MaterialTheme.colorScheme.onSurface
+                else
+                    MaterialTheme.colorScheme.outline
+            )
+        }
+    }
+}
+
+@Composable
+fun PacketsSection(
+    logs: List<List<Log>>,
+    context: Context,
+    navController: NavController
+) {
+    // Filter logs to show packets with resolved domain names
+    val packetsWithDomains = remember(logs) {
+        logs.map { logGroup ->
+            logGroup.filter { log ->
+                log.destinationAddress != null && log.destinationAddress.isNotBlank()
+            }
+        }.filter { it.isNotEmpty() }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
+    ) {
+        if (packetsWithDomains.isEmpty()) {
+            MaterialPlaceholder(
+                placeholderIcon = {
+                    Icon(
+                        imageVector = Icons.Rounded.Description,
+                        contentDescription = null,
+                        modifier = Modifier.scale(2f),
+                        tint = MaterialTheme.colorScheme.outline
+                    )
+                },
+                placeholderText = stringResource(R.string.logs_no_logs)
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+            ) {
+                items(
+                    items = packetsWithDomains,
+                    key = { logGroup -> logGroup.firstOrNull()?.id ?: 0 }
+                ) { logGroup ->
+                    if (logGroup.firstOrNull()?.packageID != 0) {
+                        LogGroupCard(
+                            logGroup = logGroup,
+                            context = context,
+                            navController = navController
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DnsRequestsSection(
+    logs: List<List<Log>>,
+    context: Context,
+    navController: NavController
+) {
+    // Filter logs to show only DNS queries/responses (port 53)
+    val dnsLogs = remember(logs) {
+        logs.map { logGroup ->
+            logGroup.filter { log ->
+                log.destinationPort == "53" || log.sourcePort == "53"
+            }
+        }.filter { it.isNotEmpty() }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
+    ) {
+        if (dnsLogs.isEmpty()) {
+            MaterialPlaceholder(
+                placeholderIcon = {
+                    Icon(
+                        imageVector = Icons.Rounded.Dns,
+                        contentDescription = null,
+                        modifier = Modifier.scale(2f),
+                        tint = MaterialTheme.colorScheme.outline
+                    )
+                },
+                placeholderText = stringResource(R.string.logs_no_dns_requests)
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+            ) {
+                items(
+                    items = dnsLogs,
+                    key = { logGroup -> logGroup.firstOrNull()?.id ?: 0 }
+                ) { logGroup ->
+                    if (logGroup.firstOrNull()?.packageID != 0) {
+                        LogGroupCard(
+                            logGroup = logGroup,
+                            context = context,
+                            navController = navController
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun StatsSection(networkStats: com.kin.athena.domain.model.NetworkStatsState) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
+    ) {
+        NetworkStatsSection(networkStats = networkStats)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Additional stats can be added here in the future
+        MaterialPlaceholder(
+            placeholderIcon = {
+                Icon(
+                    imageVector = Icons.Rounded.Analytics,
+                    contentDescription = null,
+                    modifier = Modifier.scale(2f),
+                    tint = MaterialTheme.colorScheme.outline
+                )
+            },
+            placeholderText = stringResource(R.string.logs_stats_info)
+        )
+    }
 }
 
 @Composable

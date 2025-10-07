@@ -412,8 +412,13 @@ class HomeViewModel @Inject constructor(
 
         // Set up callback to reload when settings change
         settingsViewModel.onAppFilteringSettingsChanged = {
-            Logger.info("HomeViewModel: onAppFilteringSettingsChanged triggered, reloading applications")
-            loadApplications(reset = true, settingsViewModel = settingsViewModel)
+            Logger.info("HomeViewModel: onAppFilteringSettingsChanged triggered, reloading packages and applications")
+            viewModelScope.launch {
+                // Reload packages from system with new settings
+                loadPackages(settingsViewModel)
+                // Then reload the application list view
+                loadApplications(reset = true, settingsViewModel = settingsViewModel)
+            }
         }
     }
 
