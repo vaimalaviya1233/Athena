@@ -113,26 +113,51 @@ Java_com_kin_athena_service_vpn_service_TunnelManager_jni_1get_1mtu(JNIEnv *env,
 
 JNIEXPORT void JNICALL Java_com_kin_athena_service_vpn_service_TunnelManager_jni_1clear_1sessions(JNIEnv *env, jobject instance, jlong context) {
     if (context == 0) return;
-    
+
     struct context *ctx = (struct context *) context;
     if (ctx == NULL) return;
-    
+
     // Lock the context to prevent race conditions during session clearing
     if (pthread_mutex_lock(&ctx->lock) != 0) {
         log_android(ANDROID_LOG_ERROR, "Failed to lock context for session clearing");
         return;
     }
-    
+
     log_android(ANDROID_LOG_INFO, "Clearing all active sessions");
-    
+
     // Clear all sessions
     clear(ctx);
-    
+
     log_android(ANDROID_LOG_INFO, "All sessions cleared successfully");
-    
+
     // Unlock the context
     if (pthread_mutex_unlock(&ctx->lock) != 0) {
         log_android(ANDROID_LOG_ERROR, "Failed to unlock context after session clearing");
+    }
+}
+
+JNIEXPORT void JNICALL Java_com_kin_athena_service_vpn_service_TunnelManager_jni_1set_1dns_1servers(JNIEnv *env, jobject instance, jlong context, jstring dnsV4, jstring dnsV6) {
+    if (context == 0) return;
+
+    struct context *ctx = (struct context *) context;
+    if (ctx == NULL) return;
+
+    // Get UTF strings from Java
+    const char *dns_v4_str = (*env)->GetStringUTFChars(env, dnsV4, 0);
+    const char *dns_v6_str = (*env)->GetStringUTFChars(env, dnsV6, 0);
+
+    if (dns_v4_str != NULL) {
+        strncpy(ctx->dns_server_v4, dns_v4_str, INET_ADDRSTRLEN - 1);
+        ctx->dns_server_v4[INET_ADDRSTRLEN - 1] = '\0';
+        log_android(ANDROID_LOG_INFO, "DNS IPv4 server set to: %s", ctx->dns_server_v4);
+        (*env)->ReleaseStringUTFChars(env, dnsV4, dns_v4_str);
+    }
+
+    if (dns_v6_str != NULL) {
+        strncpy(ctx->dns_server_v6, dns_v6_str, INET6_ADDRSTRLEN - 1);
+        ctx->dns_server_v6[INET6_ADDRSTRLEN - 1] = '\0';
+        log_android(ANDROID_LOG_INFO, "DNS IPv6 server set to: %s", ctx->dns_server_v6);
+        (*env)->ReleaseStringUTFChars(env, dnsV6, dns_v6_str);
     }
 }
 

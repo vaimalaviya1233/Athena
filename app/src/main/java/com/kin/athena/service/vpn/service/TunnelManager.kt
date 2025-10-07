@@ -37,17 +37,22 @@ import java.nio.ByteOrder
 
 class TunnelManager(
     private val ruleHandler: RuleHandler? = null,
-    private val targetDnsServer: String = "9.9.9.9"
+    private val dnsServerV4: String = "9.9.9.9",
+    private val dnsServerV6: String = "2620:fe::fe"
 ) {
-    
+
     private var contextPtr: Long = 0
     private val lock = Any()
     private var isReleased = false
 
 
-    
+
     fun initialize(): Boolean {
         contextPtr = jni_init(Build.VERSION.SDK_INT)
+        if (contextPtr != 0L) {
+            // Set DNS servers in native code
+            jni_set_dns_servers(contextPtr, dnsServerV4, dnsServerV6)
+        }
         return contextPtr != 0L
     }
     
@@ -225,6 +230,7 @@ class TunnelManager(
     private external fun jni_getprop(name: String): String
     private external fun jni_get_mtu(): Int
     private external fun jni_clear_sessions(context: Long)
+    private external fun jni_set_dns_servers(context: Long, dnsV4: String, dnsV6: String)
 
     companion object {
         init {

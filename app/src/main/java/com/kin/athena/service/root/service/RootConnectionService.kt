@@ -389,9 +389,17 @@ class RootConnectionService : Service(), CoroutineScope by CoroutineScope(Dispat
     }
 
     private fun createDNSRules(iptables: String, commands: MutableList<String>, settings: Settings) {
-            if (iptables == "iptables") {
+        if (iptables == "iptables") {
+            // IPv4 DNS redirection
             commands.addAll(listOf(
                 "$iptables -t nat -I OUTPUT -p udp --dport 53 -j DNAT --to ${settings.dnsServer1}:53",
+                "$iptables -t nat -I OUTPUT -p tcp --dport 53 -j DNAT --to ${settings.dnsServer1}:53"
+            ))
+        } else if (iptables == "ip6tables") {
+            // IPv6 DNS redirection
+            commands.addAll(listOf(
+                "$iptables -t nat -I OUTPUT -p udp --dport 53 -j DNAT --to [${settings.dnsServer1v6}]:53",
+                "$iptables -t nat -I OUTPUT -p tcp --dport 53 -j DNAT --to [${settings.dnsServer1v6}]:53"
             ))
         }
     }

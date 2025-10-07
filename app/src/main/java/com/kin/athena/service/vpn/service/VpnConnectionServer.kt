@@ -261,16 +261,16 @@ class VpnConnectionServer : Service(), CoroutineScope by MainScope(), AppChangeC
     }
 
     private fun initializeVpnComponents(vpnInterface: ParcelFileDescriptor) {
-        // Get DNS server from settings
-        val dnsServer = runBlocking {
+        // Get DNS servers from settings
+        val (dnsServerV4, dnsServerV6) = runBlocking {
             preferencesUseCases.loadSettings.execute().fold(
-                ifSuccess = { it.dnsServer1 },
-                ifFailure = { "9.9.9.9" }
+                ifSuccess = { Pair(it.dnsServer1, it.dnsServer1v6) },
+                ifFailure = { Pair("9.9.9.9", "2620:fe::fe") }
             )
         }
-        
-        // Initialize TunnelManager with the injected RuleHandler and user's DNS server
-        tunnelManager = TunnelManager(ruleManager, dnsServer)
+
+        // Initialize TunnelManager with the injected RuleHandler and user's DNS servers
+        tunnelManager = TunnelManager(ruleManager, dnsServerV4, dnsServerV6)
         
         if (!tunnelManager.initialize()) {
             Logger.error("Failed to initialize Tunnel Manager")

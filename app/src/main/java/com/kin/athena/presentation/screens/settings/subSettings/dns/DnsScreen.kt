@@ -516,10 +516,10 @@ private fun OnDNSClicked(settings: SettingsViewModel, onExit: () -> Unit) {
 
     list.forEach { dns ->
         if (
-            settings.settings.value.dnsServer1 == dns.second.first ||
-            settings.settings.value.dnsServer1 == dns.second.first &&
-            settings.settings.value.dnsServer2 == dns.second.first ||
-            settings.settings.value.dnsServer2 == dns.second.first
+            settings.settings.value.dnsServer1 == dns.ipv4Primary ||
+            settings.settings.value.dnsServer1 == dns.ipv4Primary &&
+            settings.settings.value.dnsServer2 == dns.ipv4Primary ||
+            settings.settings.value.dnsServer2 == dns.ipv4Primary
         ) {
             useCustom = false
         }
@@ -539,12 +539,16 @@ private fun OnDNSClicked(settings: SettingsViewModel, onExit: () -> Unit) {
                 customAction = { onExit ->
                     CustomDnsDialog(
                         onExit = onExit,
-                        dns1Key = if (useCustom) settings.settings.value.dnsServer1 else null,
-                        dns2Key = if (useCustom) settings.settings.value.dnsServer2 else null,
-                        onDone = { dns1, dns2 ->
+                        dns1v4Key = if (useCustom) settings.settings.value.dnsServer1 else null,
+                        dns2v4Key = if (useCustom) settings.settings.value.dnsServer2 else null,
+                        dns1v6Key = if (useCustom) settings.settings.value.dnsServer1v6 else null,
+                        dns2v6Key = if (useCustom) settings.settings.value.dnsServer2v6 else null,
+                        onDone = { dns1v4, dns2v4, dns1v6, dns2v6 ->
                             settings.update(settings.settings.value.copy(
-                                dnsServer1 = dns1,
-                                dnsServer2 = dns2
+                                dnsServer1 = dns1v4,
+                                dnsServer2 = dns2v4,
+                                dnsServer1v6 = dns1v6,
+                                dnsServer2v6 = dns2v6
                             ))
                         }
                     )
@@ -554,14 +558,16 @@ private fun OnDNSClicked(settings: SettingsViewModel, onExit: () -> Unit) {
         setting = { displayData ->
             SettingsBox(
                 size = 8.dp,
-                title = displayData.first,
-                description = displayData.second.first,
+                title = displayData.name,
+                description = displayData.ipv4Primary,
                 actionType = SettingType.RADIOBUTTON,
-                variable = settings.settings.value.dnsServer1 == displayData.second.first,
+                variable = settings.settings.value.dnsServer1 == displayData.ipv4Primary,
                 onSwitchEnabled = {
                     settings.update(settings.settings.value.copy(
-                        dnsServer1 = displayData.second.first,
-                        dnsServer2 = displayData.second.second,
+                        dnsServer1 = displayData.ipv4Primary,
+                        dnsServer2 = displayData.ipv4Secondary,
+                        dnsServer1v6 = displayData.ipv6Primary,
+                        dnsServer2v6 = displayData.ipv6Secondary
                     ))
                 }
             )

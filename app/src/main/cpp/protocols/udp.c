@@ -140,17 +140,43 @@ jboolean handle_udp(const struct arguments *args, const uint8_t *pkt, size_t len
         if (version == 4) {
             s->udp.saddr.ip4 = (__be32) ip4->saddr;
             s->udp.daddr.ip4 = (__be32) ip4->daddr;
-            
-            // Check for DNS redirection: 198.18.0.1 -> 1.1.1.1
+
+            // Check for DNS redirection: 198.18.0.1 -> user's DNS server
             uint32_t target_ip = htonl(0xC6120001); // 198.18.0.1 in network byte order
-            uint32_t redirect_ip = htonl(0x01010101); // 1.1.1.1 in network byte order
-            
+
             if (s->udp.daddr.ip4 == target_ip && ntohs(udphdr->dest) == 53) {
-                s->udp.daddr.ip4 = redirect_ip;
+                // Convert user's DNS server from string to network byte order
+                struct in_addr dns_addr;
+                if (inet_pton(AF_INET, args->ctx->dns_server_v4, &dns_addr) == 1) {
+                    s->udp.daddr.ip4 = dns_addr.s_addr;
+                    log_android(ANDROID_LOG_DEBUG, "DNS IPv4 redirected to: %s", args->ctx->dns_server_v4);
+                } else {
+                    // Fallback to 9.9.9.9 if parsing fails
+                    s->udp.daddr.ip4 = htonl(0x09090909);
+                    log_android(ANDROID_LOG_WARN, "Failed to parse DNS IPv4, using fallback: 9.9.9.9");
+                }
             }
         } else {
             memcpy(&s->udp.saddr.ip6, &ip6->ip6_src, 16);
             memcpy(&s->udp.daddr.ip6, &ip6->ip6_dst, 16);
+
+            // Check for IPv6 DNS redirection: fd00::53 -> user's IPv6 DNS server
+            struct in6_addr target_ipv6;
+            inet_pton(AF_INET6, "fd00::53", &target_ipv6);
+
+            if (memcmp(&s->udp.daddr.ip6, &target_ipv6, 16) == 0 && ntohs(udphdr->dest) == 53) {
+                // Convert user's IPv6 DNS server from string
+                struct in6_addr dns_addr6;
+                if (inet_pton(AF_INET6, args->ctx->dns_server_v6, &dns_addr6) == 1) {
+                    memcpy(&s->udp.daddr.ip6, &dns_addr6, 16);
+                    log_android(ANDROID_LOG_DEBUG, "DNS IPv6 redirected to: %s", args->ctx->dns_server_v6);
+                } else {
+                    // Fallback to 2620:fe::fe if parsing fails
+                    inet_pton(AF_INET6, "2620:fe::fe", &dns_addr6);
+                    memcpy(&s->udp.daddr.ip6, &dns_addr6, 16);
+                    log_android(ANDROID_LOG_WARN, "Failed to parse DNS IPv6, using fallback: 2620:fe::fe");
+                }
+            }
         }
 
         s->udp.source = udphdr->source;
@@ -267,11 +293,17 @@ ssize_t write_udp(const struct arguments *args, const struct udp_session *cur, u
         ip4->tot_len = htons(len);
         ip4->ttl = IPDEFTTL;
         ip4->protocol = IPPROTO_UDP;
-        // Check if this is a response from redirected DNS (1.1.1.1 -> 198.18.0.1)
-        uint32_t redirect_ip = htonl(0x01010101); // 1.1.1.1 in network byte order
+        // Check if this is a response from redirected DNS (user's DNS -> 198.18.0.1)
         uint32_t target_ip = htonl(0xC6120001); // 198.18.0.1 in network byte order
-        
-        if (cur->daddr.ip4 == redirect_ip && ntohs(cur->dest) == 53) {
+
+        // Parse user's DNS server to check if this is a DNS response
+        struct in_addr user_dns_addr;
+        int is_dns_response = 0;
+        if (inet_pton(AF_INET, args->ctx->dns_server_v4, &user_dns_addr) == 1) {
+            is_dns_response = (cur->daddr.ip4 == user_dns_addr.s_addr && ntohs(cur->dest) == 53);
+        }
+
+        if (is_dns_response) {
             ip4->saddr = target_ip;
         } else {
             ip4->saddr = cur->daddr.ip4;
@@ -300,7 +332,22 @@ ssize_t write_udp(const struct arguments *args, const struct udp_session *cur, u
         ip6->ip6_ctlun.ip6_un1.ip6_un1_nxt = IPPROTO_UDP;
         ip6->ip6_ctlun.ip6_un1.ip6_un1_hlim = IPDEFTTL;
         ip6->ip6_ctlun.ip6_un2_vfc = IPV6_VERSION;
-        memcpy(&(ip6->ip6_src), &cur->daddr.ip6, 16);
+
+        // Check if this is a response from redirected IPv6 DNS (user's DNS -> fd00::53)
+        struct in6_addr user_dns_addr6;
+        struct in6_addr target_ipv6;
+        inet_pton(AF_INET6, "fd00::53", &target_ipv6);
+
+        int is_dns_response_v6 = 0;
+        if (inet_pton(AF_INET6, args->ctx->dns_server_v6, &user_dns_addr6) == 1) {
+            is_dns_response_v6 = (memcmp(&cur->daddr.ip6, &user_dns_addr6, 16) == 0 && ntohs(cur->dest) == 53);
+        }
+
+        if (is_dns_response_v6) {
+            memcpy(&(ip6->ip6_src), &target_ipv6, 16);
+        } else {
+            memcpy(&(ip6->ip6_src), &cur->daddr.ip6, 16);
+        }
         memcpy(&(ip6->ip6_dst), &cur->saddr.ip6, 16);
 
         struct ip6_hdr_pseudo pseudo;

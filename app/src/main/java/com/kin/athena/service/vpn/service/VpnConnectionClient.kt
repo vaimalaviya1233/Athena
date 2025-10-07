@@ -100,9 +100,12 @@ class VpnConnectionClient : VpnService() {
 
     private fun createVpnBuilder() = Builder().apply {
         loadSettings()
-        addDnsServer("198.18.0.1")
+        addDnsServer(NetworkConstants.VPN_DNS_ADDRESS)    // IPv4 DNS
+        addDnsServer(NetworkConstants.VPN_DNS6_ADDRESS)   // IPv6 DNS
         addAddress(settings!!.ipv4, 32)
+        addAddress(settings!!.ipv6, 128)  // Add IPv6 address
         addRoute(NetworkConstants.ALL_TRAFFIC, 0)
+        addRoute("::", 0)  // Route all IPv6 traffic
         setMtu(NetworkConstants.MAX_PACKET_LEN)
         setBlocking(true)
         setSession(getString(R.string.app_name))
