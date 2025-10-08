@@ -591,6 +591,28 @@
     <string name="dns_auto_update_completed">Auto-update completed</string>
     <string name="dns_auto_update_failed">Auto-update failed</string>
 
+    <!-- Domain Management -->
+    <string name="dns_domain_management_title">Domain Management</string>
+    <string name="dns_domain_management_desc">Manage custom domain rules</string>
+    <string name="dns_allowlist_title">Allowlist</string>
+    <string name="dns_blocklist_title">Blocklist</string>
+    <string name="dns_add_domain">Add Domain</string>
+    <string name="dns_domain_format_normal">Normal</string>
+    <string name="dns_domain_format_regex">Regex</string>
+    <string name="dns_domain_hint_normal">Enter domain (e.g., example.com)</string>
+    <string name="dns_domain_hint_regex">Enter regex pattern (e.g., .*\\.ads\\..*)</string>
+    <string name="dns_domain_description_hint">Optional description</string>
+    <string name="dns_domain_added">Domain added successfully</string>
+    <string name="dns_domain_deleted">Domain removed successfully</string>
+    <string name="dns_domain_error_empty">Please enter a domain</string>
+    <string name="dns_domain_error_invalid">Invalid domain format</string>
+    <string name="dns_domain_error_regex">Invalid regex pattern</string>
+    <string name="dns_domain_error_exists">Domain already exists</string>
+    <string name="dns_no_domains_allowlist">No domains in allowlist</string>
+    <string name="dns_no_domains_blocklist">No domains in blocklist</string>
+    <string name="dns_domain_count">%1$d domains</string>
+    <string name="dns_domain_delete_confirm">Delete this domain?</string>
+
     <!-- Custom Blocklist -->
     <string name="blocklist_custom">Custom Blocklist</string>
     <string name="blocklist_custom_desc">Add custom blocklists</string>

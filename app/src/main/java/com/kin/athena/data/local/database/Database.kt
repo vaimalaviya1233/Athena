@@ -23,12 +23,14 @@ import com.kin.athena.core.utils.constants.AppConstants
 import com.kin.athena.data.local.dao.ApplicationDao
 import com.kin.athena.data.local.dao.LogDao
 import com.kin.athena.data.local.dao.NetworkFilterDao
+import com.kin.athena.data.database.dao.CustomDomainDao
+import com.kin.athena.data.database.entity.CustomDomainEntity
 import com.kin.athena.domain.model.Application
 import com.kin.athena.domain.model.Ip
 import com.kin.athena.domain.model.Log
 
 @Database(
-    entities = [Application::class, Log::class, Ip::class],
+    entities = [Application::class, Log::class, Ip::class, CustomDomainEntity::class],
     version = AppConstants.DatabaseConstants.DATABASE_VERSION,
     exportSchema = false
 )
@@ -36,4 +38,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun packageDao(): ApplicationDao
     abstract fun logDao(): LogDao
     abstract fun blockedDao() : NetworkFilterDao
+    abstract fun customDomainDao(): CustomDomainDao
 }

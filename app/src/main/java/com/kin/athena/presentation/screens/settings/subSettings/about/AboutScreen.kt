@@ -18,12 +18,15 @@
 package com.kin.athena.presentation.screens.settings.subSettings.about
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ContactSupport
@@ -37,6 +40,7 @@ import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -238,9 +242,17 @@ fun PremiumCodeDialog(
 
     SettingDialog(
         text = stringResource(id = R.string.premium_code),
-        onExit = { onExit() }
+        onExit = onExit
     ) {
         Column {
+            // Premium code input
+            Text(
+                text = "Premium Code",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -253,13 +265,13 @@ fun PremiumCodeDialog(
                     modifier = Modifier.fillMaxWidth(),
                     value = code,
                     onValueChange = { code = it },
-                    placeholder = "Enter premium code",
+                    placeholder = "Enter your premium code",
                     singleLine = true
                 )
             }
-
+            
             Spacer(modifier = Modifier.height(16.dp))
-
+            
             // Show notification message with Material You design
             if (notificationMessage.isNotEmpty()) {
                 val isSuccess = notificationMessage.startsWith("✅")
@@ -271,13 +283,13 @@ fun PremiumCodeDialog(
                         else 
                             MaterialTheme.colorScheme.errorContainer
                     ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                    shape = RoundedCornerShape(16.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
@@ -287,11 +299,12 @@ fun PremiumCodeDialog(
                                 MaterialTheme.colorScheme.onTertiaryContainer
                             else
                                 MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.padding(end = 12.dp)
+                            modifier = Modifier.size(20.dp)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = notificationMessage.removePrefix("✅ ").removePrefix("❌ "),
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodySmall,
                             color = if (isSuccess)
                                 MaterialTheme.colorScheme.onTertiaryContainer
                             else
@@ -302,22 +315,41 @@ fun PremiumCodeDialog(
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
-
-            Button(
-                onClick = {
-                    if (code.text.isNotBlank() && !isVerifying) {
-                        isVerifying = true
-                        settings.verifyLicense(code.text) { success, message ->
-                            isVerifying = false
-                            notificationMessage = message
-                        }
-                    }
-                },
-                enabled = !isVerifying && code.text.isNotBlank(),
-                modifier = Modifier.align(Alignment.End)
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Bottom buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(text = if (isVerifying) "Verifying..." else stringResource(id = R.string.common_done))
+                Button(
+                    onClick = onExit,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                ) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+                Button(
+                    onClick = {
+                        if (code.text.isNotBlank() && !isVerifying) {
+                            isVerifying = true
+                            settings.verifyLicense(code.text) { success, message ->
+                                isVerifying = false
+                                notificationMessage = message
+                            }
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = !isVerifying && code.text.isNotBlank()
+                ) {
+                    Text(text = if (isVerifying) "Verifying..." else "Verify")
+                }
             }
+            
             Spacer(modifier = Modifier.height(8.dp))
         }
     }

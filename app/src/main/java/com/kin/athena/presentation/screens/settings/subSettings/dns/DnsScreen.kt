@@ -26,6 +26,7 @@ import androidx.compose.material.icons.rounded.AdsClick
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Dns
 import androidx.compose.material.icons.rounded.Games
+import androidx.compose.material.icons.rounded.List
 import androidx.compose.material.icons.rounded.Man
 import androidx.compose.material.icons.rounded.Numbers
 import androidx.compose.material.icons.rounded.RemoveRedEye
@@ -500,6 +501,16 @@ fun DnsScreen(
                     }
                     onExit()
                 },
+            )
+            SettingsBox(
+                title = stringResource(R.string.dns_domain_management_title),
+                description = stringResource(R.string.dns_domain_management_desc),
+                icon = IconType.VectorIcon(Icons.Rounded.List),
+                actionType = SettingType.CUSTOM,
+                customAction = { onExit ->
+                    navController.navigate(SettingRoutes.DomainManagement.route)
+                    onExit()
+                }
             )
             SettingsBox(
                 title = stringResource(id = R.string.dns_blocked_domains),

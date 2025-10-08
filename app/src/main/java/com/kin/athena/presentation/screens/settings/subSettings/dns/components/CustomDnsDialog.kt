@@ -17,6 +17,7 @@
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -184,22 +186,49 @@ fun CustomDnsDialog(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
-                onClick = {
-                    if (isValidIpv4(dns1v4.text) && isValidIpv4(dns2v4.text) &&
-                        isValidIpv6(dns1v6.text) && isValidIpv6(dns2v6.text)) {
-                        onDone(dns1v4.text, dns2v4.text, dns1v6.text, dns2v6.text)
-                        onExit()
-                    } else {
-                        Toast.makeText(context, context.getString(R.string.dns_invalid), Toast.LENGTH_SHORT).show()
-                    }
-                },
-                modifier = Modifier.align(Alignment.End)
+            // Bottom buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(text = stringResource(R.string.common_done))
+                Button(
+                    onClick = onExit,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                ) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+                Button(
+                    onClick = {
+                        val isValidDns1v4 = dns1v4.text.isNotBlank() && isValidIpv4(dns1v4.text)
+                        val isValidDns2v4 = dns2v4.text.isBlank() || isValidIpv4(dns2v4.text)
+                        val isValidDns1v6 = dns1v6.text.isBlank() || isValidIpv6(dns1v6.text)
+                        val isValidDns2v6 = dns2v6.text.isBlank() || isValidIpv6(dns2v6.text)
+                        
+                        if (isValidDns1v4 && isValidDns2v4 && isValidDns1v6 && isValidDns2v6) {
+                            onDone(
+                                dns1v4.text,
+                                dns2v4.text.ifBlank { "" },
+                                dns1v6.text.ifBlank { "" },
+                                dns2v6.text.ifBlank { "" }
+                            )
+                            onExit()
+                        } else {
+                            Toast.makeText(context, context.getString(R.string.dns_invalid), Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = dns1v4.text.isNotBlank()
+                ) {
+                    Text(stringResource(R.string.common_done))
+                }
             }
+            
             Spacer(modifier = Modifier.height(8.dp))
         }
     }

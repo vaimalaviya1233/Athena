@@ -25,6 +25,7 @@ import com.kin.athena.presentation.screens.settings.subSettings.behavior.Behavio
 import com.kin.athena.presentation.screens.settings.subSettings.colors.ColorsScreen
 import com.kin.athena.presentation.screens.settings.subSettings.dns.DnsScreen
 import com.kin.athena.presentation.screens.settings.subSettings.dns.CustomBlocklistManagementScreen
+import com.kin.athena.presentation.screens.settings.subSettings.dns.DomainManagementScreen
 import com.kin.athena.presentation.screens.settings.subSettings.network.NetworkScreen
 import com.kin.athena.presentation.screens.settings.subSettings.privacy.PrivacyScreen
 import com.kin.athena.presentation.screens.settings.subSettings.proxy.ProxyScreen
@@ -40,6 +41,7 @@ sealed class SettingRoutes(val route: String) {
     data object Proxy: SettingRoutes("subSettings/proxy")
     data object Dns: SettingRoutes("subSettings/dns")
     data object CustomBlocklist: SettingRoutes("subSettings/dns/customBlocklist")
+    data object DomainManagement: SettingRoutes("subSettings/dns/domainManagement")
     data object Privacy: SettingRoutes("subSettings/privacy")
     data object About: SettingRoutes("subSettings/about")
     data object LockScreen : SettingRoutes("subSettings/lock/{type}") {
@@ -55,6 +57,7 @@ val settingScreens = mapOf<String, @Composable (settingsViewModel: SettingsViewM
     SettingRoutes.Proxy.route to { settingsViewModel, navController, homeViewModel -> ProxyScreen(navController, settingsViewModel) },
     SettingRoutes.Dns.route to { settingsViewModel, navController, homeViewModel -> DnsScreen(navController, settingsViewModel) },
     SettingRoutes.CustomBlocklist.route to { settingsViewModel, navController, homeViewModel -> CustomBlocklistManagementScreen(navController, settingsViewModel) },
+    SettingRoutes.DomainManagement.route to { settingsViewModel, navController, homeViewModel -> DomainManagementScreen(navController, settingsViewModel) },
     SettingRoutes.Privacy.route to { settingsViewModel, navController, homeViewModel -> PrivacyScreen(navController, settingsViewModel) },
     SettingRoutes.About.route to { settingsViewModel, navController, homeViewModel -> AboutScreen(navController, settingsViewModel) }
 )

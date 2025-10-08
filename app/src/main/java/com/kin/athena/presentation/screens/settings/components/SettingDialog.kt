@@ -19,6 +19,7 @@ package com.kin.athena.presentation.screens.settings.components
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +32,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -122,44 +125,80 @@ fun IpDialog(
 
     SettingDialog(
         text = stringResource(R.string.dialog_add_ip),
-        onExit = { onExit() }
+        onExit = onExit
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.background(
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
-                shape = RoundedCornerShape(16.dp)
+        Column {
+            // IP type indicator
+            Text(
+                text = when {
+                    allowOnlyIPv4 -> "IPv4 Address"
+                    allowOnlyIPv6 -> "IPv6 Address"
+                    else -> "IP Address"
+                },
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
-        ) {
-            MaterialTextField(
-                modifier = Modifier.fillMaxWidth(0.85f),
-                value = textFieldValue,
-                onValueChange = { text -> onValueChange(text) },
-                placeholder = if (allowOnlyIPv4) "127.0.0.1" else "::1",
-                singleLine = true,
-                keyboardType = if (allowOnlyIPv4) KeyboardType.Number else KeyboardType.Text
-            )
-            IconButton(
-                onClick = {
-                    if (isValidIp(textFieldValue.text)) {
-                        onFinished()
-                    } else {
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.dialog_invalid_ip),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.background(
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    shape = RoundedCornerShape(16.dp)
+                )
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Check,
-                    contentDescription = "",
-                    modifier = Modifier.padding(end = 10.dp)
+                MaterialTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = textFieldValue,
+                    onValueChange = onValueChange,
+                    placeholder = when {
+                        allowOnlyIPv4 -> "192.168.1.1"
+                        allowOnlyIPv6 -> "2001:db8::1"
+                        else -> "Enter IP address"
+                    },
+                    singleLine = true,
+                    keyboardType = if (allowOnlyIPv4) KeyboardType.Number else KeyboardType.Text
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Bottom buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Button(
+                    onClick = onExit,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                ) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+                Button(
+                    onClick = {
+                        if (isValidIp(textFieldValue.text)) {
+                            onFinished()
+                            onExit()
+                        } else {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.dialog_invalid_ip),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = textFieldValue.text.isNotBlank()
+                ) {
+                    Text(stringResource(R.string.common_done))
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+        }
     }
 }

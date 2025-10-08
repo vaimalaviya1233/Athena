@@ -24,6 +24,7 @@ import com.kin.athena.core.utils.constants.AppConstants
 import com.kin.athena.data.local.dao.ApplicationDao
 import com.kin.athena.data.local.dao.LogDao
 import com.kin.athena.data.local.dao.NetworkFilterDao
+import com.kin.athena.data.database.dao.CustomDomainDao
 import com.kin.athena.data.local.database.AppDatabase
 
 class DatabaseProvider(private val application: Application) {
@@ -71,6 +72,28 @@ class DatabaseProvider(private val application: Application) {
         }
     }
 
+    private val MIGRATION_6_7 = object : Migration(6, 7) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create custom_domains table for domain management
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS custom_domains (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    domain TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    is_regex INTEGER NOT NULL,
+                    is_allowlist INTEGER NOT NULL,
+                    created_at INTEGER NOT NULL,
+                    is_enabled INTEGER NOT NULL
+                )
+            """)
+            
+            // Create indexes for better performance
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_custom_domains_domain ON custom_domains(domain)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_custom_domains_is_allowlist ON custom_domains(is_allowlist)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_custom_domains_is_enabled ON custom_domains(is_enabled)")
+        }
+    }
+
     @Synchronized
     fun instance(): AppDatabase {
         return database ?: synchronized(this) {
@@ -82,7 +105,7 @@ class DatabaseProvider(private val application: Application) {
         return Room.databaseBuilder(application.applicationContext,
             AppDatabase::class.java,
             AppConstants.DatabaseConstants.DATABASE_NAME)
-            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
             .build()
     }
 
@@ -102,5 +125,9 @@ class DatabaseProvider(private val application: Application) {
 
     fun networkFilterDao(): NetworkFilterDao {
         return instance().blockedDao()
+    }
+
+    fun customDomainDao(): CustomDomainDao {
+        return instance().customDomainDao()
     }
 }
