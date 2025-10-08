@@ -36,7 +36,7 @@ class GetFilteredApplications @Inject constructor(
         showSystemPackages: Boolean,
         showOfflinePackages: Boolean,
         searchQuery: String,
-        limit: Int = 50,
+        limit: Int = Int.MAX_VALUE,
         offset: Int = 0
     ): Result<FilteredApplicationResult, Error> {
         return try {

@@ -344,8 +344,8 @@ fun HomeScreen(
         )
     }
 
-    // Onboarding overlay for first-time users
-    if (settingsViewModel.settings.value.isFirstTimeRunning && isFirewallManager.value == FirewallStatus.OFFLINE) {
+    // Onboarding overlay for first-time users - show regardless of firewall status
+    if (settingsViewModel.settings.value.isFirstTimeRunning) {
         OnboardingOverlay(
             targetIconPosition = securityIconPosition,
             onDismiss = {
@@ -373,13 +373,13 @@ private fun HomeScreenContent(
     val applicationState = homeViewModel.applicationState.value
     val searchQuery = homeViewModel.searchQuery.value
 
-    // Track if we should animate - initial load or search change
+    // Track animation state for search changes only
     var animationKey by remember { mutableStateOf(0) }
     var previousSearchQuery by remember { mutableStateOf(searchQuery) }
     var previousAppList by remember { mutableStateOf<List<String>>(emptyList()) }
     var isFirstLoad by remember { mutableStateOf(true) }
 
-    // Only animate when the actual application list structure changes (not just properties)
+    // Animate on search changes and initial load only
     LaunchedEffect(applicationState) {
         if (applicationState is ApplicationListState.Success) {
             val currentAppList = applicationState.applications.map { it.packageID }
@@ -396,10 +396,9 @@ private fun HomeScreenContent(
                     animationKey++
                 }
             } else if (currentAppList != previousAppList) {
-                // List structure changed (items added/removed/reordered) - don't animate
+                // List structure changed but not search - don't animate to prevent scroll interference
                 previousAppList = currentAppList
             }
-            // If only properties changed (wifi/cellular), don't increment animationKey
         }
     }
 
@@ -447,17 +446,17 @@ private fun ProfessionalApplicationList(
         }
     }
 
-    // Track visible items for animation
+    // Track visible items for controlled animations
     val visibleItems = remember(animationKey) { mutableStateMapOf<String, Boolean>() }
     val applicationIds = remember(applications) { applications.map { it.packageID } }
 
+    // Control animations based on animation key
     LaunchedEffect(animationKey) {
         if (animationKey > 0) {
-            // Reset visibility for new animation
+            // Clear visibility and stagger for animation (only on search/initial load)
             visibleItems.clear()
-            // Stagger the visibility with a smoother delay
             applicationIds.forEachIndexed { index, packageId ->
-                delay(15L) // Smooth stagger timing
+                delay(25L) // Faster stagger to reduce scroll interference
                 visibleItems[packageId] = true
             }
         } else {
@@ -468,7 +467,7 @@ private fun ProfessionalApplicationList(
         }
     }
 
-    // Add new items to visibility map when list grows (pagination)
+    // Ensure new items become visible immediately during normal updates
     LaunchedEffect(applicationIds) {
         applicationIds.forEach { packageId ->
             if (!visibleItems.containsKey(packageId)) {
@@ -528,10 +527,10 @@ private fun ProfessionalApplicationList(
                     visible = isVisible,
                     enter = if (animationKey > 0) {
                         fadeIn(
-                            animationSpec = tween(400)
+                            animationSpec = tween(300, easing = FastOutSlowInEasing)
                         ) + slideInVertically(
-                            animationSpec = tween(400),
-                            initialOffsetY = { it / 4 }
+                            animationSpec = tween(300, easing = FastOutSlowInEasing),
+                            initialOffsetY = { it / 6 }
                         )
                     } else {
                         EnterTransition.None
