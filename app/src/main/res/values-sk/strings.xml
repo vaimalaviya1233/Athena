@@ -587,4 +587,6 @@
     <string name="dns_no_domains_blocklist">Žiadne domény v zozname blokov</string>
     <string name="dns_domain_count">%1$d domény</string>
     <string name="dns_domain_delete_confirm">Odstráňte túto doménu?</string>
+    <string name="dns_ads_extreme">Ads Extrémne</string>
+    <string name="dns_ads_extreme_desc">Dodatočné agresívne blokovanie reklám</string>
 </resources>
