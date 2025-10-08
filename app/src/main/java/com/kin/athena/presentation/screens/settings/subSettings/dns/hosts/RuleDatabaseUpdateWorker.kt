@@ -62,15 +62,24 @@ class RuleDatabaseUpdateWorker @AssistedInject constructor(
         val start = System.currentTimeMillis()
         _isRefreshing.value = true
 
+        // Check if this is an auto-update
+        val isAutoUpdate = inputData.getBoolean("auto_update", false)
+        
         // Check if we should update specific lists only
         val targetLists = inputData.getStringArray("target_lists")
         val hostsToProcess = if (targetLists != null && targetLists.isNotEmpty()) {
             config.hosts.items.filter { targetLists.contains(it.data) }
         } else {
-            config.hosts.items
+            // For auto-updates, only update enabled lists
+            if (isAutoUpdate) {
+                config.hosts.items.filter { it.state == HostState.DENY }
+            } else {
+                config.hosts.items
+            }
         }
 
-        Logger.info("DNS blocklist update started: ${hostsToProcess.size} lists to process")
+        val updateType = if (isAutoUpdate) "auto-update" else "manual update"
+        Logger.info("DNS blocklist $updateType started: ${hostsToProcess.size} lists to process")
 
         // Set initial progress
         setProgress(workDataOf("progress" to 0, "stage" to "downloading"))
@@ -117,7 +126,7 @@ class RuleDatabaseUpdateWorker @AssistedInject constructor(
         val successCount = done.size
         val errorCount = errors.size
 
-        Logger.info("DNS blocklist update completed: ${successCount} succeeded, ${errorCount} failed (${duration}ms total)")
+        Logger.info("DNS blocklist $updateType completed: ${successCount} succeeded, ${errorCount} failed (${duration}ms total)")
 
         postExecute()
 

@@ -22,7 +22,9 @@ import android.app.Application
 import android.content.Context
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.kin.athena.core.logging.Logger
 import com.kin.athena.data.cache.DomainCacheService
+import com.kin.athena.presentation.screens.settings.subSettings.dns.AutoUpdateManager
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -44,12 +46,28 @@ class App : Application(), Configuration.Provider {
         super.onCreate()
         App.applicationContext = this
         instance = this
+        
+        // Initialize auto-update on app startup
+        initializeAutoUpdate()
+        
         // Don't initialize domains on app startup - they'll be loaded when needed
         // This significantly improves app startup time
         // Domains will be loaded when:
         // 1. VPN service starts
         // 2. User navigates to DNS settings
         // 3. User manually triggers a refresh
+        // 4. Auto-update worker runs
+    }
+    
+    private fun initializeAutoUpdate() {
+        try {
+            // Use default interval of 15 minutes if settings aren't available yet
+            // The actual interval will be updated when settings are loaded
+            val defaultInterval = 15 * 60 * 1000L // 15 minutes
+            AutoUpdateManager.initializeAutoUpdate(this, defaultInterval)
+        } catch (e: Exception) {
+            // Silently handle initialization errors
+        }
     }
 
     companion object {

@@ -29,6 +29,7 @@ import androidx.compose.material.icons.rounded.Games
 import androidx.compose.material.icons.rounded.Man
 import androidx.compose.material.icons.rounded.Numbers
 import androidx.compose.material.icons.rounded.RemoveRedEye
+import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -105,6 +106,11 @@ fun DnsScreen(
     
     // Track if we're actively updating domains (different from initial load)
     var isDomainUpdateInProgress by remember { mutableStateOf(false) }
+    
+    // Update auto-update interval when DNS screen loads (in case settings changed)
+    LaunchedEffect(settings.settings.value.autoUpdateInterval) {
+        AutoUpdateManager.scheduleAutoUpdateWorker(context, settings.settings.value.autoUpdateInterval)
+    }
 
     fun updateLists(onComplete: ((Boolean) -> Unit)? = null) {
         val workRequest = OneTimeWorkRequestBuilder<RuleDatabaseUpdateWorker>().build()
@@ -336,6 +342,68 @@ fun DnsScreen(
                     OnDNSClicked(settings, onExit)
                 }
             )
+            
+            // Auto-update interval setting
+            val autoUpdateIntervals = listOf(
+                6 * 60 * 60 * 1000L to stringResource(R.string.dns_auto_update_interval_6h),
+                12 * 60 * 60 * 1000L to stringResource(R.string.dns_auto_update_interval_12h), 
+                24 * 60 * 60 * 1000L to stringResource(R.string.dns_auto_update_interval_24h),
+                3 * 24 * 60 * 60 * 1000L to stringResource(R.string.dns_auto_update_interval_3d),
+                7 * 24 * 60 * 60 * 1000L to stringResource(R.string.dns_auto_update_interval_1w)
+            )
+            
+            var showAutoUpdateDialog by remember { mutableStateOf(false) }
+            
+            // Function to get display text for current interval
+            fun getCurrentIntervalText(): String {
+                val currentInterval = settings.settings.value.autoUpdateInterval
+                return autoUpdateIntervals.find { it.first == currentInterval }?.second
+                    ?: if (currentInterval % (24 * 60 * 60 * 1000L) == 0L) {
+                        "${currentInterval / (24 * 60 * 60 * 1000L)} days"
+                    } else {
+                        "${currentInterval / (60 * 60 * 1000L)} hours"
+                    }
+            }
+            
+            SettingsBox(
+                title = stringResource(R.string.dns_auto_update_title),
+                description = stringResource(R.string.dns_auto_update_desc, getCurrentIntervalText()),
+                icon = IconType.VectorIcon(Icons.Rounded.Schedule),
+                actionType = SettingType.CUSTOM,
+                customAction = { onExit ->
+                    showAutoUpdateDialog = true
+                    onExit()
+                }
+            )
+            
+            if (showAutoUpdateDialog) {
+                val options = autoUpdateIntervals.map { (interval, label) ->
+                    AutoUpdateOption(interval, label)
+                }
+                
+                ListDialog(
+                    text = stringResource(R.string.dns_auto_update_dialog_title),
+                    list = options,
+                    onExit = { showAutoUpdateDialog = false },
+                    extractDisplayData = { it },
+                    setting = { option ->
+                        SettingsBox(
+                            size = 8.dp,
+                            title = option.label,
+                            description = stringResource(R.string.dns_auto_update_description_template, option.label.lowercase()),
+                            actionType = SettingType.RADIOBUTTON,
+                            variable = settings.settings.value.autoUpdateInterval == option.interval,
+                            onSwitchEnabled = {
+                                if (it) {
+                                    settings.update(settings.settings.value.copy(autoUpdateInterval = option.interval))
+                                    AutoUpdateManager.scheduleAutoUpdateWorker(context, option.interval)
+                                    showAutoUpdateDialog = false
+                                }
+                            }
+                        )
+                    }
+                )
+            }
         }
         settingsContainer {
             LaunchedEffect(doneNames.value) {
@@ -574,3 +642,9 @@ private fun OnDNSClicked(settings: SettingsViewModel, onExit: () -> Unit) {
         }
     )
 }
+
+// Data class for auto-update options
+data class AutoUpdateOption(
+    val interval: Long,
+    val label: String
+)

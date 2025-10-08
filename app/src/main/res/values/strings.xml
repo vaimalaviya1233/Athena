@@ -7,6 +7,7 @@
     <string name="common_settings">Settings</string>
     <string name="common_allow">Allow</string>
     <string name="common_cancel">Cancel</string>
+    <string name="common_save">Save</string>
     <string name="common_enable">Enable</string>
     <string name="common_disable">Disable</string>
     <string name="common_done">Done</string>
@@ -572,6 +573,23 @@
     <string name="dns_social_media_desc">Block social media sites</string>
     <string name="dns_block_adult">Block adult content</string>
     <string name="dns_block_gambling">Block gambling sites</string>
+
+    <!-- Auto-update Interval -->
+    <string name="dns_auto_update_title">Auto-update Lists</string>
+    <string name="dns_auto_update_desc">Current interval: %1$s</string>
+    <string name="dns_auto_update_dialog_title">Auto-update Interval</string>
+    <string name="dns_auto_update_interval_6h">6 hours</string>
+    <string name="dns_auto_update_interval_12h">12 hours</string>
+    <string name="dns_auto_update_interval_24h">24 hours</string>
+    <string name="dns_auto_update_interval_3d">3 days</string>
+    <string name="dns_auto_update_interval_1w">1 week</string>
+    <string name="dns_auto_update_description_template">Update blocklists every %1$s</string>
+    
+    <!-- Auto-update Status Messages -->
+    <string name="dns_auto_update_scheduled">Auto-update scheduled</string>
+    <string name="dns_auto_update_running">Auto-update in progress</string>
+    <string name="dns_auto_update_completed">Auto-update completed</string>
+    <string name="dns_auto_update_failed">Auto-update failed</string>
 
     <!-- Custom Blocklist -->
     <string name="blocklist_custom">Custom Blocklist</string>
