@@ -44,10 +44,11 @@ object AppConstants {
         val AD_PROTECTION = listOf(
             "https://small.oisd.nl",
         )
+        val ADS_EXTREME = listOf(
+            "https://blokada.org/mirror/v5/goodbyeads/standard/hosts.txt"
+        )
         val PRIVACY_PROTECTION = listOf(
-            // Frogeye: first-party trackers (very lightweight and targeted)
             "https://hostfiles.frogeye.fr/firstparty-trackers-hosts.txt",
-            // Perflyst – Android telemetry & analytics
             "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/android-tracking.txt",
         )
         val GAMBLING_PROTECTION = listOf(

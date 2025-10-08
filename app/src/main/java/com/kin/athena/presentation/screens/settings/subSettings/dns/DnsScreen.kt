@@ -37,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.rounded.Hardware
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -193,6 +194,7 @@ fun DnsScreen(
                 val ruleName = when {
                     lists.any { it in AppConstants.DnsBlockLists.MALWARE_PROTECTION } -> "Malware Protection"
                     lists.any { it in AppConstants.DnsBlockLists.AD_PROTECTION } -> "Ad Protection"
+                    lists.any { it in AppConstants.DnsBlockLists.ADS_EXTREME } -> "Ads Extreme"
                     lists.any { it in AppConstants.DnsBlockLists.PRIVACY_PROTECTION } -> "Privacy Protection"
                     lists.any { it in AppConstants.DnsBlockLists.SOCIAL_PROTECTION } -> "Social Media"
                     lists.any { it in AppConstants.DnsBlockLists.ADULT_PROTECTION } -> "Adult Content"
@@ -432,9 +434,32 @@ fun DnsScreen(
                 variable = localSwitchStates["AD_PROTECTION"]
                     ?: (AppConstants.DnsBlockLists.AD_PROTECTION.any { it in doneNames.value }),
                 onSwitchEnabled = {
+                    if (!it) {
+                        // If disabling ads protection, also disable ads extreme
+                        localSwitchStates["ADS_EXTREME"] = false
+                        updateList(false, AppConstants.DnsBlockLists.ADS_EXTREME, "ADS_EXTREME")
+                    }
                     updateList(it, AppConstants.DnsBlockLists.AD_PROTECTION, "AD_PROTECTION")
                 }
             )
+            
+            // Ads Extreme setting - only show when Ad Protection is enabled
+            val isAdProtectionEnabled = localSwitchStates["AD_PROTECTION"]
+                ?: (AppConstants.DnsBlockLists.AD_PROTECTION.any { it in doneNames.value })
+            
+            if (isAdProtectionEnabled) {
+                SettingsBox(
+                    title = stringResource(id = R.string.dns_ads_extreme),
+                    description = stringResource(id = R.string.dns_ads_extreme_desc),
+                    icon = IconType.VectorIcon(Icons.Rounded.Hardware),
+                    actionType = SettingType.SWITCH,
+                    variable = localSwitchStates["ADS_EXTREME"]
+                        ?: (AppConstants.DnsBlockLists.ADS_EXTREME.any { it in doneNames.value }),
+                    onSwitchEnabled = {
+                        updateList(it, AppConstants.DnsBlockLists.ADS_EXTREME, "ADS_EXTREME")
+                    }
+                )
+            }
             SettingsBox(
                 title = stringResource(id = R.string.dns_block_trackers),
                 description = stringResource(id = R.string.dns_block_trackers_desc),
@@ -550,6 +575,7 @@ fun DnsScreen(
                 val (listConstants, listKey) = when (ruleName) {
                     "Malware Protection" -> AppConstants.DnsBlockLists.MALWARE_PROTECTION to "MALWARE_PROTECTION"
                     "Ad Protection" -> AppConstants.DnsBlockLists.AD_PROTECTION to "AD_PROTECTION"
+                    "Ads Extreme" -> AppConstants.DnsBlockLists.ADS_EXTREME to "ADS_EXTREME"
                     "Privacy Protection" -> AppConstants.DnsBlockLists.PRIVACY_PROTECTION to "PRIVACY_PROTECTION"
                     "Social Media" -> AppConstants.DnsBlockLists.SOCIAL_PROTECTION to "SOCIAL_PROTECTION"
                     "Adult Content" -> AppConstants.DnsBlockLists.ADULT_PROTECTION to "ADULT_PROTECTION"

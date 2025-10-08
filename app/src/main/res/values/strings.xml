@@ -568,6 +568,8 @@
     <string name="dns_malware_protection_desc">Block malware domains</string>
     <string name="dns_ad_protection">Ad Protection</string>
     <string name="dns_ad_blocker_desc">Block advertising domains</string>
+    <string name="dns_ads_extreme">Ads Extreme</string>
+    <string name="dns_ads_extreme_desc">Additional aggressive ad blocking</string>
     <string name="dns_block_trackers">Block Trackers</string>
     <string name="dns_block_trackers_desc">Block tracking domains</string>
     <string name="dns_social_media_desc">Block social media sites</string>
