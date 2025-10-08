@@ -26,10 +26,12 @@ import com.kin.athena.domain.usecase.application.ApplicationUseCases
 import com.kin.athena.domain.usecase.log.LogUseCases
 import com.kin.athena.domain.usecase.networkFilter.NetworkFilterUseCases
 import com.kin.athena.domain.usecase.preferences.PreferencesUseCases
+import com.kin.athena.domain.repository.CustomDomainRepository
 import com.kin.athena.data.cache.DomainCacheService
 import com.kin.athena.presentation.screens.settings.subSettings.dns.hosts.RuleDatabase
 import com.kin.athena.service.firewall.rule.AppRule
 import com.kin.athena.service.firewall.handler.RuleHandler
+import com.kin.athena.service.firewall.rule.CustomDomainRule
 import com.kin.athena.service.firewall.rule.DNSRule
 import com.kin.athena.service.firewall.rule.FilterRule
 import com.kin.athena.service.firewall.rule.HTTPRule
@@ -175,6 +177,14 @@ object RulesModule {
 
     @Provides
     @Singleton
+    fun provideCustomDomainRule(
+        customDomainRepository: CustomDomainRepository
+    ): CustomDomainRule {
+        return CustomDomainRule(customDomainRepository)
+    }
+
+    @Provides
+    @Singleton
     fun provideRuleManager(
         appRule: AppRule,
         filterRule: FilterRule,
@@ -182,11 +192,12 @@ object RulesModule {
         httpRule: HTTPRule,
         screenRule: ScreenRule,
         DNSRule: DNSRule,
+        customDomainRule: CustomDomainRule,
         logUseCases: LogUseCases,
         preferencesUseCases: PreferencesUseCases,
         networkChangeReceiver: NetworkChangeReceiver,
         @ApplicationContext context: Context
     ): RuleHandler {
-        return RuleHandler(listOf(appRule,DNSRule,filterRule,screenRule, httpRule, logRule), logUseCases,preferencesUseCases, networkChangeReceiver, context)
+        return RuleHandler(listOf(appRule, DNSRule, customDomainRule, filterRule, screenRule, httpRule, logRule), logUseCases, preferencesUseCases, networkChangeReceiver, context)
     }
 }

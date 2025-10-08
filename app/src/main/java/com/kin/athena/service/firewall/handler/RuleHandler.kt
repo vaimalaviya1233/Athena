@@ -33,6 +33,7 @@ import com.kin.athena.domain.usecase.preferences.PreferencesUseCases
 import com.kin.athena.service.firewall.model.FireWallModel
 import com.kin.athena.service.firewall.model.FirewallResult
 import com.kin.athena.service.firewall.rule.AppRule
+import com.kin.athena.service.firewall.rule.CustomDomainRule
 import com.kin.athena.service.firewall.rule.DNSRule
 import com.kin.athena.service.firewall.rule.FilterRule
 import com.kin.athena.service.firewall.rule.FirewallRule
@@ -98,6 +99,20 @@ class RuleHandler @Inject constructor(
     
     fun isDnsBlockingEnabled(): Boolean {
         return rules.filterIsInstance<DNSRule>().firstOrNull()?.isDnsBlockingEnabled() ?: false
+    }
+
+    fun setCustomDomainRules(enabled: Boolean) {
+        rules.filterIsInstance<CustomDomainRule>().forEach { customDomainRule ->
+            if (enabled) {
+                customDomainRule.enableCustomDomainRules()
+            } else {
+                customDomainRule.disableCustomDomainRules()
+            }
+        }
+    }
+    
+    fun isCustomDomainRulesEnabled(): Boolean {
+        return rules.filterIsInstance<CustomDomainRule>().firstOrNull()?.isCustomDomainRulesEnabled() ?: false
     }
 
     fun updateScreenSetting() {
