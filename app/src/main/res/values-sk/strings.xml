@@ -567,4 +567,24 @@
     <string name="dns_auto_update_running">Auto-update v pokroku</string>
     <string name="dns_auto_update_completed">Automatické dokončenie</string>
     <string name="dns_auto_update_failed">Auto-update zlyhal</string>
+    <string name="dns_domain_management_title">Správa domén</string>
+    <string name="dns_domain_management_desc">Správa vlastných pravidiel domény</string>
+    <string name="dns_allowlist_title">Zoznam</string>
+    <string name="dns_blocklist_title">Blocklist</string>
+    <string name="dns_add_domain">Pridať doménu</string>
+    <string name="dns_domain_format_normal">Normálne</string>
+    <string name="dns_domain_format_regex">Všeobecný</string>
+    <string name="dns_domain_hint_normal">Zadajte doménu (napr. napríklad.com)</string>
+    <string name="dns_domain_hint_regex">Zadajte vzor regex (napr. .*\\.ads\\.*)</string>
+    <string name="dns_domain_description_hint">Voliteľné popis</string>
+    <string name="dns_domain_added">Doména úspešne</string>
+    <string name="dns_domain_deleted">Doména odstránená úspešne</string>
+    <string name="dns_domain_error_empty">Zadajte doménu</string>
+    <string name="dns_domain_error_invalid">Neplatný formát domény</string>
+    <string name="dns_domain_error_regex">Neplatný regex vzor</string>
+    <string name="dns_domain_error_exists">Doména už existuje</string>
+    <string name="dns_no_domains_allowlist">Žiadne domény v zozname</string>
+    <string name="dns_no_domains_blocklist">Žiadne domény v zozname blokov</string>
+    <string name="dns_domain_count">%1$d domény</string>
+    <string name="dns_domain_delete_confirm">Odstráňte túto doménu?</string>
 </resources>
