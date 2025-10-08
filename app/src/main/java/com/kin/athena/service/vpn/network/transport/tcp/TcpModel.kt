@@ -313,6 +313,29 @@ data class TCPHeader(
     }
 
     companion object {
+        // Rate limiting for malformed packet logging
+        private var lastMalformedLogTime = 0L
+        private var malformedPacketCount = 0L
+        private const val LOG_INTERVAL_MS = 5000L // Log every 5 seconds
+        
+        private fun logMalformedPacket(reason: String, buffer: ByteBuffer? = null) {
+            malformedPacketCount++
+            val currentTime = System.currentTimeMillis()
+            if (currentTime - lastMalformedLogTime > LOG_INTERVAL_MS) {
+                val packetHex = buffer?.let { buf ->
+                    val originalPos = buf.position()
+                    buf.position(0)
+                    val bytes = ByteArray(minOf(buf.remaining(), 60)) // Log first 60 bytes
+                    buf.get(bytes)
+                    buf.position(originalPos)
+                    bytes.joinToString(" ") { "%02x".format(it) }
+                } ?: "N/A"
+                Logger.warn("TCP malformed packets detected ($malformedPacketCount total): $reason | Packet hex: $packetHex")
+                lastMalformedLogTime = currentTime
+                malformedPacketCount = 0
+            }
+        }
+        
         @Synchronized
         fun fromByteBuffer(buffer: ByteBuffer): TCPHeader {
             val originalPosition = buffer.position()
@@ -343,9 +366,21 @@ data class TCPHeader(
             val checksum = buffer.getShort(originalPosition + TcpConstants.OFFSET_CHECKSUM).toInt() and 0xFFFF
             val urgentPointer = buffer.getShort(originalPosition + TcpConstants.OFFSET_URGENT_POINTER).toInt() and 0xFFFF
 
+            // Reject malformed packets with invalid Data Offset
+            if (parsedDataOffset == 0) {
+                // Rate-limited logging for malformed packets with raw data
+                val bufferCopy = buffer.duplicate()
+                bufferCopy.position(originalPosition)
+                logMalformedPacket("Data Offset is 0", bufferCopy)
+                throw IllegalArgumentException("Malformed TCP packet: Data Offset cannot be 0")
+            }
+            
             val actualHeaderLengthBytes = parsedDataOffset * 4
             if (actualHeaderLengthBytes < TcpConstants.MIN_HEADER_LENGTH_BYTES) {
-                throw IllegalArgumentException("Invalid Data Offset $parsedDataOffset: calculated header length $actualHeaderLengthBytes bytes is less than minimum ${TcpConstants.MIN_HEADER_LENGTH_BYTES} bytes.")
+                val bufferCopy = buffer.duplicate()
+                bufferCopy.position(originalPosition)
+                logMalformedPacket("Data Offset $parsedDataOffset: calculated header length $actualHeaderLengthBytes bytes is less than minimum ${TcpConstants.MIN_HEADER_LENGTH_BYTES} bytes", bufferCopy)
+                throw IllegalArgumentException("Malformed TCP packet: Data Offset $parsedDataOffset produces invalid header length")
             }
             if (buffer.remaining() < actualHeaderLengthBytes - (buffer.position() - originalPosition)) {
                 throw IllegalArgumentException("Buffer remaining bytes (${buffer.remaining()}) insufficient for declared header length ($actualHeaderLengthBytes bytes) from current position.")

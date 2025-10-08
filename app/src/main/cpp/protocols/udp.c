@@ -149,7 +149,6 @@ jboolean handle_udp(const struct arguments *args, const uint8_t *pkt, size_t len
                 struct in_addr dns_addr;
                 if (inet_pton(AF_INET, args->ctx->dns_server_v4, &dns_addr) == 1) {
                     s->udp.daddr.ip4 = dns_addr.s_addr;
-                    log_android(ANDROID_LOG_DEBUG, "DNS IPv4 redirected to: %s", args->ctx->dns_server_v4);
                 } else {
                     // Fallback to 9.9.9.9 if parsing fails
                     s->udp.daddr.ip4 = htonl(0x09090909);

@@ -57,3 +57,19 @@ fun slideScreenExitAnimation(): ExitTransition {
         animationSpec = tween(AppConstants.AnimationConstants.SLIDE_DURATION)
     )
 }
+
+fun fastScreenEnterAnimation(): EnterTransition {
+    return fadeIn(animationSpec = tween(150)) +
+            scaleIn(
+                initialScale = 0.98f,
+                animationSpec = tween(180)
+            )
+}
+
+fun fastScreenExitAnimation(): ExitTransition {
+    return fadeOut(animationSpec = tween(120)) +
+            scaleOut(
+                targetScale = 0.98f,
+                animationSpec = tween(150)
+            )
+}

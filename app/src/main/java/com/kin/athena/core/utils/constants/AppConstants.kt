@@ -20,10 +20,10 @@ package com.kin.athena.core.utils.constants
 
 object AppConstants {
     object AnimationConstants {
-        const val FADE_DURATION: Int = 300
-        const val SCALE_DURATION: Int = 400
-        const val SLIDE_DURATION: Int = 400
-        const val INITIAL_SCALE: Float = 0.9f
+        const val FADE_DURATION: Int = 200
+        const val SCALE_DURATION: Int = 250
+        const val SLIDE_DURATION: Int = 300
+        const val INITIAL_SCALE: Float = 0.95f
     }
 
     object DatabaseConstants {

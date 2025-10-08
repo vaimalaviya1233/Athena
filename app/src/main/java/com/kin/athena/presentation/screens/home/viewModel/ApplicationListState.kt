@@ -23,9 +23,7 @@ sealed class ApplicationListState {
     object Loading : ApplicationListState()
     data class Success(
         val applications: List<Application>,
-        val totalCount: Int,
-        val hasMore: Boolean,
-        val isLoadingMore: Boolean = false
+        val totalCount: Int
     ) : ApplicationListState()
     data class Error(val message: String) : ApplicationListState()
 }

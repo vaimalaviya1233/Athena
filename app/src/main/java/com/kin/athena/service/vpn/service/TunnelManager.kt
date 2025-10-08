@@ -115,6 +115,19 @@ class TunnelManager(
             val buffer = ByteBuffer.wrap(data, 0, length)
             buffer.order(ByteOrder.BIG_ENDIAN)
             
+            // Check IP version - first 4 bits
+            val firstByte = buffer.get(0).toInt() and 0xFF
+            val ipVersion = (firstByte shr 4) and 0xF
+            
+            if (ipVersion == 6) {
+                // IPv6 packets - currently not supported for TCP filtering
+                Log.d("PacketFilter", "[$direction] IPv6 TCP packet detected, allowing (not implemented)")
+                return true
+            } else if (ipVersion != 4) {
+                Log.w("PacketFilter", "[$direction] Unknown IP version $ipVersion, blocking")
+                return false
+            }
+            
             val ipHeader = buffer.toIPv4Header()
             val tcpHeader = TCPHeader.fromByteBuffer(buffer.slice())
 
@@ -132,8 +145,17 @@ class TunnelManager(
                 true // Allow if no rule handler
             }
         } catch (e: Exception) {
-            Log.e("PacketFilter", "Error filtering TCP packet: ${e.message}")
-            true // Allow packet if parsing fails
+            // For malformed packets (like Data Offset 0), block them for security
+            if (e.message?.contains("Malformed TCP packet") == true) {
+                // Log full packet data for debugging
+                val packetHex = data.take(minOf(length, 100)).joinToString(" ") { "%02x".format(it) }
+                Log.d("PacketFilter", "[$direction] TCP: Blocking malformed packet: ${e.message}")
+                Log.d("PacketFilter", "[$direction] TCP: Full packet hex (first 100 bytes): $packetHex")
+                false // Block malformed packets
+            } else {
+                Log.e("PacketFilter", "Error filtering TCP packet: ${e.message}")
+                true // Allow packet if other parsing errors occur
+            }
         }
     }
 

@@ -415,8 +415,6 @@ private fun HomeScreenContent(
         is ApplicationListState.Success -> {
             ProfessionalApplicationList(
                 applications = applicationState.applications,
-                hasMore = applicationState.hasMore,
-                isLoadingMore = applicationState.isLoadingMore,
                 viewModel = homeViewModel,
                 settingsViewModel = settingsViewModel,
                 onApplicationClicked = onApplicationClicked,
@@ -430,8 +428,6 @@ private fun HomeScreenContent(
 @Composable
 private fun ProfessionalApplicationList(
     applications: List<Application>,
-    hasMore: Boolean,
-    isLoadingMore: Boolean,
     viewModel: HomeViewModel,
     settingsViewModel: SettingsViewModel,
     onApplicationClicked: (String) -> Unit,
@@ -481,11 +477,13 @@ private fun ProfessionalApplicationList(
         }
     }
 
-    // Load icons for visible applications
+    // Load icons for visible applications - debounced to prevent excessive calls
     val primaryColor = MaterialTheme.colorScheme.primary
     LaunchedEffect(applications.size) {
         Logger.info("HomeScreen: Applications list size changed to ${applications.size}")
         if (applications.isNotEmpty()) {
+            // Small delay to debounce rapid size changes during pagination
+            kotlinx.coroutines.delay(50)
             viewModel.loadIcons(
                 applications = applications,
                 settingsViewModel = settingsViewModel,
@@ -494,21 +492,7 @@ private fun ProfessionalApplicationList(
         }
     }
 
-    // Handle pagination - load ahead by 10 items
-    LaunchedEffect(lazyListState, applications.size, hasMore, isLoadingMore) {
-        snapshotFlow {
-            val firstVisibleIndex = lazyListState.firstVisibleItemIndex
-            val lastVisibleIndex = lazyListState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
-            val totalItems = lazyListState.layoutInfo.totalItemsCount
-            Triple(firstVisibleIndex, lastVisibleIndex, totalItems)
-        }
-            .collect { (firstIndex, lastIndex, totalItems) ->
-                // Trigger pagination 10 items before the end to preload
-                if (lastIndex != null && lastIndex >= applications.size - 10 && hasMore && !isLoadingMore) {
-                    viewModel.loadMoreApplications(settingsViewModel)
-                }
-            }
-    }
+    // Pagination removed - all applications are loaded at once
     
     LazyColumn(
         state = lazyListState,
@@ -527,7 +511,7 @@ private fun ProfessionalApplicationList(
             val shape = when {
                 applications.size == 1 -> RoundedCornerShape(32.dp)
                 index == 0 -> RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
-                index == applications.lastIndex && !hasMore -> RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                index == applications.lastIndex -> RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
                 else -> RoundedCornerShape(0.dp)
             }
 

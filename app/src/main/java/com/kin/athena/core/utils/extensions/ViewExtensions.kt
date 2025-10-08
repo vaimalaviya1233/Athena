@@ -31,6 +31,8 @@ import com.kin.athena.presentation.components.defaultScreenEnterAnimation
 import com.kin.athena.presentation.components.defaultScreenExitAnimation
 import com.kin.athena.presentation.components.slideScreenEnterAnimation
 import com.kin.athena.presentation.components.slideScreenExitAnimation
+import com.kin.athena.presentation.components.fastScreenEnterAnimation
+import com.kin.athena.presentation.components.fastScreenExitAnimation
 import com.kin.athena.presentation.navigation.routes.HomeRoutes
 import com.kin.athena.presentation.navigation.routes.SettingRoutes
 
@@ -90,6 +92,24 @@ fun NavGraphBuilder.slideInComposable(
         exitTransition = { defaultScreenExitAnimation() },
         popEnterTransition = { defaultScreenEnterAnimation() },
         popExitTransition = { slideScreenExitAnimation() },
+        content = content
+    )
+}
+
+fun NavGraphBuilder.fastAnimatedComposable(
+    route: String,
+    arguments: List<NamedNavArgument> = emptyList(),
+    deepLinks: List<NavDeepLink> = emptyList(),
+    content: @Composable AnimatedVisibilityScope.(NavBackStackEntry) -> Unit
+) {
+    composable(
+        route = route,
+        arguments = arguments,
+        deepLinks = deepLinks,
+        enterTransition = { fastScreenEnterAnimation() },
+        exitTransition = { fastScreenExitAnimation() },
+        popEnterTransition = { fastScreenEnterAnimation() },
+        popExitTransition = { fastScreenExitAnimation() },
         content = content
     )
 }

@@ -70,8 +70,7 @@ class HomeViewModel @Inject constructor(
     
     private var currentSettingsViewModel: SettingsViewModel? = null
     
-    private var currentOffset = 0
-    private val pageSize = 20
+    // Removed pagination - show all applications
 
     // Saved scroll position for restoration
     private val _savedScrollIndex = mutableStateOf(0)
@@ -82,6 +81,14 @@ class HomeViewModel @Inject constructor(
 
     // Icon cache
     val iconMap: MutableState<Map<String, Drawable?>> = mutableStateOf(emptyMap())
+    
+    // Track icon loading to prevent duplicates
+    private var iconLoadingJob: Job? = null
+    private var lastIconLoadSize = 0
+    
+    // Throttle refresh calls
+    private var lastRefreshTime = 0L
+    private val refreshThrottleMs = 1000L // 1 second minimum between refreshes
 
     private val _firewallClicked = mutableStateOf(false)
     val firewallClicked: State<Boolean> get() = _firewallClicked
@@ -135,10 +142,17 @@ class HomeViewModel @Inject constructor(
     }
 
     fun refreshVisibleApplications() {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastRefreshTime < refreshThrottleMs) {
+            Logger.info("HomeViewModel: Refresh throttled - last refresh was ${currentTime - lastRefreshTime}ms ago")
+            return // Throttle rapid refresh calls
+        }
+        
         val currentState = _applicationState.value
         if (currentState is ApplicationListState.Success) {
+            lastRefreshTime = currentTime
             viewModelScope.launch(Dispatchers.IO) {
-                // Get fresh data for visible applications
+                // Refresh all applications
                 val packageIds = currentState.applications.map { it.packageID }
                 val freshApps = packageIds.mapNotNull { packageId ->
                     applicationUseCases.getApplication.execute(packageId).fold(
@@ -152,7 +166,7 @@ class HomeViewModel @Inject constructor(
                     freshApps.find { it.packageID == oldApp.packageID } ?: oldApp
                 }
                 _applicationState.value = currentState.copy(applications = updatedApplications)
-                Logger.info("HomeViewModel: Refreshed ${freshApps.size} visible applications")
+                Logger.info("HomeViewModel: Refreshed ${freshApps.size} applications")
             }
         }
     }
@@ -167,9 +181,6 @@ class HomeViewModel @Inject constructor(
         searchJob = viewModelScope.launch {
             delay(300) // Professional debounce timing
             
-            // For search, we want to smoothly update without resetting scroll position
-            currentOffset = 0
-            
             val showSystemPackages = currentSettingsViewModel?.settings?.value?.showSystemPackages ?: true
             val showOfflinePackages = currentSettingsViewModel?.settings?.value?.showOfflinePackages ?: true
             
@@ -179,7 +190,6 @@ class HomeViewModel @Inject constructor(
                 showSystemPackages = showSystemPackages,
                 showOfflinePackages = showOfflinePackages,
                 searchQuery = query,
-                limit = pageSize,
                 offset = 0
             )
             
@@ -189,10 +199,8 @@ class HomeViewModel @Inject constructor(
                     // Smoothly replace the current list without showing loading state
                     _applicationState.value = ApplicationListState.Success(
                         applications = data.applications,
-                        totalCount = data.totalCount,
-                        hasMore = data.hasMore
+                        totalCount = data.totalCount
                     )
-                    currentOffset = data.applications.size
                 }
                 is Result.Failure -> {
                     _applicationState.value = ApplicationListState.Error(
@@ -209,8 +217,6 @@ class HomeViewModel @Inject constructor(
         
         // When clearing search, smoothly reload the full list without jumping
         viewModelScope.launch(Dispatchers.IO) {
-            currentOffset = 0
-            
             val showSystemPackages = currentSettingsViewModel?.settings?.value?.showSystemPackages ?: true
             val showOfflinePackages = currentSettingsViewModel?.settings?.value?.showOfflinePackages ?: true
             
@@ -218,7 +224,6 @@ class HomeViewModel @Inject constructor(
                 showSystemPackages = showSystemPackages,
                 showOfflinePackages = showOfflinePackages,
                 searchQuery = "",
-                limit = pageSize,
                 offset = 0
             )
             
@@ -228,10 +233,8 @@ class HomeViewModel @Inject constructor(
                     // Smoothly replace the current list without showing loading state
                     _applicationState.value = ApplicationListState.Success(
                         applications = data.applications,
-                        totalCount = data.totalCount,
-                        hasMore = data.hasMore
+                        totalCount = data.totalCount
                     )
-                    currentOffset = data.applications.size
                 }
                 is Result.Failure -> {
                     _applicationState.value = ApplicationListState.Error(
@@ -263,19 +266,9 @@ class HomeViewModel @Inject constructor(
     }
 
     fun loadApplications(reset: Boolean = false, settingsViewModel: SettingsViewModel? = null) {
-        Logger.info("HomeViewModel: loadApplications called - reset=$reset, currentOffset=$currentOffset")
+        Logger.info("HomeViewModel: loadApplications called - loading all applications")
         if (reset) {
-            currentOffset = 0
             _applicationState.value = ApplicationListState.Loading
-        } else {
-            // Loading more - update state to show loading indicator
-            val currentState = _applicationState.value
-            if (currentState is ApplicationListState.Success) {
-                Logger.info("HomeViewModel: Setting isLoadingMore=true for pagination")
-                _applicationState.value = currentState.copy(isLoadingMore = true)
-            } else {
-                Logger.error("HomeViewModel: Cannot load more - current state is not Success: ${currentState.javaClass.simpleName}")
-            }
         }
         
         viewModelScope.launch(Dispatchers.IO) {
@@ -291,36 +284,17 @@ class HomeViewModel @Inject constructor(
                     showSystemPackages = showSystemPackages,
                     showOfflinePackages = showOfflinePackages,
                     searchQuery = _searchQuery.value,
-                    limit = pageSize,
-                    offset = currentOffset
+                    offset = 0
                 )
                 
                 when (result) {
                     is Result.Success -> {
                         val data = result.data
-
-                        if (reset) {
-                            Logger.info("HomeViewModel: Reset load - got ${data.applications.size} apps, totalCount=${data.totalCount}, hasMore=${data.hasMore}")
-                            _applicationState.value = ApplicationListState.Success(
-                                applications = data.applications,
-                                totalCount = data.totalCount,
-                                hasMore = data.hasMore
-                            )
-                        } else {
-                            // Append to existing list
-                            val currentState = _applicationState.value
-                            if (currentState is ApplicationListState.Success) {
-                                Logger.info("HomeViewModel: Pagination load - appending ${data.applications.size} apps to existing ${currentState.applications.size}")
-                                _applicationState.value = currentState.copy(
-                                    applications = currentState.applications + data.applications,
-                                    hasMore = data.hasMore,
-                                    isLoadingMore = false
-                                )
-                            }
-                        }
-
-                        currentOffset += data.applications.size
-                        Logger.info("HomeViewModel: New offset: $currentOffset")
+                        Logger.info("HomeViewModel: Loaded ${data.applications.size} apps, totalCount=${data.totalCount}")
+                        _applicationState.value = ApplicationListState.Success(
+                            applications = data.applications,
+                            totalCount = data.totalCount
+                        )
                     }
                     is Result.Failure -> {
                         _applicationState.value = ApplicationListState.Error(
@@ -336,12 +310,9 @@ class HomeViewModel @Inject constructor(
         }
     }
     
+    // Removed pagination - no longer needed
     fun loadMoreApplications(settingsViewModel: SettingsViewModel) {
-        val currentState = _applicationState.value
-        if (currentState is ApplicationListState.Success && currentState.hasMore && !currentState.isLoadingMore) {
-            Logger.info("HomeViewModel: Loading more applications. Current count: ${currentState.applications.size}, offset: $currentOffset")
-            loadApplications(reset = false, settingsViewModel = settingsViewModel)
-        }
+        // No-op - pagination removed
     }
 
     fun updatePackage(packageEntity: Application, updateUI: Boolean = true) {
@@ -395,16 +366,18 @@ class HomeViewModel @Inject constructor(
         // Only load if we don't have data already
         val currentState = _applicationState.value
         if (currentState !is ApplicationListState.Success || currentState.applications.isEmpty()) {
-            viewModelScope.launch {
-                // Load packages from database with initial settings (wait for it to complete)
+            viewModelScope.launch(Dispatchers.IO) {
+                // Load packages from database with initial settings
                 loadPackages(settingsViewModel)
 
-                // Now load applications from database
-                loadApplications(reset = true, settingsViewModel = settingsViewModel)
+                // Load applications from database on IO thread to prevent UI blocking
+                withContext(Dispatchers.Main) {
+                    loadApplications(reset = true, settingsViewModel = settingsViewModel)
+                }
             }
         }
 
-        // Register app change receiver once
+        // Register app change receiver once - do this immediately to avoid delays
         if (appChangeReceiver == null) {
             appChangeReceiver = AppChangeReceiver(createAppChangeCallback(settingsViewModel))
             appChangeReceiver?.register(context)
@@ -413,24 +386,68 @@ class HomeViewModel @Inject constructor(
         // Set up callback to reload when settings change
         settingsViewModel.onAppFilteringSettingsChanged = {
             Logger.info("HomeViewModel: onAppFilteringSettingsChanged triggered, reloading packages and applications")
-            viewModelScope.launch {
-                // Reload packages from system with new settings
+            viewModelScope.launch(Dispatchers.IO) {
+                // Reload packages from system with new settings on IO thread
                 loadPackages(settingsViewModel)
-                // Then reload the application list view
-                loadApplications(reset = true, settingsViewModel = settingsViewModel)
+                // Then reload the application list view on main thread
+                withContext(Dispatchers.Main) {
+                    loadApplications(reset = true, settingsViewModel = settingsViewModel)
+                }
             }
         }
     }
 
     fun loadIcons(applications: List<Application>, settingsViewModel: SettingsViewModel, color: Color) {
-        viewModelScope.launch(Dispatchers.IO) {
+        // Prevent duplicate icon loading
+        if (applications.size == lastIconLoadSize) {
+            return // Same size, likely a duplicate call
+        }
+        
+        // Cancel previous icon loading job
+        iconLoadingJob?.cancel()
+        
+        iconLoadingJob = viewModelScope.launch(Dispatchers.IO) {
             val existingIcons = iconMap.value
             
             // Only load icons for new applications
-            val newIcons = applications.filter { !existingIcons.containsKey(it.packageID) }
-                .chunked(10) // Smaller chunks for better performance
-                .map { chunk ->
-                    chunk.mapNotNull { application ->
+            val newApps = applications.filter { !existingIcons.containsKey(it.packageID) }
+            if (newApps.isEmpty()) {
+                lastIconLoadSize = applications.size
+                return@launch
+            }
+            
+            // Prioritize the first 15 applications for immediate loading
+            val priorityApps = newApps.take(15)
+            val remainingApps = newApps.drop(15)
+            
+            // Load priority apps first (first 15) with no delay
+            if (priorityApps.isNotEmpty()) {
+                val priorityIcons = priorityApps.mapNotNull { application ->
+                    try {
+                        val icon = application.getApplicationIcon(
+                            context.packageManager,
+                            tintColor = color.toArgb(),
+                            useDynamicIcon = settingsViewModel.settings.value.useDynamicIcons,
+                            context
+                        )
+                        application.packageID to icon
+                    } catch (e: Exception) {
+                        Logger.error("Failed to load icon for ${application.packageID}: ${e.message}", e)
+                        application.packageID to null
+                    }
+                }.toMap()
+                
+                // Update priority icons immediately
+                iconMap.value = iconMap.value + priorityIcons
+                Logger.info("HomeViewModel: Loaded ${priorityIcons.size} priority icons (total apps: ${applications.size})")
+            }
+            
+            // Load remaining icons in background with delays
+            if (remainingApps.isNotEmpty()) {
+                remainingApps.chunked(3).forEachIndexed { index, chunk ->
+                    delay(100) // Increased delay to reduce background loading frequency
+                    
+                    val chunkIcons = chunk.mapNotNull { application ->
                         try {
                             val icon = application.getApplicationIcon(
                                 context.packageManager,
@@ -443,11 +460,14 @@ class HomeViewModel @Inject constructor(
                             Logger.error("Failed to load icon for ${application.packageID}: ${e.message}", e)
                             application.packageID to null
                         }
-                    }
-                }.flatten().toMap()
+                    }.toMap()
+                    
+                    // Update icons incrementally
+                    iconMap.value = iconMap.value + chunkIcons
+                }
+            }
             
-            // Merge with existing icons
-            iconMap.value = existingIcons + newIcons
+            lastIconLoadSize = applications.size
         }
     }
 

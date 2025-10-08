@@ -23,6 +23,7 @@ import androidx.navigation.compose.NavHost
 import com.kin.athena.core.utils.extensions.animatedComposable
 import com.kin.athena.core.utils.extensions.safeNavigate
 import com.kin.athena.core.utils.extensions.slideInComposable
+import com.kin.athena.core.utils.extensions.fastAnimatedComposable
 import com.kin.athena.presentation.navigation.routes.HomeRoutes
 import com.kin.athena.presentation.navigation.routes.LogRoutes
 import com.kin.athena.presentation.navigation.routes.SettingRoutes
@@ -51,7 +52,7 @@ fun AppNavHost(
         navController = navController,
         startDestination = startDestination
     ) {
-        animatedComposable(HomeRoutes.Home.route) {
+        fastAnimatedComposable(HomeRoutes.Home.route) {
             HomeScreen(
                 onLogsClicked = {  navController.safeNavigate(LogRoutes.Logs.route) },
                 onSettingsClicked = { navController.safeNavigate(SettingRoutes.Settings.route) },
