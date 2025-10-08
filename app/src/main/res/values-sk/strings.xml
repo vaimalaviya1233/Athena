@@ -553,4 +553,18 @@
     <string name="notification_install_channel_desc">Oznámenia pre aplikačné inštalácie</string>
     <string name="misc_back_description">Späť</string>
     <string name="misc_close_description">Zatvoriť</string>
+    <string name="common_save">Uložiť</string>
+    <string name="dns_auto_update_title">Auto-update Zoznamy</string>
+    <string name="dns_auto_update_desc">Aktuálny interval: %1$s</string>
+    <string name="dns_auto_update_dialog_title">Auto-update Interval</string>
+    <string name="dns_auto_update_interval_6h">6 hodín</string>
+    <string name="dns_auto_update_interval_12h">12 hodín</string>
+    <string name="dns_auto_update_interval_24h">24 hodín</string>
+    <string name="dns_auto_update_interval_3d">3 dni</string>
+    <string name="dns_auto_update_interval_1w">1 týždeň</string>
+    <string name="dns_auto_update_description_template">Aktualizácie zoznamy všetkých %1$s</string>
+    <string name="dns_auto_update_scheduled">Auto-update naplánované</string>
+    <string name="dns_auto_update_running">Auto-update v pokroku</string>
+    <string name="dns_auto_update_completed">Automatické dokončenie</string>
+    <string name="dns_auto_update_failed">Auto-update zlyhal</string>
 </resources>
