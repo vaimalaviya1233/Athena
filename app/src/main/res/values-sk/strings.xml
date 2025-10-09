@@ -589,4 +589,10 @@
     <string name="dns_domain_delete_confirm">Odstráňte túto doménu?</string>
     <string name="dns_ads_extreme">Ads Extrémne</string>
     <string name="dns_ads_extreme_desc">Dodatočné agresívne blokovanie reklám</string>
+    <string name="network_speed_monitor">Monitor rýchlosti siete</string>
+    <string name="network_speed_monitor_desc">Zobraziť rýchlosť v reálnom čase v oznámení</string>
+    <string name="notification_network_speed_channel">Monitor rýchlosti siete</string>
+    <string name="notification_network_speed_channel_desc">Zobrazuje rýchlosť reálnom čase</string>
+    <string name="notification_network_speed_title">Rýchlosť siete</string>
+    <string name="notification_network_speed_content">↓ %1$s ↑ %2$s</string>
 </resources>
