@@ -679,6 +679,8 @@
     <string name="network_manage_ips_desc">Whitelist/blacklist IPs</string>
     <string name="network_always_allow">Always Allow IPs</string>
     <string name="network_always_allow_desc">IPs that bypass firewall</string>
+    <string name="network_speed_monitor">Network Speed Monitor</string>
+    <string name="network_speed_monitor_desc">Show real-time speed in notification</string>
     <string name="network_interface_ipv4">Interface IPv4</string>
     <string name="network_interface_ipv4_desc">IPv4 network interface</string>
     <string name="network_interface_ipv6">Interface IPv6</string>
@@ -728,6 +730,10 @@
     <!-- Notifications -->
     <string name="notification_install_channel">Installation Notifications</string>
     <string name="notification_install_channel_desc">Notifications for app installations</string>
+    <string name="notification_network_speed_channel">Network Speed Monitor</string>
+    <string name="notification_network_speed_channel_desc">Shows real-time network speed</string>
+    <string name="notification_network_speed_title">Network Speed</string>
+    <string name="notification_network_speed_content">↓ %1$s ↑ %2$s</string>
 
     <!-- Misc -->
     <string name="misc_back_description">Back</string>

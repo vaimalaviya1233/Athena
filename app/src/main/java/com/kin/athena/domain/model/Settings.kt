@@ -54,6 +54,7 @@ data class Settings(
     val dnsServer2: String = NetworkConstants.DNS_SERVERS[0].ipv4Secondary,
     val dnsServer1v6: String = NetworkConstants.DNS_SERVERS[0].ipv6Primary,
     val dnsServer2v6: String = NetworkConstants.DNS_SERVERS[0].ipv6Secondary,
+    val networkSpeedMonitor: Boolean = false,
 
     //Root
     val useRootMode: Boolean? = null,

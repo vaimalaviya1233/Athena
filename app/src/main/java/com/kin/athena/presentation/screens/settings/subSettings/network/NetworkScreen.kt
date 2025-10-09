@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.CallMissedOutgoing
 import androidx.compose.ui.res.stringResource
 import androidx.compose.material.icons.filled.CallMissedOutgoing
 import androidx.compose.material.icons.filled.MultipleStop
+import androidx.compose.material.icons.filled.NetworkCheck
 import androidx.compose.material.icons.filled.SignalCellularConnectedNoInternet0Bar
 import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material.icons.filled.WifiOff
@@ -31,6 +32,8 @@ import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material.icons.rounded.ArrowDropUp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -47,7 +50,9 @@ import com.kin.athena.presentation.screens.settings.components.SettingsScaffold
 import com.kin.athena.presentation.screens.settings.components.settingsContainer
 import com.kin.athena.presentation.screens.settings.subSettings.network.viewModel.IpDialogViewModel
 import com.kin.athena.presentation.screens.settings.viewModel.SettingsViewModel
+import com.kin.athena.presentation.components.PremiumFeatureChoiceDialog
 import com.kin.athena.service.utils.manager.FirewallManager
+import com.kin.athena.service.utils.manager.NetworkSpeedManager
 import kotlinx.coroutines.runBlocking
 
 @Composable
@@ -55,6 +60,8 @@ fun NetworkScreen(
     navController: NavController,
     settings: SettingsViewModel,
 ) {
+    val context = LocalContext.current
+    
     val networkViewModel = hiltViewModel<IpDialogViewModel>().apply {
         updateIpv4DialogText(TextFieldValue(settings.settings.value.ipv4 ?: ""))
         updateIpv6DialogText(TextFieldValue(settings.settings.value.ipv6 ?: ""))
@@ -82,6 +89,39 @@ fun NetworkScreen(
                 actionType = SettingType.SWITCH,
                 variable = settings.settings.value.allowLocal,
                 onSwitchEnabled = { settings.update(settings.settings.value.copy(allowLocal = it)) },
+            )
+            val speedMonitorTitle = stringResource(id = R.string.network_speed_monitor)
+            val speedMonitorDescription = stringResource(id = R.string.network_speed_monitor_desc)
+            
+            SettingsBox(
+                title = speedMonitorTitle + " " + stringResource(id = R.string.premium_feature_indicator),
+                description = speedMonitorDescription,
+                icon = IconType.VectorIcon(Icons.Filled.NetworkCheck),
+                actionType = SettingType.SWITCH,
+                variable = settings.settings.value.networkSpeedMonitor,
+                onSwitchEnabled = { enabled ->
+                    if (!settings.settings.value.premiumUnlocked) {
+                        settings.showFeatureChoiceDialog(
+                            featureName = speedMonitorTitle,
+                            featureDescription = speedMonitorDescription,
+                            productId = "speed_notification "
+                        ) {
+                            settings.update(settings.settings.value.copy(networkSpeedMonitor = enabled))
+                            if (enabled) {
+                                NetworkSpeedManager.start(context)
+                            } else {
+                                NetworkSpeedManager.stop(context)
+                            }
+                        }
+                    } else {
+                        settings.update(settings.settings.value.copy(networkSpeedMonitor = enabled))
+                        if (enabled) {
+                            NetworkSpeedManager.start(context)
+                        } else {
+                            NetworkSpeedManager.stop(context)
+                        }
+                    }
+                },
             )
         }
         settingsContainer {
@@ -186,6 +226,21 @@ fun NetworkScreen(
                     val intent = Intent(Settings.ACTION_VPN_SETTINGS)
                     LocalContext.current.startActivity(intent)
                 }
+            )
+        }
+    }
+    
+    // Premium Feature Choice Dialog
+    if (settings.showFeatureChoiceDialog.value) {
+        settings.currentFeatureChoice.value?.let { choice ->
+            PremiumFeatureChoiceDialog(
+                featureName = choice.featureName,
+                featureDescription = choice.featureDescription,
+                singleFeaturePrice = settings.getProductPrice(choice.productId),
+                fullPremiumPrice = settings.getProductPrice("all_features"),
+                onSingleFeaturePurchase = { settings.purchaseSingleFeature() },
+                onFullPremiumPurchase = { settings.purchaseFullPremium() },
+                onDismiss = { settings.dismissFeatureChoiceDialog() }
             )
         }
     }

@@ -51,4 +51,20 @@ object NumberFormatter {
             else -> count.toString()
         }
     }
+    
+    /**
+     * Formats bytes into human-readable units (B, KB, MB, GB).
+     * 
+     * @param bytes The number of bytes to format
+     * @return Formatted string representation with appropriate unit
+     */
+    fun formatBytes(bytes: Long): String {
+        return when {
+            bytes < 0 -> "0 B"
+            bytes < 1024 -> "$bytes B"
+            bytes < 1024 * 1024 -> String.format("%.1f KB", bytes / 1024.0)
+            bytes < 1024 * 1024 * 1024 -> String.format("%.1f MB", bytes / (1024.0 * 1024.0))
+            else -> String.format("%.1f GB", bytes / (1024.0 * 1024.0 * 1024.0))
+        }.replace(".0 ", " ")
+    }
 }
