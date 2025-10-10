@@ -18,6 +18,7 @@
 package com.kin.athena.presentation.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Star
@@ -34,8 +35,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import com.kin.athena.BuildConfig
 import com.kin.athena.R
+import com.kin.athena.presentation.screens.settings.components.SettingsBox
+import com.kin.athena.presentation.screens.settings.components.SettingType
+import com.kin.athena.presentation.screens.settings.components.IconType
+import com.kin.athena.presentation.screens.settings.components.settingsContainer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,150 +54,187 @@ fun PremiumFeatureChoiceDialog(
     onFullPremiumPurchase: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = sheetState,
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        LazyColumn(
+            contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Feature Icon
-            Icon(
-                imageVector = Icons.Rounded.Lock,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(48.dp)
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Title
-            Text(
-                text = stringResource(R.string.premium_unlock_feature, featureName),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Description
-            Text(
-                text = if (BuildConfig.USE_PLAY_BILLING) {
-                    stringResource(R.string.premium_feature_description, featureDescription)
-                } else {
-                    stringResource(R.string.premium_kofi_description, featureName)
-                },
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            if (BuildConfig.USE_PLAY_BILLING) {
-                // Play Store: Show both options
-                // Single Feature Option
-                PremiumOptionCard(
-                    icon = Icons.Rounded.Lock,
-                    title = stringResource(R.string.premium_just_feature, featureName),
-                    description = stringResource(R.string.premium_unlock_only_feature),
-                    price = singleFeaturePrice ?: stringResource(R.string.common_loading),
-                    onClick = onSingleFeaturePurchase
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Full Premium Option with Badge
-                PremiumOptionCard(
-                    icon = Icons.Rounded.Star,
-                    title = stringResource(R.string.premium_lifetime),
-                    description = stringResource(R.string.premium_all_features),
-                    price = fullPremiumPrice ?: stringResource(R.string.common_loading),
-                    onClick = onFullPremiumPurchase,
-                    isBestValue = true
-                )
-            } else {
-                // F-Droid: Only show Ko-fi option
-                PremiumOptionCard(
-                    icon = Icons.Rounded.Star,
-                    title = stringResource(R.string.premium_kofi_support),
-                    description = stringResource(R.string.premium_all_features),
-                    price = stringResource(R.string.premium_one_time),
-                    onClick = onFullPremiumPurchase,
-                    isBestValue = true
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-    }
-}
-
-@Composable
-private fun PremiumOptionCard(
-    icon: ImageVector,
-    title: String,
-    description: String,
-    price: String,
-    onClick: () -> Unit,
-    isBestValue: Boolean = false
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isBestValue) 
-                MaterialTheme.colorScheme.primaryContainer 
-            else 
-                MaterialTheme.colorScheme.surfaceContainer
-        )
-    ) {
-        Box {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = if (isBestValue) 
-                        MaterialTheme.colorScheme.primary 
-                    else 
-                        MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(24.dp)
-                )
-                
-                Spacer(modifier = Modifier.width(12.dp))
-                
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = title,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Feature Icon
+                    Icon(
+                        imageVector = Icons.Rounded.Lock,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(48.dp)
                     )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Title
                     Text(
-                        text = description,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        text = stringResource(R.string.premium_unlock_feature, featureName),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Description
+                    Text(
+                        text = if (BuildConfig.USE_PLAY_BILLING) {
+                            stringResource(R.string.premium_feature_description, featureDescription)
+                        } else {
+                            stringResource(R.string.premium_kofi_description, featureName)
+                        },
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
                     )
                 }
-                
-                Text(
-                    text = price,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = if (isBestValue) 
-                        MaterialTheme.colorScheme.primary 
-                    else 
-                        MaterialTheme.colorScheme.onSurface
-                )
+            }
+
+            settingsContainer {
+                if (BuildConfig.USE_PLAY_BILLING) {
+                    SettingsBox(
+                        title = stringResource(R.string.premium_just_feature, featureName),
+                        description = stringResource(R.string.premium_unlock_only_feature),
+                        icon = IconType.VectorIcon(Icons.Rounded.Lock),
+                        actionType = SettingType.CUSTOM,
+                        customAction = { onExit ->
+                            AlertDialog(
+                                onDismissRequest = onExit,
+                                title = { Text(stringResource(R.string.premium_confirm_purchase)) },
+                                text = { 
+                                    Text(stringResource(
+                                        R.string.premium_confirm_feature_purchase, 
+                                        featureName,
+                                        singleFeaturePrice ?: ""
+                                    ))
+                                },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            onSingleFeaturePurchase()
+                                            onExit()
+                                            onDismiss()
+                                        }
+                                    ) {
+                                        Text(stringResource(R.string.common_purchase))
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = onExit) {
+                                        Text(stringResource(R.string.common_cancel))
+                                    }
+                                }
+                            )
+                        },
+                        customButton = {
+                            Text(
+                                text = singleFeaturePrice ?: stringResource(R.string.common_loading),
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    )
+                    SettingsBox(
+                        title = stringResource(R.string.premium_lifetime),
+                        description = stringResource(R.string.premium_all_features),
+                        icon = IconType.VectorIcon(Icons.Rounded.Star),
+                        actionType = SettingType.CUSTOM,
+                        customAction = { onExit ->
+                            AlertDialog(
+                                onDismissRequest = onExit,
+                                title = { Text(stringResource(R.string.premium_confirm_purchase)) },
+                                text = { 
+                                    Text(stringResource(
+                                        R.string.premium_confirm_full_purchase,
+                                        fullPremiumPrice ?: ""
+                                    ))
+                                },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            onFullPremiumPurchase()
+                                            onExit()
+                                            onDismiss()
+                                        }
+                                    ) {
+                                        Text(stringResource(R.string.common_purchase))
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = onExit) {
+                                        Text(stringResource(R.string.common_cancel))
+                                    }
+                                }
+                            )
+                        },
+                        circleWrapperColor = MaterialTheme.colorScheme.primaryContainer,
+                        customButton = {
+                            Text(
+                                text = fullPremiumPrice ?: stringResource(R.string.common_loading),
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    )
+                } else {
+                    // F-Droid: Only show Ko-fi option
+                    SettingsBox(
+                        title = stringResource(R.string.premium_kofi_support),
+                        description = stringResource(R.string.premium_all_features),
+                        icon = IconType.VectorIcon(Icons.Rounded.Star),
+                        actionType = SettingType.CUSTOM,
+                        customAction = { onExit ->
+                            AlertDialog(
+                                onDismissRequest = onExit,
+                                title = { Text(stringResource(R.string.premium_confirm_purchase)) },
+                                text = { 
+                                    Text(stringResource(R.string.premium_confirm_kofi_purchase))
+                                },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            onFullPremiumPurchase()
+                                            onExit()
+                                            onDismiss()
+                                        }
+                                    ) {
+                                        Text(stringResource(R.string.common_purchase))
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = onExit) {
+                                        Text(stringResource(R.string.common_cancel))
+                                    }
+                                }
+                            )
+                        },
+                        circleWrapperColor = MaterialTheme.colorScheme.primaryContainer,
+                        customButton = {
+                            Text(
+                                text = stringResource(R.string.premium_one_time),
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    )
+                }
             }
         }
     }
 }
+

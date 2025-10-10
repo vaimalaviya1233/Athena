@@ -17,6 +17,11 @@
     <string name="common_loading">Loading...</string>
     <string name="common_verifying">Verifying...</string>
     <string name="common_block">Block</string>
+    <string name="common_purchase">Purchase</string>
+    <string name="premium_confirm_purchase">Confirm Purchase</string>
+    <string name="premium_confirm_feature_purchase">Purchase %1$s for %2$s?</string>
+    <string name="premium_confirm_full_purchase">Purchase lifetime premium access for %1$s?</string>
+    <string name="premium_confirm_kofi_purchase">Support development and unlock all premium features?</string>
 
     <!-- App Details -->
     <string name="details_title">Details</string>
@@ -344,7 +349,7 @@
     <string name="premium_invalid_license">Invalid License</string>
     <string name="premium_thank_you">Thank You for Your Support!</string>
     <string name="premium_unlocked_description">All premium features unlocked. Tap to donate more!</string>
-    <string name="premium_support_development">Save 20%% - Only %s</string>
+    <string name="premium_support_development">20%% OFF - %s</string>
     <string name="premium_purchase_title">Premium Features</string>
     <string name="premium_activated_success">✅ Premium activated successfully!</string>
     <string name="premium_activation_success">Premium activated successfully!</string>
@@ -510,8 +515,8 @@
     <string name="packet_time">Time</string>
 
     <!-- Settings Screen -->
-    <string name="settings_premium">Premium</string>
-    <string name="settings_support_dev">Support Development</string>
+    <string name="settings_premium">Lifetime Premium</string>
+    <string name="settings_support_dev">20%% OFF - %s</string>
     <string name="settings_all_premium">All Premium Features</string>
     <string name="settings_fdroid_premium">Support development via Ko-fi to unlock all premium features!</string>
     <string name="settings_colors_option_theme">Theme</string>

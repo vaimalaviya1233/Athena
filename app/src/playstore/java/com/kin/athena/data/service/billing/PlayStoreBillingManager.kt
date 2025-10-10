@@ -88,6 +88,10 @@ class PlayStoreBillingManager @Inject constructor(
             QueryProductDetailsParams.Product.newBuilder()
                 .setProductId("custom_blocklist")
                 .setProductType(BillingClient.ProductType.INAPP)
+                .build(),
+            QueryProductDetailsParams.Product.newBuilder()
+                .setProductId("speed_notification")
+                .setProductType(BillingClient.ProductType.INAPP)
                 .build()
         )
         billingClient.queryProductDetailsAsync(
@@ -199,11 +203,18 @@ class PlayStoreBillingManager @Inject constructor(
     }
 
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: MutableList<Purchase>?) {
-        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
-            purchases.forEach { handlePurchase(it) }
-        } else {
-            Logger.error("Purchases update failed: ${billingResult.responseCode}")
-            pendingSuccessCallback = null
+        when (billingResult.responseCode) {
+            BillingClient.BillingResponseCode.OK -> {
+                purchases?.forEach { handlePurchase(it) }
+            }
+            BillingClient.BillingResponseCode.USER_CANCELED -> {
+                Logger.info("User canceled purchase")
+                pendingSuccessCallback = null
+            }
+            else -> {
+                Logger.error("Purchases update failed: ${billingResult.responseCode}")
+                pendingSuccessCallback = null
+            }
         }
     }
 
@@ -242,9 +253,5 @@ class PlayStoreBillingManager @Inject constructor(
         }.toMap()
         Logger.info("All product prices: $prices")
         return prices
-    }
-
-    fun shutdown() {
-        if (::billingClient.isInitialized) billingClient.endConnection()
     }
 }

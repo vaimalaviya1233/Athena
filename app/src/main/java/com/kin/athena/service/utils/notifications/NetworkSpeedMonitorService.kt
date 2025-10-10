@@ -221,17 +221,6 @@ class NetworkSpeedMonitorService : Service() {
             isAntiAlias = true
         }
 
-        val linePaint = Paint().apply {
-            color = Color.WHITE
-            strokeWidth = 0.5f
-            style = Paint.Style.STROKE
-            strokeCap = Paint.Cap.ROUND
-            isAntiAlias = true
-        }
-
-
-
-        // Always draw something, even with no data
         val currentSpeeds = if (downloadSpeeds.isEmpty()) {
             listOf(0f, currentDownload)
         } else {

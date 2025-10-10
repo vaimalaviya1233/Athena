@@ -48,6 +48,7 @@ import com.kin.athena.presentation.screens.settings.subSettings.dns.hosts.Config
 import com.kin.athena.presentation.screens.settings.viewModel.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.IOException
 import javax.inject.Inject
 
@@ -103,14 +104,20 @@ class MainActivity : AppCompatActivity() {
             settings = hiltViewModel<SettingsViewModel>().apply {
                 val homeViewModel = hiltViewModel<HomeViewModel>()
 
-                // Check for existing purchases on startup
+                // Check for existing purchases on startup with timeout
                 LaunchedEffect(Unit) {
-                    billingProvider.getBillingInterface()?.checkExistingPurchases {
-                        // User already owns premium, update settings
-                        if (!settings.value.premiumUnlocked) {
-                            Logger.info("Restoring premium purchase from Play Store")
-                            update(settings.value.copy(premiumUnlocked = true))
-                        }
+                    try {
+                        kotlinx.coroutines.withTimeoutOrNull(3000) {
+                            billingProvider.getBillingInterface()?.checkExistingPurchases {
+                                // User already owns premium, update settings
+                                if (!settings.value.premiumUnlocked) {
+                                    Logger.info("Restoring premium purchase from Play Store")
+                                    update(settings.value.copy(premiumUnlocked = true))
+                                }
+                            }
+                        } ?: Logger.warn("Billing check timed out after 3 seconds")
+                    } catch (e: Exception) {
+                        Logger.error("Failed to check existing purchases: ${e.message}", e)
                     }
                 }
 
@@ -121,10 +128,9 @@ class MainActivity : AppCompatActivity() {
                         homeViewModel.initialize(this@apply)
                     }
                     
-                    // Watch for when apps are loaded and hide splash screen - optimized for performance
-                    LaunchedEffect(homeViewModel.applicationState) {
-                        val state = homeViewModel.applicationState.value
-                        if (state is com.kin.athena.presentation.screens.home.viewModel.ApplicationListState.Success && state.applications.isNotEmpty()) {
+                    // Watch for when apps are loaded and hide splash screen
+                    LaunchedEffect(homeViewModel.applicationState.value) {
+                        if (homeViewModel.applicationState.value is com.kin.athena.presentation.screens.home.viewModel.ApplicationListState.Success) {
                             viewModel.showSlashScreen(true)
                         }
                     }
