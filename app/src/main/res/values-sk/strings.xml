@@ -284,7 +284,7 @@
     <string name="premium_invalid_license">Neplatná licencia</string>
     <string name="premium_thank_you">Ďakujeme za Vašu podporu!</string>
     <string name="premium_unlocked_description">Všetky prémiové funkcie odomknuté. Kliknite na darovanie viac!</string>
-    <string name="premium_support_development">Uložiť 20%% - Iba %s</string>
+    <string name="premium_support_development">20%% OFF - %s</string>
     <string name="premium_purchase_title">Prémiové vlastnosti</string>
     <string name="premium_activated_success">✅ Premium aktivovaný úspešne!</string>
     <string name="premium_activation_success">Prémiový aktivovaný úspešne!</string>
@@ -408,8 +408,8 @@
     <string name="packet_dest_address">Adresa destinácie</string>
     <string name="packet_dest_type">Typ destinácie</string>
     <string name="packet_time">Čas</string>
-    <string name="settings_premium">Aktuality</string>
-    <string name="settings_support_dev">Vývoj podpory</string>
+    <string name="settings_premium">Životnosť Premium</string>
+    <string name="settings_support_dev">20%% OFF - %s</string>
     <string name="settings_all_premium">Všetky prémiové funkcie</string>
     <string name="settings_fdroid_premium">Podporovať vývoj cez Ko-fi odomknúť všetky prémiové funkcie!</string>
     <string name="settings_colors_option_theme">Téma</string>
@@ -595,4 +595,9 @@
     <string name="notification_network_speed_channel_desc">Zobrazuje rýchlosť reálnom čase</string>
     <string name="notification_network_speed_title">Rýchlosť siete</string>
     <string name="notification_network_speed_content">↓ %1$s ↑ %2$s</string>
+    <string name="common_purchase">Kúpiť</string>
+    <string name="premium_confirm_purchase">Potvrdiť nákup</string>
+    <string name="premium_confirm_feature_purchase">Kúpiť %1$s pre %2$s?</string>
+    <string name="premium_confirm_full_purchase">Kúpte si život premium prístup pre %1$s?</string>
+    <string name="premium_confirm_kofi_purchase">Podpora vývoj a odomknúť všetky prémiové funkcie?</string>
 </resources>
