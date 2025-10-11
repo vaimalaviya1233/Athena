@@ -1,3 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="common_cancel">Mégsem</string>
+    <string name="common_save">Mentés</string>
+    <string name="colors_language">Nyelv</string>
+    <string name="colors_system_language">Rendszer nyelve</string>
+    <string name="dns_set_custom_desc">Egyedi DNS szerver beállítása</string>
+    <string name="dns_malware_protection_desc">Malware domain blokkolás</string>
+    <string name="dns_ad_protection">Reklám blokkolás</string>
+    <string name="dns_ad_blocker_desc">Hirdetési domainok blokkolása</string>
+    <string name="details_version">Verzió</string>
+    <string name="details_last_updated">Utoljára frissítve</string>
+    <string name="details_permissions">Jogosultságok</string>
+    <string name="details_installed">Telepítve</string>
+    <string name="common_search">Keresés</string>
+    <string name="common_permissions">Engedélyek</string>
+    <string name="common_version">Verzió</string>
+    <string name="common_logs">Logok</string>
+    <string name="common_settings">Beállítások</string>
+    <string name="common_allow">Engedélyez</string>
+    <string name="misc_close_description">Bezár</string>
+    <string name="misc_back_description">Vissza</string>
+    <string name="notification_network_speed_content">↑ %1$s ↑ %2$s</string>
+    <string name="notification_network_speed_title">Hálózati sebesség</string>
+    <string name="notification_network_speed_channel_desc">Valós idejű hálózati sebesség</string>
+    <string name="notification_network_speed_channel">Hálózati sebesség monitor</string>
+    <string name="notification_install_channel_desc">Értesítések alkalmazás telepítésekhez</string>
+    <string name="notification_install_channel">Telepítési értesítések</string>
+    <string name="onboarding_tap_security">Érintse meg a biztonsági ikont, hogy folytassa</string>
+    <string name="premium_benefits">Prémium Előnyök</string>
+    <string name="premium_dns_lists_feature">DNS listák</string>
 </resources>
