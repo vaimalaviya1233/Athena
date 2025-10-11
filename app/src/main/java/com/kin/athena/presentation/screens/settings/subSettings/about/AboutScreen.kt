@@ -232,11 +232,13 @@ fun PremiumCodeDialog(
     // Auto-clear notification after delay
     LaunchedEffect(notificationMessage) {
         if (notificationMessage.isNotEmpty()) {
-            delay(3000)
             if (notificationMessage.startsWith("✅")) {
+                delay(1500) // Shorter delay for success
                 onExit() // Exit dialog on success after showing message
+            } else {
+                delay(3000) // Longer delay for error messages
+                notificationMessage = ""
             }
-            notificationMessage = ""
         }
     }
 
@@ -279,7 +281,7 @@ fun PremiumCodeDialog(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = if (isSuccess) 
-                            MaterialTheme.colorScheme.tertiaryContainer
+                            MaterialTheme.colorScheme.primaryContainer
                         else 
                             MaterialTheme.colorScheme.errorContainer
                     ),
@@ -296,7 +298,7 @@ fun PremiumCodeDialog(
                             imageVector = if (isSuccess) Icons.Rounded.CheckCircle else Icons.Rounded.Error,
                             contentDescription = null,
                             tint = if (isSuccess)
-                                MaterialTheme.colorScheme.onTertiaryContainer
+                                MaterialTheme.colorScheme.onPrimaryContainer
                             else
                                 MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.size(20.dp)
@@ -306,7 +308,7 @@ fun PremiumCodeDialog(
                             text = notificationMessage.removePrefix("✅ ").removePrefix("❌ "),
                             style = MaterialTheme.typography.bodySmall,
                             color = if (isSuccess)
-                                MaterialTheme.colorScheme.onTertiaryContainer
+                                MaterialTheme.colorScheme.onPrimaryContainer
                             else
                                 MaterialTheme.colorScheme.onErrorContainer,
                             fontWeight = FontWeight.Medium

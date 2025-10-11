@@ -78,9 +78,9 @@ fun PremiumFeatureChoiceDialog(
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(48.dp)
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     // Title
                     Text(
                         text = stringResource(R.string.premium_unlock_feature, featureName),
@@ -111,35 +111,10 @@ fun PremiumFeatureChoiceDialog(
                         title = stringResource(R.string.premium_just_feature, featureName),
                         description = stringResource(R.string.premium_unlock_only_feature),
                         icon = IconType.VectorIcon(Icons.Rounded.Lock),
-                        actionType = SettingType.CUSTOM,
-                        customAction = { onExit ->
-                            AlertDialog(
-                                onDismissRequest = onExit,
-                                title = { Text(stringResource(R.string.premium_confirm_purchase)) },
-                                text = { 
-                                    Text(stringResource(
-                                        R.string.premium_confirm_feature_purchase, 
-                                        featureName,
-                                        singleFeaturePrice ?: ""
-                                    ))
-                                },
-                                confirmButton = {
-                                    TextButton(
-                                        onClick = {
-                                            onSingleFeaturePurchase()
-                                            onExit()
-                                            onDismiss()
-                                        }
-                                    ) {
-                                        Text(stringResource(R.string.common_purchase))
-                                    }
-                                },
-                                dismissButton = {
-                                    TextButton(onClick = onExit) {
-                                        Text(stringResource(R.string.common_cancel))
-                                    }
-                                }
-                            )
+                        actionType = SettingType.LINK,
+                        onLinkClicked = {
+                            onSingleFeaturePurchase()
+                            onDismiss()
                         },
                         customButton = {
                             Text(
@@ -153,34 +128,10 @@ fun PremiumFeatureChoiceDialog(
                         title = stringResource(R.string.premium_lifetime),
                         description = stringResource(R.string.premium_all_features),
                         icon = IconType.VectorIcon(Icons.Rounded.Star),
-                        actionType = SettingType.CUSTOM,
-                        customAction = { onExit ->
-                            AlertDialog(
-                                onDismissRequest = onExit,
-                                title = { Text(stringResource(R.string.premium_confirm_purchase)) },
-                                text = { 
-                                    Text(stringResource(
-                                        R.string.premium_confirm_full_purchase,
-                                        fullPremiumPrice ?: ""
-                                    ))
-                                },
-                                confirmButton = {
-                                    TextButton(
-                                        onClick = {
-                                            onFullPremiumPurchase()
-                                            onExit()
-                                            onDismiss()
-                                        }
-                                    ) {
-                                        Text(stringResource(R.string.common_purchase))
-                                    }
-                                },
-                                dismissButton = {
-                                    TextButton(onClick = onExit) {
-                                        Text(stringResource(R.string.common_cancel))
-                                    }
-                                }
-                            )
+                        actionType = SettingType.LINK,
+                        onLinkClicked = {
+                            onFullPremiumPurchase()
+                            onDismiss()
                         },
                         circleWrapperColor = MaterialTheme.colorScheme.primaryContainer,
                         customButton = {
@@ -197,31 +148,10 @@ fun PremiumFeatureChoiceDialog(
                         title = stringResource(R.string.premium_kofi_support),
                         description = stringResource(R.string.premium_all_features),
                         icon = IconType.VectorIcon(Icons.Rounded.Star),
-                        actionType = SettingType.CUSTOM,
-                        customAction = { onExit ->
-                            AlertDialog(
-                                onDismissRequest = onExit,
-                                title = { Text(stringResource(R.string.premium_confirm_purchase)) },
-                                text = { 
-                                    Text(stringResource(R.string.premium_confirm_kofi_purchase))
-                                },
-                                confirmButton = {
-                                    TextButton(
-                                        onClick = {
-                                            onFullPremiumPurchase()
-                                            onExit()
-                                            onDismiss()
-                                        }
-                                    ) {
-                                        Text(stringResource(R.string.common_purchase))
-                                    }
-                                },
-                                dismissButton = {
-                                    TextButton(onClick = onExit) {
-                                        Text(stringResource(R.string.common_cancel))
-                                    }
-                                }
-                            )
+                        actionType = SettingType.LINK,
+                        onLinkClicked = {
+                            onFullPremiumPurchase()
+                            onDismiss()
                         },
                         circleWrapperColor = MaterialTheme.colorScheme.primaryContainer,
                         customButton = {

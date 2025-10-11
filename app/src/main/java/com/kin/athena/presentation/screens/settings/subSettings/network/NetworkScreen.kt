@@ -50,7 +50,6 @@ import com.kin.athena.presentation.screens.settings.components.SettingsScaffold
 import com.kin.athena.presentation.screens.settings.components.settingsContainer
 import com.kin.athena.presentation.screens.settings.subSettings.network.viewModel.IpDialogViewModel
 import com.kin.athena.presentation.screens.settings.viewModel.SettingsViewModel
-import com.kin.athena.presentation.components.PremiumFeatureChoiceDialog
 import com.kin.athena.service.utils.manager.FirewallManager
 import com.kin.athena.service.utils.manager.NetworkSpeedManager
 import kotlinx.coroutines.runBlocking
@@ -226,21 +225,6 @@ fun NetworkScreen(
                     val intent = Intent(Settings.ACTION_VPN_SETTINGS)
                     LocalContext.current.startActivity(intent)
                 }
-            )
-        }
-    }
-    
-    // Premium Feature Choice Dialog
-    if (settings.showFeatureChoiceDialog.value) {
-        settings.currentFeatureChoice.value?.let { choice ->
-            PremiumFeatureChoiceDialog(
-                featureName = choice.featureName,
-                featureDescription = choice.featureDescription,
-                singleFeaturePrice = settings.getProductPrice(choice.productId),
-                fullPremiumPrice = settings.getProductPrice("all_features"),
-                onSingleFeaturePurchase = { settings.purchaseSingleFeature() },
-                onFullPremiumPurchase = { settings.purchaseFullPremium() },
-                onDismiss = { settings.dismissFeatureChoiceDialog() }
             )
         }
     }

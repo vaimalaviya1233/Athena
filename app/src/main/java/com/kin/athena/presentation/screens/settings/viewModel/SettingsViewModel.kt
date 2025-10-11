@@ -91,7 +91,7 @@ class SettingsViewModel @Inject constructor(
                     if (licenseResponse.valid == true) {
                         update(settings.value.copy(premiumUnlocked = true))
                         Toast.makeText(context, context.getString(R.string.premium_activation_success), Toast.LENGTH_LONG).show()
-                        onResult(true, context.getString(R.string.premium_activation_success))
+                        onResult(true, "✅ ${context.getString(R.string.premium_activation_success)}")
                     } else {
                         val errorMessage = licenseResponse.error ?: context.getString(R.string.premium_invalid_license)
                         Toast.makeText(context, context.getString(R.string.premium_activation_error, errorMessage), Toast.LENGTH_LONG).show()

@@ -40,7 +40,6 @@ import com.kin.athena.presentation.screens.settings.components.SettingType
 import com.kin.athena.presentation.screens.settings.components.SettingsBox
 import com.kin.athena.presentation.screens.settings.components.SettingsScaffold
 import com.kin.athena.presentation.screens.settings.components.settingsContainer
-import com.kin.athena.presentation.components.PremiumFeatureChoiceDialog
 import com.kin.athena.presentation.screens.settings.subSettings.behavior.viewModel.BehaviorViewModel
 import com.kin.athena.presentation.screens.settings.viewModel.SettingsViewModel
 import com.kin.athena.service.firewall.utils.FirewallStatus
@@ -205,21 +204,6 @@ fun BehaviorScreen(
                 onSwitchEnabled = {
                     settings.update(settings.settings.value.copy(permanentNotification = !it))
                 }
-            )
-        }
-    }
-    
-    // Premium Feature Choice Dialog
-    if (settings.showFeatureChoiceDialog.value) {
-        settings.currentFeatureChoice.value?.let { choice ->
-            PremiumFeatureChoiceDialog(
-                featureName = choice.featureName,
-                featureDescription = choice.featureDescription,
-                singleFeaturePrice = settings.getProductPrice(choice.productId),
-                fullPremiumPrice = settings.getProductPrice("all_features"),
-                onSingleFeaturePurchase = { settings.purchaseSingleFeature() },
-                onFullPremiumPurchase = { settings.purchaseFullPremium() },
-                onDismiss = { settings.dismissFeatureChoiceDialog() }
             )
         }
     }
