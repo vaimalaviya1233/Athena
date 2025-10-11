@@ -599,4 +599,5 @@
     <string name="premium_kofi_support">Támogatás Ko-fi</string>
     <string name="premium_fdroid_message">Támogatja a fejlesztést Ko-fi-n keresztül, hogy kinyissa az összes prémium funkciót!</string>
     <string name="premium_app_notifications_feature">App értesítések</string>
+    <string name="settings_colors_option_sort">Nyelv</string>
 </resources>
