@@ -22,6 +22,7 @@ import com.kin.athena.data.service.NetworkManager
 enum class FirewallResult {
     ACCEPT(),
     DROP(),
+    DNS_BLOCKED(),
 }
 
 data class FireWallModel(

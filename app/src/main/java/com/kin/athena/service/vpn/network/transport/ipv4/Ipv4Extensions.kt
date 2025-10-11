@@ -38,6 +38,13 @@ fun IPv4.copy(): IPv4 {
     )
 }
 
+fun IPv4.toByteArray(): ByteArray {
+    val buffer = ByteArray(iPHeaderLength)
+    buffer.fillBasicHeaderFields(this)
+    buffer.fillSourceAndDestinationIP(this)
+    return buffer
+}
+
 fun ByteBuffer.toIPv4Header(): IPv4 {
     checkMinimumHeaderLength()
     val versionAndHeaderLengthByte = get()

@@ -91,10 +91,4 @@ class FDroidBillingManager @Inject constructor(
         // F-Droid doesn't use Google Play billing, so no purchases to check
         Logger.info("F-Droid: No purchase check needed")
     }
-
-    override fun clearPendingCallbacks() {
-        Logger.info("F-Droid: Clearing pending callbacks")
-        currentOnSuccess = null
-        showKofiDialog = false
-    }
 }

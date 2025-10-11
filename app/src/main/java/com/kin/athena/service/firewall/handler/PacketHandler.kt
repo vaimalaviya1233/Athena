@@ -18,11 +18,12 @@ package com.kin.athena.service.firewall.handler
 
 import com.kin.athena.core.logging.Logger
 import com.kin.athena.service.firewall.model.FireWallModel
+import com.kin.athena.service.firewall.model.FirewallResult
 import com.kin.athena.service.vpn.network.transport.dns.DNSModel
 import com.kin.athena.service.vpn.network.transport.ipv4.IPv4
 
-fun filterPacket(protocol: Any?, ipHeader: IPv4?, ruleManager: RuleHandler, dnsModel: DNSModel? = null, uid: Int? = null, bypassCheck: Boolean = false): Pair<Boolean, Int> {
+fun filterPacket(protocol: Any?, ipHeader: IPv4?, ruleManager: RuleHandler, dnsModel: DNSModel? = null, uid: Int? = null, bypassCheck: Boolean = false): Triple<Boolean, Int, FirewallResult> {
     val handler = ProtocolHandlerFactory.getHandler(protocol)
     val fireWallModel = handler?.handle(protocol, ipHeader) ?: uid?.let { FireWallModel(uid = uid) }
-    return fireWallModel?.let { ruleManager.handle(it, dnsModel, bypassCheck) } ?: Pair(true, 0)
+    return fireWallModel?.let { ruleManager.handle(it, dnsModel, bypassCheck) } ?: Triple(true, 0, FirewallResult.ACCEPT)
 }

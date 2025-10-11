@@ -179,6 +179,7 @@ class LogsViewModel @Inject constructor(
                         when (log.packetStatus) {
                             FirewallResult.ACCEPT -> allowedCount++
                             FirewallResult.DROP -> blockedCount++
+                            FirewallResult.DNS_BLOCKED -> blockedCount++
                         }
                     }
                 }
@@ -207,6 +208,7 @@ class LogsViewModel @Inject constructor(
             when (iterator.next().packetStatus) {
                 FirewallResult.ACCEPT -> allowedCount++
                 FirewallResult.DROP -> blockedCount++
+                FirewallResult.DNS_BLOCKED -> blockedCount++
             }
         }
         

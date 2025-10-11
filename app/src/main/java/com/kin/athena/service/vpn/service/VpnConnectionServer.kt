@@ -205,7 +205,7 @@ class VpnConnectionServer : Service(), CoroutineScope by MainScope(), AppChangeC
                 tunnelManager.clearSessions()
                 Logger.info("All sessions cleared successfully")
             } else {
-                Logger.warn("TunnelManager not initialized, cannot clear sessions")
+                Logger.warn("TunnelManager not initialized for session clearing")
             }
         } catch (e: Exception) {
             Logger.error("Error clearing sessions: ${e.message}", e)

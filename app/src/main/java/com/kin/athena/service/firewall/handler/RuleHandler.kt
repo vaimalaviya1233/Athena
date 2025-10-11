@@ -42,6 +42,8 @@ import com.kin.athena.service.firewall.rule.LogRule
 import com.kin.athena.service.firewall.rule.ScreenRule
 import com.kin.athena.service.firewall.utils.isLocalIPv4
 import com.kin.athena.service.vpn.network.transport.dns.DNSModel
+import com.kin.athena.service.vpn.service.VpnConnectionServer
+import com.kin.athena.service.vpn.network.util.NetworkConstants
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -72,6 +74,10 @@ class RuleHandler @Inject constructor(
                    allowLocal = settings.allowLocal
                 }
             )
+        }
+        
+        rules.filterIsInstance<CustomDomainRule>().forEach { customDomainRule ->
+            customDomainRule.setRuleHandler(this)
         }
     }
 
@@ -136,14 +142,14 @@ class RuleHandler @Inject constructor(
         }
     }
 
-    fun handle(packet: FireWallModel, dnsModel: DNSModel? = null, bypassCheck: Boolean): Pair<Boolean, Int> {
+    fun handle(packet: FireWallModel, dnsModel: DNSModel? = null, bypassCheck: Boolean): Triple<Boolean, Int, FirewallResult> {
         if (bypassCheck) {
-            return Pair(true, packet.uid)
+            return Triple(true, packet.uid, FirewallResult.ACCEPT)
         }
 
         if (allowLocal && dnsModel == null) {
             if (isLocalIPv4(packet.destinationIP)) {
-                return Pair(true, packet.uid)
+                return Triple(true, packet.uid, FirewallResult.ACCEPT)
             }
         }
 
@@ -158,6 +164,6 @@ class RuleHandler @Inject constructor(
         }
 
         rules.last().check(packet, dnsModel, logUseCases, result)
-        return Pair(result == FirewallResult.ACCEPT , packet.uid)
+        return Triple(result == FirewallResult.ACCEPT, packet.uid, result)
     }
 }

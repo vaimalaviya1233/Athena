@@ -20,6 +20,7 @@
 #include "athena.h"
 
 int loglevel = ANDROID_LOG_WARN;
+static int current_tun_fd = -1;  // Global TUN file descriptor
 
 
 
@@ -64,6 +65,7 @@ ctx->stopping = 0;
 
 JNIEXPORT void JNICALL Java_com_kin_athena_service_vpn_service_TunnelManager_jni_1run(JNIEnv *env, jobject instance, jlong context, jint tun, jboolean fwd53, jint rcode) {
 struct context *ctx = (struct context *) context;
+current_tun_fd = tun;  // Store TUN file descriptor globally
 struct arguments *args = ng_malloc(sizeof(struct arguments), "arguments");
 args->env = env;
 args->instance = instance;
@@ -159,6 +161,49 @@ JNIEXPORT void JNICALL Java_com_kin_athena_service_vpn_service_TunnelManager_jni
         log_android(ANDROID_LOG_INFO, "DNS IPv6 server set to: %s", ctx->dns_server_v6);
         (*env)->ReleaseStringUTFChars(env, dnsV6, dns_v6_str);
     }
+}
+
+JNIEXPORT void JNICALL Java_com_kin_athena_service_vpn_service_TunnelManager_jni_1send_1complete_1packet(JNIEnv *env, jobject instance, jlong context, jbyteArray packetData) {
+    if (context == 0) return;
+
+    struct context *ctx = (struct context *) context;
+    if (ctx == NULL) return;
+
+    // Get complete packet data from Java byte array
+    jbyte *packet_bytes = (*env)->GetByteArrayElements(env, packetData, NULL);
+    jsize packet_length = (*env)->GetArrayLength(env, packetData);
+    
+    if (packet_bytes == NULL || packet_length <= 0) {
+        log_android(ANDROID_LOG_ERROR, "Complete packet: Invalid packet data");
+        return;
+    }
+
+    // Log the complete packet details
+    log_android(ANDROID_LOG_DEBUG, "Complete packet details:");
+    log_android(ANDROID_LOG_DEBUG, "  Packet size: %zd bytes", (size_t) packet_length);
+    log_android(ANDROID_LOG_DEBUG, "  TUN fd: %d", current_tun_fd);
+    
+    // Log first 64 bytes of complete packet in hex
+    char hex_buffer[512];
+    int hex_len = 0;
+    int bytes_to_log = packet_length < 64 ? packet_length : 64;
+    for (int i = 0; i < bytes_to_log; i++) {
+        hex_len += snprintf(hex_buffer + hex_len, sizeof(hex_buffer) - hex_len, 
+                           "%02x ", (unsigned char)packet_bytes[i]);
+    }
+    log_android(ANDROID_LOG_DEBUG, "  Packet data (first %d bytes): %s", bytes_to_log, hex_buffer);
+
+    // Write complete packet directly to TUN interface
+    ssize_t written = write(current_tun_fd, packet_bytes, packet_length);
+    
+    if (written > 0) {
+        log_android(ANDROID_LOG_DEBUG, "Complete packet sent successfully: %zd bytes written to TUN interface", written);
+    } else {
+        log_android(ANDROID_LOG_ERROR, "Failed to send complete packet: %zd (TUN fd: %d, errno: %d)", written, current_tun_fd, errno);
+    }
+
+    // Release Java byte array
+    (*env)->ReleaseByteArrayElements(env, packetData, packet_bytes, JNI_ABORT);
 }
 
 void ng_delete_alloc(void *ptr, const char *file, int line) {

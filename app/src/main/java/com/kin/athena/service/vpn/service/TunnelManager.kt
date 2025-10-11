@@ -11,7 +11,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should hinave received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
@@ -22,16 +22,19 @@ import android.util.Log
 import com.kin.athena.core.logging.Logger
 import com.kin.athena.service.firewall.handler.RuleHandler
 import com.kin.athena.service.firewall.handler.filterPacket
+import com.kin.athena.service.firewall.model.FirewallResult
 import com.kin.athena.service.vpn.network.transport.tcp.TCPHeader
 import com.kin.athena.service.vpn.network.transport.udp.UDPModel
 import com.kin.athena.service.vpn.network.transport.udp.toUDPHeader
 import com.kin.athena.service.vpn.network.transport.udp.extractUDPData
+import com.kin.athena.service.vpn.network.transport.udp.handleDnsResponse
 import com.kin.athena.service.vpn.network.transport.icmp.ICMPModel
 import com.kin.athena.service.vpn.network.transport.icmp.toICMPPacket
 import com.kin.athena.service.vpn.network.transport.ipv4.IPv4
 import com.kin.athena.service.vpn.network.transport.ipv4.toIPv4Header
 import com.kin.athena.service.vpn.network.transport.dns.DNSModel
 import com.kin.athena.service.vpn.network.transport.dns.toDNSModel
+import com.kin.athena.service.vpn.network.transport.udp.soarResponse
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -87,6 +90,12 @@ class TunnelManager(
     
     fun getProperty(name: String): String {
         return jni_getprop(name)
+    }
+    
+    fun setDnsServers(dnsV4: String, dnsV6: String) {
+        if (contextPtr != 0L) {
+            jni_set_dns_servers(contextPtr, dnsV4, dnsV6)
+        }
     }
     
     fun clearSessions() {
@@ -165,6 +174,7 @@ class TunnelManager(
             buffer.order(ByteOrder.BIG_ENDIAN)
             
             val ipHeader = buffer.toIPv4Header()
+            val udpStartPosition = buffer.position()
             val udpHeaderBuffer = buffer.slice()
             val udpHeader = udpHeaderBuffer.toUDPHeader()
             
@@ -183,10 +193,38 @@ class TunnelManager(
                 } else null
 
                 val filterResult = filterPacket(udpHeader, ipHeader, ruleHandler, dnsModel)
-                
                 val allowed = filterResult.first
-
-                allowed
+                val firewallResult = filterResult.third
+                
+                // Handle DNS blocking with SOAR response
+                if (isDnsPacket && firewallResult == FirewallResult.DNS_BLOCKED) {
+                    try {
+                        // Create a buffer with UDP header and data for soarResponse
+                        val udpPacketData = ByteBuffer.wrap(data, udpStartPosition, length - udpStartPosition)
+                        udpPacketData.order(ByteOrder.BIG_ENDIAN)
+                        
+                        Log.d("PacketFilter", "[$direction] DNS: Creating SOAR response for blocked domain, UDP data size: ${udpPacketData.remaining()}")
+                        val soarResponsePayload = soarResponse(udpPacketData, ipHeader)
+                        Log.d("PacketFilter", "[$direction] DNS: SOAR response payload created, size: ${soarResponsePayload.size}")
+                        
+                        // Create complete response packet using Kotlin packet creation system
+                        val completeResponsePacket = handleDnsResponse(udpHeader, ipHeader, soarResponsePayload)
+                        Log.d("PacketFilter", "[$direction] DNS: Complete response packet created, size: ${completeResponsePacket.size}")
+                        
+                        // Send complete packet through VPN interface
+                        if (contextPtr != 0L) {
+                            jni_send_complete_packet(contextPtr, completeResponsePacket)
+                        }
+                        
+                        Log.d("PacketFilter", "[$direction] DNS: Sent SOAR response for blocked domain")
+                        false // Block original packet
+                    } catch (e: Exception) {
+                        Log.e("PacketFilter", "Error creating/sending SOAR response: ${e.message}", e)
+                        false // Block packet on error
+                    }
+                } else {
+                    allowed
+                }
             } ?: run {
                 true
             }
@@ -206,7 +244,7 @@ class TunnelManager(
             ruleHandler?.let { ruleHandler ->
                 val filterResult = filterPacket(icmpPacket, ipHeader, ruleHandler)
                 
-                val allowed = filterResult?.first ?: true
+                val allowed = filterResult.first
 
                 allowed
             } ?: run {
@@ -253,6 +291,7 @@ class TunnelManager(
     private external fun jni_get_mtu(): Int
     private external fun jni_clear_sessions(context: Long)
     private external fun jni_set_dns_servers(context: Long, dnsV4: String, dnsV6: String)
+    private external fun jni_send_complete_packet(context: Long, packetData: ByteArray)
 
     companion object {
         init {

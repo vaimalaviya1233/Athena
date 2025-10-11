@@ -467,6 +467,7 @@ fun LogDetails(logs: List<Log>, navController: NavController) {
             val color = when (log.packetStatus) {
                 FirewallResult.ACCEPT -> Color.Unspecified
                 FirewallResult.DROP -> MaterialTheme.colorScheme.error
+                FirewallResult.DNS_BLOCKED -> MaterialTheme.colorScheme.error
             }
 
             Row(

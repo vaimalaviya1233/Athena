@@ -24,6 +24,7 @@ import com.kin.athena.domain.usecase.log.LogUseCases
 import com.kin.athena.service.firewall.model.FireWallModel
 import com.kin.athena.service.firewall.model.FirewallResult
 import com.kin.athena.service.vpn.network.transport.dns.DNSModel
+import com.kin.athena.service.firewall.handler.RuleHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
@@ -37,6 +38,7 @@ class CustomDomainRule @Inject constructor(
     private var allowlistDomains: List<CustomDomain> = emptyList()
     private var blocklistDomains: List<CustomDomain> = emptyList()
     private var isCustomDomainRulesEnabled = true
+    private var ruleHandler: RuleHandler? = null
 
     init {
         observeCustomDomains()
@@ -73,6 +75,10 @@ class CustomDomainRule @Inject constructor(
     fun isCustomDomainRulesEnabled(): Boolean {
         return isCustomDomainRulesEnabled
     }
+    
+    fun setRuleHandler(handler: RuleHandler) {
+        ruleHandler = handler
+    }
 
     override fun check(
         packet: FireWallModel,
@@ -92,7 +98,7 @@ class CustomDomainRule @Inject constructor(
             for (blockDomain in blocklistDomains) {
                 if (isDomainMatch(domainName, blockDomain)) {
                     Logger.info("Blocked custom domain: $domainName (matched: ${blockDomain.domain})")
-                    return FirewallResult.DROP
+                    return FirewallResult.DNS_BLOCKED
                 }
             }
             
