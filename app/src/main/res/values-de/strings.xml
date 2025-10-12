@@ -598,4 +598,6 @@
     <string name="notification_network_speed_content">↓ %1$s</string>
     <string name="misc_back_description">Zurück</string>
     <string name="misc_close_description">Schließen</string>
+    <string name="details_version">Version</string>
+    <string name="details_permissions">Berechtigungen</string>
 </resources>
