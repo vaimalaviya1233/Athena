@@ -1,3 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="common_search">Suchen</string>
+    <string name="common_version">Version</string>
+    <string name="common_permissions">Berechtigungen</string>
+    <string name="common_logs">Protokolle</string>
+    <string name="common_settings">Einstellungen</string>
+    <string name="common_allow">Erlauben</string>
+    <string name="common_cancel">Abbrechen</string>
+    <string name="common_save">Speichern</string>
+    <string name="common_enable">Aktivieren</string>
+    <string name="common_disable">Deaktivieren</string>
+    <string name="common_done">Fertig</string>
+    <string name="common_delete">Löschen</string>
+    <string name="common_clear">entfernen</string>
+    <string name="common_retry">Erneut versuchen</string>
+    <string name="common_loading">Wird geladen...</string>
+    <string name="common_verifying">Überprüfen...</string>
+    <string name="common_block">Blockieren</string>
+    <string name="common_purchase">Kaufen</string>
+    <string name="premium_confirm_purchase">Kauf bestätigen</string>
+    <string name="premium_confirm_feature_purchase">%1$s für %2$s kaufen?</string>
+    <string name="premium_confirm_full_purchase">Lebenslangen Premium-Zugang für %1$s kaufen?</string>
+    <string name="premium_confirm_kofi_purchase">Entwicklung unterstützen und alle Premium-Funktionen freischalten?</string>
+    <string name="details_title">Details</string>
 </resources>
