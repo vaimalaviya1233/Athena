@@ -86,8 +86,17 @@ class DatabaseProvider(private val application: Application) {
                     is_enabled INTEGER NOT NULL
                 )
             """)
+        }
+    }
+
+    private val MIGRATION_7_8 = object : Migration(7, 8) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Drop existing indices that are corrupted
+            database.execSQL("DROP INDEX IF EXISTS index_custom_domains_domain")
+            database.execSQL("DROP INDEX IF EXISTS index_custom_domains_is_allowlist") 
+            database.execSQL("DROP INDEX IF EXISTS index_custom_domains_is_enabled")
             
-            // Create indexes for better performance
+            // Recreate indices properly
             database.execSQL("CREATE INDEX IF NOT EXISTS index_custom_domains_domain ON custom_domains(domain)")
             database.execSQL("CREATE INDEX IF NOT EXISTS index_custom_domains_is_allowlist ON custom_domains(is_allowlist)")
             database.execSQL("CREATE INDEX IF NOT EXISTS index_custom_domains_is_enabled ON custom_domains(is_enabled)")
@@ -105,7 +114,7 @@ class DatabaseProvider(private val application: Application) {
         return Room.databaseBuilder(application.applicationContext,
             AppDatabase::class.java,
             AppConstants.DatabaseConstants.DATABASE_NAME)
-            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
             .build()
     }
 
