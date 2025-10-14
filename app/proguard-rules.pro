@@ -57,6 +57,25 @@
 -keep class com.kin.athena.data.remote.LicenseRepositoryImpl { *; }
 -keep class com.kin.athena.data.remote.VerifyLicenseUseCase { *; }
 
+# Room Database rules - prevent R8 from breaking database operations
+-keep class androidx.room.** { *; }
+-keep class androidx.sqlite.** { *; }
+-keepclassmembers class * extends androidx.room.RoomDatabase {
+    *;
+}
+-keepclassmembers @androidx.room.Entity class * {
+    *;
+}
+-keepclassmembers @androidx.room.Dao class * {
+    *;
+}
+-keep class * extends androidx.room.migration.Migration {
+    *;
+}
+-keep class com.kin.athena.data.database.** { *; }
+-keep class com.kin.athena.data.local.database.** { *; }
+-keep class com.kin.athena.domain.model.** { *; }
+
 # Enhanced optimization rules for smaller APK size
 -allowaccessmodification
 -repackageclasses ''
