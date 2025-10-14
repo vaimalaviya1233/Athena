@@ -3,8 +3,8 @@
 set -e
 
 NDK_VERSION="27.0.12077973"
-ANDROID_HOME="/Users/kin/Library/Android/sdk"
-NDK="/Users/kin/Library/Android/sdk/ndk/27.0.12077973"
+ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
+NDK="$ANDROID_HOME/ndk/$NDK_VERSION"
 
 if [ ! -d "$NDK" ]; then
     echo "Error: Android NDK not found at $NDK"
