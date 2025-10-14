@@ -46,6 +46,7 @@ import com.kin.athena.presentation.screens.settings.subSettings.dns.hosts.HostSt
 import com.kin.athena.presentation.screens.settings.subSettings.dns.hosts.RuleDatabaseUpdateWorker
 import com.kin.athena.presentation.screens.settings.subSettings.dns.hosts.Configuration
 import com.kin.athena.presentation.screens.settings.viewModel.SettingsViewModel
+import com.kin.athena.service.utils.manager.NetworkSpeedManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
@@ -126,6 +127,12 @@ class MainActivity : AppCompatActivity() {
 
                     LaunchedEffect(homeViewModel) {
                         homeViewModel.initialize(this@apply)
+                        
+                        // Start network speed monitor if enabled
+                        if (settings.value.networkSpeedMonitor) {
+                            NetworkSpeedManager.start(this@MainActivity)
+                            Logger.info("Network speed monitor started on app startup")
+                        }
                     }
                     
                     // Watch for when apps are loaded and hide splash screen

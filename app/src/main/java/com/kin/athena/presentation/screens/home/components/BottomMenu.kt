@@ -27,7 +27,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -61,10 +60,8 @@ fun BottomMenu(
                     icon = IconType.VectorIcon(Icons.Rounded.Code),
                     actionType = SettingType.CUSTOM,
                     customAction = {
-                        LaunchedEffect(true) {
-                            onLogsClicked()
-                            onExit()
-                        }
+                        onLogsClicked()
+                        onExit()
                     }
                 )
                 SettingsBox(
@@ -74,10 +71,8 @@ fun BottomMenu(
                     icon = IconType.VectorIcon(Icons.Rounded.Settings),
                     actionType = SettingType.CUSTOM,
                     customAction = {
-                        LaunchedEffect(true) {
-                            onSettingsClicked()
-                            onExit()
-                        }
+                        onSettingsClicked()
+                        onExit()
                     }
                 )
             }

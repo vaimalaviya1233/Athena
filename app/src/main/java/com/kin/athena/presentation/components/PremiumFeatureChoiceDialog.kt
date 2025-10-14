@@ -111,8 +111,8 @@ fun PremiumFeatureChoiceDialog(
                         title = stringResource(R.string.premium_just_feature, featureName),
                         description = stringResource(R.string.premium_unlock_only_feature),
                         icon = IconType.VectorIcon(Icons.Rounded.Lock),
-                        actionType = SettingType.LINK,
-                        onLinkClicked = {
+                        actionType = SettingType.CUSTOM,
+                        customAction = { _ ->
                             onSingleFeaturePurchase()
                             onDismiss()
                         },
@@ -128,8 +128,8 @@ fun PremiumFeatureChoiceDialog(
                         title = stringResource(R.string.premium_lifetime),
                         description = stringResource(R.string.premium_all_features),
                         icon = IconType.VectorIcon(Icons.Rounded.Star),
-                        actionType = SettingType.LINK,
-                        onLinkClicked = {
+                        actionType = SettingType.CUSTOM,
+                        customAction = { _ ->
                             onFullPremiumPurchase()
                             onDismiss()
                         },
@@ -148,15 +148,15 @@ fun PremiumFeatureChoiceDialog(
                         title = stringResource(R.string.premium_kofi_support),
                         description = stringResource(R.string.premium_all_features),
                         icon = IconType.VectorIcon(Icons.Rounded.Star),
-                        actionType = SettingType.LINK,
-                        onLinkClicked = {
+                        actionType = SettingType.CUSTOM,
+                        customAction = { _ ->
                             onFullPremiumPurchase()
                             onDismiss()
                         },
                         circleWrapperColor = MaterialTheme.colorScheme.primaryContainer,
                         customButton = {
                             Text(
-                                text = stringResource(R.string.premium_one_time),
+                                text = "$4.99",
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )

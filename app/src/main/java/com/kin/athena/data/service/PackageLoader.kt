@@ -93,17 +93,19 @@ class PackageLoader(
                         true // Default to true for safety
                     }
                     
-                    Application(
+                    val tempApp = Application(
                         packageID = appInfo.packageName,
                         uid = appInfo.uid,
                         systemApp = isSystemApp,
-                        usesGooglePlayServices = false, // Defer GPS detection for performance
+                        usesGooglePlayServices = false,
                         internetAccess = wifiDefault,
                         cellularAccess = cellularDefault,
                         displayName = displayName,
                         lastUpdated = System.currentTimeMillis(),
                         requiresNetwork = requiresNetwork
                     )
+                    
+                    tempApp.copy(usesGooglePlayServices = tempApp.usesGooglePlayServices())
                 } else null
             }
             
@@ -117,6 +119,9 @@ class PackageLoader(
             
             // Update display names for existing apps that have empty display names
             updateEmptyDisplayNames()
+            
+            // Update GMS status for existing apps
+            updateGmsStatus()
             
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -164,6 +169,42 @@ class PackageLoader(
             )
         } catch (e: Exception) {
             Logger.error("Error updating display names: ${e.message}")
+        }
+    }
+    
+    private suspend fun updateGmsStatus() {
+        try {
+            val allAppsResult = applicationUseCases.getApplications.execute()
+            allAppsResult.fold(
+                ifSuccess = { allApps ->
+                    val appsToUpdate = allApps.filter { app ->
+                        val expectedGmsStatus = app.usesGooglePlayServices()
+                        app.usesGooglePlayServices != expectedGmsStatus
+                    }
+
+                    if (appsToUpdate.isNotEmpty()) {
+                        Logger.info("PackageLoader: Updating GMS status for ${appsToUpdate.size} applications")
+
+                        appsToUpdate.forEach { app ->
+                            try {
+                                val correctedGmsStatus = app.usesGooglePlayServices()
+                                applicationUseCases.updateApplication.execute(
+                                    app.copy(usesGooglePlayServices = correctedGmsStatus)
+                                )
+                            } catch (e: Exception) {
+                                Logger.error("Failed to update GMS status for ${app.packageID}: ${e.message}")
+                            }
+                        }
+
+                        Logger.info("PackageLoader: Updated GMS status for ${appsToUpdate.size} applications")
+                    }
+                },
+                ifFailure = { error ->
+                    Logger.error("Error getting all applications for GMS update: ${error.message}")
+                }
+            )
+        } catch (e: Exception) {
+            Logger.error("Error updating GMS status: ${e.message}")
         }
     }
 }

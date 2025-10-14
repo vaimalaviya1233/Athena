@@ -25,6 +25,7 @@ import com.kin.athena.domain.usecase.preferences.PreferencesUseCases
 import com.kin.athena.service.utils.manager.FirewallManager
 import com.kin.athena.service.utils.manager.FirewallMode
 import com.kin.athena.service.utils.manager.VpnManager
+import com.kin.athena.service.utils.manager.NetworkSpeedManager
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -62,6 +63,12 @@ class BootReceiver : BroadcastReceiver() {
                                     Logger.error("Vpn permission not granted")
                                 }
                             }
+                        }
+                        
+                        // Start network speed monitor if enabled
+                        if (settings.networkSpeedMonitor) {
+                            NetworkSpeedManager.start(context)
+                            Logger.info("Network speed monitor started on boot")
                         }
                     }
                 )

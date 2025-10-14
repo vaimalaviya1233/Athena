@@ -170,10 +170,11 @@ fun HomeScreen(
         homeViewModel.initialize(settingsViewModel)
     }
 
-    // Refresh visible applications when returning to HomeScreen
+    // Refresh visible applications when returning to HomeScreen and close menu when navigating away
     androidx.compose.runtime.DisposableEffect(Unit) {
         onDispose {
-            // When navigating away, mark that we should refresh on return
+            // When navigating away, close the menu and mark that we should refresh on return
+            homeViewModel.updateMenuStatus(false)
         }
     }
 
@@ -515,11 +516,7 @@ private fun ProfessionalApplicationList(
             }
 
             if (icon != null) {
-                val description = if (application.usesGooglePlayServices) {
-                    "${application.packageID}\nIncoming messages are fetched from GMS"
-                } else {
-                    application.packageID
-                }
+                val description = application.packageID
 
                 val isVisible = visibleItems[application.packageID] == true
 

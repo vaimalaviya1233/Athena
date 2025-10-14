@@ -485,7 +485,7 @@
     <string name="home_preparing_commands">Preparing firewall commands…</string>
     <string name="home_executing_commands">Executing commands…</string>
     <string name="home_rules_applied">Firewall rules applied successfully</string>
-    <string name="home_gms_warning">Google Play Services Warning</string>
+    <string name="home_gms_warning">Incoming messages are received by Google Play Services and cannot be blocked by blocking this app</string>
 
     <!-- Permissions -->
     <string name="permissions_request">Permissions Request</string>

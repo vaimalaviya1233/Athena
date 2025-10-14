@@ -386,7 +386,7 @@
     <string name="home_preparing_commands">Príprava príkazov firewall ..</string>
     <string name="home_executing_commands">Prevedenie príkazov..</string>
     <string name="home_rules_applied">Firewall pravidlá aplikované úspešne</string>
-    <string name="home_gms_warning">Google Play Služby Upozornenie</string>
+    <string name="home_gms_warning">Prichádzajúce správy sú prijímané cez Google Play Services a nemožno ich zablokovať blokovaním tejto aplikácie</string>
     <string name="permissions_request">Žiadosť o povolenie</string>
     <string name="permissions_request_desc">Grant požadované povolenia</string>
     <string name="permissions_root">Root Povolenie</string>
