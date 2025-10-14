@@ -58,25 +58,18 @@ class DatabaseProvider(private val application: Application) {
         }
     }
     
-    private val MIGRATION_4_5 = object : Migration(4, 5) {
+    private val MIGRATION_4_8 = object : Migration(4, 8) {
         override fun migrate(database: SupportSQLiteDatabase) {
-            // Fix any remaining empty display names
+            // Fix any remaining empty display names (from MIGRATION_4_5)
             database.execSQL("UPDATE applications SET display_name = package_id WHERE display_name = '' OR display_name IS NULL")
-        }
-    }
-
-    private val MIGRATION_5_6 = object : Migration(5, 6) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            // Add bypass_vpn column for VPN tunnel exclusion
+            
+            // Add bypass_vpn column for VPN tunnel exclusion (from MIGRATION_5_6)
             database.execSQL("ALTER TABLE applications ADD COLUMN bypass_vpn INTEGER NOT NULL DEFAULT 0")
-        }
-    }
-
-    private val MIGRATION_6_7 = object : Migration(6, 7) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            // Create custom_domains table for domain management
+            
+            // Create custom_domains table for domain management (from MIGRATION_6_7 & 7_8 combined)
+            database.execSQL("DROP TABLE IF EXISTS custom_domains")
             database.execSQL("""
-                CREATE TABLE IF NOT EXISTS custom_domains (
+                CREATE TABLE custom_domains (
                     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                     domain TEXT NOT NULL,
                     description TEXT NOT NULL,
@@ -86,20 +79,6 @@ class DatabaseProvider(private val application: Application) {
                     is_enabled INTEGER NOT NULL
                 )
             """)
-        }
-    }
-
-    private val MIGRATION_7_8 = object : Migration(7, 8) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            // Drop existing indices that are corrupted
-            database.execSQL("DROP INDEX IF EXISTS index_custom_domains_domain")
-            database.execSQL("DROP INDEX IF EXISTS index_custom_domains_is_allowlist") 
-            database.execSQL("DROP INDEX IF EXISTS index_custom_domains_is_enabled")
-            
-            // Recreate indices properly
-            database.execSQL("CREATE INDEX IF NOT EXISTS index_custom_domains_domain ON custom_domains(domain)")
-            database.execSQL("CREATE INDEX IF NOT EXISTS index_custom_domains_is_allowlist ON custom_domains(is_allowlist)")
-            database.execSQL("CREATE INDEX IF NOT EXISTS index_custom_domains_is_enabled ON custom_domains(is_enabled)")
         }
     }
 
@@ -114,7 +93,7 @@ class DatabaseProvider(private val application: Application) {
         return Room.databaseBuilder(application.applicationContext,
             AppDatabase::class.java,
             AppConstants.DatabaseConstants.DATABASE_NAME)
-            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_8)
             .build()
     }
 
