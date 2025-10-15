@@ -83,23 +83,28 @@
 
 ---
 
-## 💬 Contact Me
+## 💬 **Contact Me**
 
--  Email : contact@easyapps.me
--  Discord : [Easy Apps](https://discord.gg/ZrP4G8z23H)
+Feel free to reach out through any of the following channels:
+
+- 📧 **Email**: [contact@easyapps.me](mailto:contact@easyapps.me)
+- 💬 **Discord**: [Easy Apps](https://discord.gg/ZrP4G8z23H)
 
 ---
 
-## 🔑 Checksums
 
--  MD5: `d6ac2c9352a8ed4c8839bbbf8ad3e534`
--  SHA1: `6f0eaf53f8bf1506f2cd0f774e32d46e1f92de59`
--  SHA-256: `fce87da97f791301df390bfa47e81685191167cab5dbd555db8287541f786e28`
+## 🔑 **Checksums**
+| Algorithm | Play Store |
+| --------- | -------- |
+| **MD5**   | `76eb1b3d6d10b010ae5a7c5a485467ab` |
+| **SHA1**  | `3895add9dcc12229fcc1699c41522436143b6c40` |
+| **SHA-256** | `3dac74ea57cbf9d5dd10ac2f443036afd38581588dd4dafa02d230bddb4250dd` |
 
-## 🌍 Translations
-<a href="https://hosted.weblate.org/engage/athena/">
-<img src="https://hosted.weblate.org/widget/athena/-/en/horizontal-blue.svg" alt="Translation status" />
-</a>
+| Algorithm | Github |
+| --------- | -------- |
+| **MD5**   | `9e014dcb1275b4f971f380a9729be8ba` |
+| **SHA1**  | `5a8f2297aa402667ce1c97a5bd5f403e0c85dc38` |
+| **SHA-256** | `f8388448de6d3eb4831a60aa4194a0524cbb443fe5806090c1a403565f49a06b` |
 
 ---
 
