@@ -92,19 +92,22 @@ Feel free to reach out through any of the following channels:
 
 ---
 
+## 🌍 Translations
+
+
+<a href="https://hosted.weblate.org/engage/athena/">
+<img src="https://hosted.weblate.org/widget/athena/horizontal-auto.svg" alt="Translation status" />
+</a>
+
+---
 
 ## 🔑 **Checksums**
-| Algorithm | Play Store |
-| --------- | -------- |
-| **MD5**   | `76eb1b3d6d10b010ae5a7c5a485467ab` |
-| **SHA1**  | `3895add9dcc12229fcc1699c41522436143b6c40` |
-| **SHA-256** | `3dac74ea57cbf9d5dd10ac2f443036afd38581588dd4dafa02d230bddb4250dd` |
+| Algorithm  | Play Store                                                       | Github                                                             |
+|------------|------------------------------------------------------------------|--------------------------------------------------------------------|
+| **MD5**    | `76eb1b3d6d10b010ae5a7c5a485467ab`                               | `9e014dcb1275b4f971f380a9729be8ba`                               |
+| **SHA1**   | `3895add9dcc12229fcc1699c41522436143b6c40`                      | `5a8f2297aa402667ce1c97a5bd5f403e0c85dc38`                       |
+| **SHA-256**| `3dac74ea57cbf9d5dd10ac2f443036afd38581588dd4dafa02d230bddb4250dd`| `f8388448de6d3eb4831a60aa4194a0524cbb443fe5806090c1a403565f49a06b`|
 
-| Algorithm | Github |
-| --------- | -------- |
-| **MD5**   | `9e014dcb1275b4f971f380a9729be8ba` |
-| **SHA1**  | `5a8f2297aa402667ce1c97a5bd5f403e0c85dc38` |
-| **SHA-256** | `f8388448de6d3eb4831a60aa4194a0524cbb443fe5806090c1a403565f49a06b` |
 
 ---
 
