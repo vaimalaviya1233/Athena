@@ -88,7 +88,9 @@
 Feel free to reach out through any of the following channels:
 
 - 📧 **Email**: [contact@easyapps.me](mailto:contact@easyapps.me)
+- 📸 **Instagram**: [@easyapps.me](https://www.instagram.com/easyapps.me/)
 - 💬 **Discord**: [Easy Apps](https://discord.gg/ZrP4G8z23H)
+
 
 ---
 
