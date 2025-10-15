@@ -48,11 +48,14 @@ else
 
 fun Context.isFingerprintSupported(): Boolean {
     val biometricManager = BiometricManager.from(this)
-    return when (biometricManager.canAuthenticate(BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL)) {
+    return when (biometricManager.canAuthenticate(BIOMETRIC_STRONG)) {
         BiometricManager.BIOMETRIC_SUCCESS -> true
+        BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> false // Hardware exists but no fingerprints enrolled
         BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> false
         BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> false
-        BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> false
+        BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED -> false
+        BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED -> false
+        BiometricManager.BIOMETRIC_STATUS_UNKNOWN -> false
         else -> false
     }
 }

@@ -30,6 +30,8 @@ import androidx.compose.material.icons.rounded.SignalWifiBad
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.WifiOff
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -85,12 +87,18 @@ fun BehaviorScreen(
             )
         }
         settingsContainer {
+            val firewallStatus by behaviorViewModel.firewallManager.rulesLoaded.collectAsState()
+            val isFirewallOnline = firewallStatus.name() == FirewallStatus.ONLINE.name()
+            
             SettingsBox(
                 title = stringResource(id = R.string.behavior_use_root),
                 description = stringResource(id = R.string.behavior_use_root_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.Key),
                 actionType = SettingType.SWITCH,
-                isEnabled = behaviorViewModel.firewallManager.rulesLoaded.value.name() == FirewallStatus.OFFLINE.name(),
+                isUsable = !isFirewallOnline,
+                onNotUsableClicked = {
+                    behaviorViewModel.showRootDisabledMessage()
+                },
                 variable = settings.settings.value.useRootMode == true,
                 onSwitchEnabled = {
                     if (settings.settings.value.useRootMode == null) {

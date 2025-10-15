@@ -31,6 +31,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import android.widget.Toast
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -149,5 +150,21 @@ class BlockListViewModel @Inject constructor(
                 message.contains("unreachable")
             }
         }
+    }
+    
+    fun showDomainManagementDisabledMessage() {
+        Toast.makeText(
+            context, 
+            context.getString(com.kin.athena.R.string.dns_domain_management_disabled_message), 
+            Toast.LENGTH_LONG
+        ).show()
+    }
+    
+    fun showRootDisabledMessage() {
+        Toast.makeText(
+            context, 
+            context.getString(com.kin.athena.R.string.behavior_root_disabled_message), 
+            Toast.LENGTH_LONG
+        ).show()
     }
 }

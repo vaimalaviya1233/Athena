@@ -122,7 +122,7 @@ fun AboutScreen(
         }
         item {
             SettingsVerification(
-                isValid = settings.getAppSignature() == ProjectConstants.SHA_256_SIGNING,
+                isValid = settings.getAppSignature() in ProjectConstants.SHA_256_SIGNING,
                 title = stringResource(id = R.string.about_verified_build),
                 description = stringResource(id = R.string.about_maintained_by) + " " + ProjectConstants.DEVELOPER
             )

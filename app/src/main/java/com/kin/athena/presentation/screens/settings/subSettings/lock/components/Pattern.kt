@@ -24,13 +24,16 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.unit.dp
@@ -38,7 +41,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kin.athena.presentation.screens.settings.subSettings.lock.viewModel.LockScreenViewModel
 import com.kin.athena.presentation.screens.settings.viewModel.SettingsViewModel
 import kotlin.math.sqrt
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -47,6 +49,7 @@ import com.kin.athena.R
 import com.kin.athena.core.utils.extensions.popUpToTop
 import com.kin.athena.presentation.navigation.routes.HomeRoutes
 import com.kin.athena.presentation.navigation.routes.SettingRoutes
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -70,6 +73,23 @@ fun PatternLock(
 
     val dotColor = MaterialTheme.colorScheme.primary
     val pathColor = MaterialTheme.colorScheme.primary
+    val errorColor = MaterialTheme.colorScheme.error
+    val successColor = Color.Green
+    
+    // Pattern validation state
+    var patternStatus by remember { mutableStateOf("") }
+    
+    // Clear status after delay
+    LaunchedEffect(patternStatus) {
+        if (patternStatus == "Wrong Pattern") {
+            delay(2000)
+            patternStatus = ""
+            lockScreenViewModel.clearPattern()
+        } else if (patternStatus.isNotEmpty()) {
+            delay(1500)
+            patternStatus = ""
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -80,12 +100,23 @@ fun PatternLock(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         val text = when {
+            patternStatus.isNotEmpty() -> patternStatus
             settingsViewModel.settings.value.pattern == null -> stringResource(id = R.string.lock_setup_pattern)
             settingsViewModel.settings.value.pattern != null -> stringResource(id = R.string.lock_pattern)
             else -> "Unknown action"
         }
 
-        TitleText(text = text)
+        Text(
+            text = text,
+            modifier = Modifier.padding(16.dp),
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold,
+            color = when (patternStatus) {
+                "Correct!" -> Color.Green
+                "Wrong Pattern" -> MaterialTheme.colorScheme.error
+                else -> MaterialTheme.colorScheme.onBackground
+            }
+        )
 
         Canvas(
             modifier = Modifier
@@ -108,48 +139,67 @@ fun PatternLock(
                                         lockScreenViewModel.selectedCellCenterList.add(cell.center)
                                         lockScreenViewModel.lastCellCenter = cell.center
                                         lockScreenViewModel.path = Path().apply { moveTo(cell.center.x, cell.center.y) }
+                                        lockScreenViewModel.currentTouchOffset = Offset(it.x, it.y)
+                                    } else {
+                                        // Don't start pattern if not touching a dot
+                                        lockScreenViewModel.clearPattern()
                                     }
                                 }
                         }
 
                         MotionEvent.ACTION_MOVE -> {
-                            val touchOffset = Offset(it.x, it.y)
-                            lockScreenViewModel.currentTouchOffset = touchOffset
+                            // Only process move events if we have a valid pattern started
+                            if (lockScreenViewModel.selectedCellsIndexList.isNotEmpty()) {
+                                val touchOffset = Offset(it.x, it.y)
+                                lockScreenViewModel.currentTouchOffset = touchOffset
 
-                            lockScreenViewModel.canvasSize
-                                .takeIf { it != Size.Zero }
-                                ?.let { size ->
-                                    val cell = getNearestCell(touchOffset, size.width, size.height)
+                                lockScreenViewModel.canvasSize
+                                    .takeIf { it != Size.Zero }
+                                    ?.let { size ->
+                                        val cell = getNearestCell(touchOffset, size.width, size.height)
 
-                                    if (cell != null && cell.index !in lockScreenViewModel.selectedCellsIndexList) {
-                                        lockScreenViewModel.selectedCellsIndexList.add(cell.index)
-                                        lockScreenViewModel.selectedCellCenterList.add(cell.center)
-
-                                        lockScreenViewModel.updatePath(cell.center)
-                                    } else if (cell == null) {
-                                        // Prevent invalid lines from being drawn by skipping path updates
-                                        lockScreenViewModel.currentTouchOffset = null
+                                        if (cell != null && cell.index !in lockScreenViewModel.selectedCellsIndexList) {
+                                            lockScreenViewModel.selectedCellsIndexList.add(cell.index)
+                                            lockScreenViewModel.selectedCellCenterList.add(cell.center)
+                                            lockScreenViewModel.updatePath(cell.center)
+                                            lockScreenViewModel.lastCellCenter = cell.center
+                                        }
                                     }
-                                }
+                            }
                         }
 
 
                         MotionEvent.ACTION_UP -> {
-                            if (settingsViewModel.settings.value.pattern == null) {
-                                settingsViewModel.update(
-                                    settingsViewModel.settings.value.copy(
-                                        passcode = null,
-                                        pattern = lockScreenViewModel.selectedCellsIndexList.joinToString(""),
-                                        fingerprint = false
+                            // Clear finger following line when lifting thumb
+                            lockScreenViewModel.currentTouchOffset = null
+                            
+                            if (lockScreenViewModel.selectedCellsIndexList.isNotEmpty()) {
+                                if (settingsViewModel.settings.value.pattern == null) {
+                                    // Setting new pattern
+                                    settingsViewModel.update(
+                                        settingsViewModel.settings.value.copy(
+                                            passcode = null,
+                                            pattern = lockScreenViewModel.selectedCellsIndexList.joinToString(""),
+                                            fingerprint = false
+                                        )
                                     )
-                                )
-                                settingsViewModel.updateDefaultRoute(SettingRoutes.LockScreen.createRoute(null),)
-                            } else {
-                                if (settingsViewModel.settings.value.pattern == lockScreenViewModel.selectedCellsIndexList.joinToString("")) {
-                                    navController.navigate(HomeRoutes.Home.route) { popUpToTop(navController) }
+                                    settingsViewModel.updateDefaultRoute(SettingRoutes.LockScreen.createRoute(null),)
+                                    patternStatus = "Pattern Set!"
+                                    lockScreenViewModel.clearPattern()
+                                } else {
+                                    // Verifying existing pattern
+                                    if (settingsViewModel.settings.value.pattern == lockScreenViewModel.selectedCellsIndexList.joinToString("")) {
+                                        patternStatus = "Correct!"
+                                        // Success - navigate to home after delay
+                                        navController.navigate(HomeRoutes.Home.route) { popUpToTop(navController) }
+                                    } else {
+                                        patternStatus = "Wrong Pattern"
+                                        // Don't clear immediately - let user see the wrong pattern
+                                    }
                                 }
+                            } else {
+                                lockScreenViewModel.clearPattern()
                             }
-                            lockScreenViewModel.clearPattern()
                         }
                     }
                     true
@@ -163,41 +213,104 @@ fun PatternLock(
             val boxSizeInY = height / rowCount
             val boxCenterInY = boxSizeInY / 2
 
+            // Draw dots
             for (row in 0 until rowCount) {
                 for (column in 0 until columnCount) {
+                    val center = Offset(
+                        (boxCenterInX + boxSizeInX * column),
+                        (boxCenterInY + boxSizeInY * row)
+                    )
+                    val dotIndex = column + 1 + row * columnCount
+                    val isSelected = dotIndex in lockScreenViewModel.selectedCellsIndexList
+                    
+                    // Draw main dot
+                    val currentDotColor = when {
+                        patternStatus == "Wrong Pattern" -> errorColor  // All dots red on error
+                        patternStatus == "Correct!" && isSelected -> successColor
+                        else -> dotColor  // All dots primary color, no transparency
+                    }
+                    
                     drawCircle(
-                        color = dotColor,
-                        radius = 25f,
-                        center = Offset(
-                            (boxCenterInX + boxSizeInX * column),
-                            (boxCenterInY + boxSizeInY * row)
-                        )
+                        color = currentDotColor,
+                        radius = if (isSelected) 30f else 25f,
+                        center = center
                     )
                 }
             }
 
-            drawPath(
-                path = lockScreenViewModel.path,
-                color = pathColor,
-                style = Stroke(
-                    width = 20f,
-                    cap = StrokeCap.Round
+            // Draw path
+            if (lockScreenViewModel.selectedCellCenterList.size > 1) {
+                val currentPathColor = when (patternStatus) {
+                    "Wrong Pattern" -> errorColor
+                    "Correct!" -> successColor
+                    else -> pathColor
+                }
+                
+                drawPath(
+                    path = lockScreenViewModel.path,
+                    color = currentPathColor,
+                    style = Stroke(
+                        width = 20f,
+                        cap = StrokeCap.Round,
+                        join = StrokeJoin.Round
+                    )
                 )
-            )
+            }
 
+            // Draw live finger-following line
             lockScreenViewModel.currentTouchOffset?.let { offset ->
                 lockScreenViewModel.lastCellCenter?.let { lastCenter ->
-                    val connectingPath = Path().apply {
+                    // Always draw line to current finger position
+                    val fingerFollowPath = Path().apply {
                         moveTo(lastCenter.x, lastCenter.y)
                         lineTo(offset.x, offset.y)
                     }
+                    
+                    // Draw main finger-following line
                     drawPath(
-                        path = connectingPath,
-                        color = pathColor,
+                        path = fingerFollowPath,
+                        brush = Brush.linearGradient(
+                            listOf(
+                                pathColor.copy(alpha = 0.7f),
+                                pathColor.copy(alpha = 0.3f)
+                            ),
+                            start = Offset(lastCenter.x, lastCenter.y),
+                            end = Offset(offset.x, offset.y)
+                        ),
                         style = Stroke(
-                            width = 20f,
+                            width = 18f,
                             cap = StrokeCap.Round
                         )
+                    )
+                    
+                    // Add a subtle glow effect
+                    drawPath(
+                        path = fingerFollowPath,
+                        color = pathColor.copy(alpha = 0.2f),
+                        style = Stroke(
+                            width = 25f,
+                            cap = StrokeCap.Round
+                        )
+                    )
+                    
+                    // Draw finger position indicator
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            listOf(
+                                pathColor.copy(alpha = 0.6f),
+                                pathColor.copy(alpha = 0.2f),
+                                Color.Transparent
+                            ),
+                            radius = 20f
+                        ),
+                        radius = 20f,
+                        center = offset
+                    )
+                    
+                    drawCircle(
+                        color = pathColor.copy(alpha = 0.8f),
+                        radius = 8f,
+                        center = offset
                     )
                 }
             }

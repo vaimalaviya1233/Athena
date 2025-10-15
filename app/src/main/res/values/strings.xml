@@ -393,6 +393,7 @@
     <string name="behavior_notify_install_desc">Show notification when apps are installed</string>
     <string name="behavior_use_root">Use Root</string>
     <string name="behavior_use_root_desc">Use root method for firewall</string>
+    <string name="behavior_root_disabled_message">Please disable the Firewall first to change root settings.</string>
     <string name="behavior_logs_desc">Enable logging connections</string>
     <string name="behavior_show_system_apps">Show System Apps</string>
     <string name="behavior_show_system_apps_desc">Display system apps in app list</string>
@@ -601,6 +602,7 @@
     <!-- Domain Management -->
     <string name="dns_domain_management_title">Domain Management</string>
     <string name="dns_domain_management_desc">Manage custom domain rules</string>
+    <string name="dns_domain_management_disabled_message">Please disable the Firewall first to access Domain Management.</string>
     <string name="dns_allowlist_title">Allowlist</string>
     <string name="dns_blocklist_title">Blocklist</string>
     <string name="dns_add_domain">Add Domain</string>

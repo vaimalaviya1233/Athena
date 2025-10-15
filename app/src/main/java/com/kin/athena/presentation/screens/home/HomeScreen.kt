@@ -649,10 +649,10 @@ private fun AccessControlButtons(
 @Composable
 private fun getFirewallColor(isFirewallActive: FirewallStatus?): Color {
     return when (isFirewallActive) {
-        null -> MaterialTheme.colorScheme.error
+        null -> MaterialTheme.colorScheme.outline
         FirewallStatus.ONLINE -> MaterialTheme.colorScheme.primary
         FirewallStatus.OFFLINE -> MaterialTheme.colorScheme.error
-        else ->  MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.tertiary
     }
 }
 

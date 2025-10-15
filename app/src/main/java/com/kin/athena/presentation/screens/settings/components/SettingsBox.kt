@@ -191,6 +191,7 @@ fun SettingsBox(
     icon: IconType? = null,
     size: Dp = 12.dp,
     isEnabled: Boolean = true,
+    isUsable: Boolean = true,
     isCentered: Boolean = false,
     actionType: SettingType,
     variable: Boolean? = null,
@@ -201,7 +202,8 @@ fun SettingsBox(
     customText: String = "",
     clipboardText: String = "",
     circleWrapperColor: Color = MaterialTheme.colorScheme.background,
-    circleWrapperSize: Dp = 6.dp
+    circleWrapperSize: Dp = 6.dp,
+    onNotUsableClicked: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var showCustomAction by remember { mutableStateOf(false) }
@@ -212,17 +214,24 @@ fun SettingsBox(
             modifier = Modifier
                 .padding(bottom = dimensionResource(id = R.dimen.card_padding_bottom))
                 .clip(RoundedCornerShape(6.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .background(
+                    if (isUsable) MaterialTheme.colorScheme.surfaceContainer 
+                    else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.5f)
+                )
                 .clickable {
-                    handleAction(
-                        context,
-                        actionType,
-                        variable,
-                        onSwitchEnabled,
-                        { showCustomAction = !showCustomAction },
-                        onLinkClicked,
-                        clipboardText
-                    )
+                    if (isUsable) {
+                        handleAction(
+                            context,
+                            actionType,
+                            variable,
+                            onSwitchEnabled,
+                            { showCustomAction = !showCustomAction },
+                            onLinkClicked,
+                            clipboardText
+                        )
+                    } else {
+                        onNotUsableClicked()
+                    }
                 }
         ) {
             Row(
@@ -249,7 +258,8 @@ fun SettingsBox(
                                     Icon(
                                         imageVector = it.imageVector,
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary
+                                        tint = if (isUsable) MaterialTheme.colorScheme.primary 
+                                               else MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                                     )
                                 }
                             }
@@ -271,11 +281,19 @@ fun SettingsBox(
                         Spacer(modifier = Modifier.width(10.dp))
                     }
                     if (actionType != SettingType.LINK && !description.isNullOrBlank()) {
-                        MaterialText(title, description.ifBlank { clipboardText })
+                        MaterialText(
+                            title = title,
+                            description = description.ifBlank { clipboardText },
+                            titleColor = if (isUsable) MaterialTheme.colorScheme.onSurface 
+                                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                            descriptionColor = if (isUsable) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                              else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        )
                     } else {
                         Text(
                             title,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = if (isUsable) MaterialTheme.colorScheme.onSurface 
+                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                             fontWeight = FontWeight.Bold,
                             textAlign = if (isCentered) TextAlign.Center else TextAlign.Start,
                             modifier = Modifier.fillMaxWidth()

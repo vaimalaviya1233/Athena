@@ -17,19 +17,23 @@
 
 package com.kin.athena.presentation.screens.settings.subSettings.behavior.viewModel
 
+import android.content.Context
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kin.athena.core.logging.Logger
 import com.kin.athena.domain.usecase.application.ApplicationUseCases
 import com.kin.athena.service.utils.manager.FirewallManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class BehaviorViewModel @Inject constructor(
     val firewallManager: FirewallManager,
-    private val applicationUseCases: ApplicationUseCases
+    private val applicationUseCases: ApplicationUseCases,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
     fun updateLogs(enabled: Boolean) {
         viewModelScope.launch {
@@ -54,5 +58,13 @@ class BehaviorViewModel @Inject constructor(
                 }
             )
         }
+    }
+    
+    fun showRootDisabledMessage() {
+        Toast.makeText(
+            context, 
+            context.getString(com.kin.athena.R.string.behavior_root_disabled_message), 
+            Toast.LENGTH_LONG
+        ).show()
     }
 }

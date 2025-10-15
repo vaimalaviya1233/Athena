@@ -101,22 +101,33 @@ class DomainManagementViewModel @Inject constructor(
     fun addDomain(domain: String, description: String, isRegex: Boolean, isAllowlist: Boolean) {
         viewModelScope.launch {
             try {
-                // Validate domain first
-                val validationResult = validateDomain(domain, isRegex)
+                Logger.info("=== addDomain called ===")
+                Logger.info("Original input: '$domain'")
+                Logger.info("isRegex: $isRegex")
+                Logger.info("isAllowlist: $isAllowlist")
+                
+                // Extract clean domain from URL if needed (for non-regex entries)
+                val cleanDomain = if (isRegex) domain else extractDomainFromUrl(domain)
+                Logger.info("Clean domain after extraction: '$cleanDomain'")
+                
+                // Validate the clean domain (not the original input)
+                val validationResult = validateDomain(cleanDomain, isRegex)
+                Logger.info("Validation result: $validationResult")
                 if (validationResult is ValidationResult.Error) {
+                    Logger.error("Validation failed with message: ${validationResult.message}")
                     _errorMessage.value = validationResult.message
                     return@launch
                 }
 
-                // Check for duplicates
-                val isDuplicate = customDomainRepository.isDomainExists(domain, isAllowlist)
+                // Check for duplicates using the clean domain
+                val isDuplicate = customDomainRepository.isDomainExists(cleanDomain, isAllowlist)
                 if (isDuplicate) {
                     _errorMessage.value = "Domain already exists in ${if (isAllowlist) "allowlist" else "blocklist"}"
                     return@launch
                 }
 
                 val customDomain = CustomDomain(
-                    domain = domain,
+                    domain = cleanDomain,
                     description = description,
                     isRegex = isRegex,
                     isAllowlist = isAllowlist
@@ -124,7 +135,7 @@ class DomainManagementViewModel @Inject constructor(
 
                 customDomainRepository.insertDomain(customDomain)
                 loadCounts() // Update counts after adding
-                Logger.info("Added domain: $domain to ${if (isAllowlist) "allowlist" else "blocklist"}")
+                Logger.info("Added domain: $cleanDomain to ${if (isAllowlist) "allowlist" else "blocklist"}")
                 
             } catch (e: Exception) {
                 Logger.error("Failed to add domain: ${e.message}", e)
@@ -165,27 +176,101 @@ class DomainManagementViewModel @Inject constructor(
     }
 
     fun validateDomain(domain: String, isRegex: Boolean): ValidationResult {
+        Logger.info("=== validateDomain called ===")
+        Logger.info("Domain: '$domain'")
+        Logger.info("Domain length: ${domain.length}")
+        Logger.info("isRegex: $isRegex")
+        
         return when {
-            domain.isBlank() -> ValidationResult.Error("Please enter a domain")
+            domain.isBlank() -> {
+                Logger.warn("VALIDATION FAILED: blank domain")
+                ValidationResult.Error("Please enter a domain")
+            }
             isRegex -> {
                 try {
                     Regex(domain)
+                    Logger.info("VALIDATION SUCCESS: Regex validation successful for: '$domain'")
                     ValidationResult.Success
                 } catch (e: Exception) {
+                    Logger.warn("VALIDATION FAILED: Regex validation failed for: '$domain' - ${e.message}")
                     ValidationResult.Error("Invalid regex pattern: ${e.message}")
                 }
             }
             else -> {
+                Logger.info("Checking domain validation rules...")
                 when {
-                    domain.contains(" ") -> ValidationResult.Error("Domain cannot contain spaces")
-                    !domain.contains(".") -> ValidationResult.Error("Domain must contain at least one dot")
-                    domain.startsWith(".") -> ValidationResult.Error("Domain cannot start with a dot")
-                    domain.endsWith(".") && domain.length > 1 -> ValidationResult.Success // Allow trailing dot for DNS
-                    domain.length < 3 -> ValidationResult.Error("Domain too short")
-                    domain.length > 253 -> ValidationResult.Error("Domain too long")
-                    else -> ValidationResult.Success
+                    domain.contains(" ") -> {
+                        Logger.warn("VALIDATION FAILED: contains spaces - '$domain'")
+                        ValidationResult.Error("Domain cannot contain spaces")
+                    }
+                    domain.length < 2 -> {
+                        Logger.warn("VALIDATION FAILED: too short (${domain.length}) - '$domain'")
+                        ValidationResult.Error("Domain too short (minimum 2 characters)")
+                    }
+                    domain.length > 253 -> {
+                        Logger.warn("VALIDATION FAILED: too long (${domain.length}) - '$domain'")
+                        ValidationResult.Error("Domain too long (maximum 253 characters)")
+                    }
+                    domain.startsWith(".") -> {
+                        Logger.warn("VALIDATION FAILED: starts with dot - '$domain'")
+                        ValidationResult.Error("Domain cannot start with a dot")
+                    }
+                    !domain.contains(".") && domain.length > 2 -> {
+                        // Allow simple hostnames like "localhost" but warn for very short ones
+                        Logger.info("VALIDATION SUCCESS: allowing hostname without dots: '$domain'")
+                        ValidationResult.Success
+                    }
+                    !domain.matches(Regex("^[a-zA-Z0-9.-]+$")) -> {
+                        Logger.warn("VALIDATION FAILED: invalid characters - '$domain'")
+                        Logger.warn("Characters check: ${domain.toCharArray().joinToString { "'$it'(${it.code})" }}")
+                        ValidationResult.Error("Domain contains invalid characters")
+                    }
+                    else -> {
+                        Logger.info("VALIDATION SUCCESS: Domain validation successful for: '$domain'")
+                        ValidationResult.Success
+                    }
                 }
             }
+        }
+    }
+
+    private fun extractDomainFromUrl(input: String): String {
+        return try {
+            val trimmed = input.trim()
+            if (trimmed.isBlank()) return trimmed
+            
+            var domain = trimmed
+            
+            // Remove protocol if present (http://, https://, ftp://, etc.)
+            domain = domain.replace(Regex("^[a-zA-Z][a-zA-Z0-9+.-]*://"), "")
+            
+            // Remove www. if present
+            domain = domain.replace(Regex("^www\\."), "")
+            
+            // Remove everything after first slash (path)
+            domain = domain.split("/")[0]
+            
+            // Remove everything after ? (query parameters)
+            domain = domain.split("?")[0]
+            
+            // Remove everything after # (fragment)
+            domain = domain.split("#")[0]
+            
+            // Remove port number if present
+            domain = domain.split(":")[0]
+            
+            // Remove any trailing dots
+            domain = domain.trimEnd('.')
+            
+            // Convert to lowercase for consistency
+            domain = domain.lowercase()
+            
+            Logger.info("Domain extraction: '$input' -> '$domain'")
+            domain
+            
+        } catch (e: Exception) {
+            Logger.error("Error extracting domain from: '$input'", e)
+            input.trim().lowercase() // Return original if extraction fails
         }
     }
 

@@ -226,6 +226,7 @@ fun DnsScreen(
                             config.removeURL(url)
                             Logger.info("Removed list: $url")
                         }
+                        // Update switch state immediately for disabling
                         withContext(Dispatchers.Main) {
                             localSwitchStates[listKey] = false
                         }
@@ -288,7 +289,8 @@ fun DnsScreen(
                                     }
                                 }
                         } else {
-                            // For disabling, just refresh the domain cache
+                            // For disabling, refresh the domain cache and mark as complete
+                            blockListViewModel.refreshDomains()
                             isDomainUpdateInProgress = false
                         }
                     }
@@ -309,7 +311,9 @@ fun DnsScreen(
                     withContext(Dispatchers.Main) {
                         isDomainUpdateInProgress = false
 
-                        // Don't set switch state on error - leave it in original position
+                        // Reset switch state to previous value on error
+                        val previousState = lists.any { it in doneNames.value }
+                        localSwitchStates[listKey] = previousState
 
                         // Show appropriate error dialog
                         if (enabled) {
@@ -527,11 +531,19 @@ fun DnsScreen(
                     onExit()
                 },
             )
+            val firewallStatus by blockListViewModel.firewallManager.rulesLoaded.collectAsState()
+            val isFirewallOnline = firewallStatus.name() == "ONLINE"
+            
             SettingsBox(
                 title = stringResource(R.string.dns_domain_management_title),
                 description = stringResource(R.string.dns_domain_management_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.List),
                 actionType = SettingType.CUSTOM,
+                isUsable = !isFirewallOnline,
+                onNotUsableClicked = {
+                    // Show message why Domain Management is not available
+                    blockListViewModel.showDomainManagementDisabledMessage()
+                },
                 customAction = { onExit ->
                     navController.navigate(SettingRoutes.DomainManagement.route)
                     onExit()
