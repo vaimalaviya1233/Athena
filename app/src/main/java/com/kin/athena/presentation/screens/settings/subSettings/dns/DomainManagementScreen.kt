@@ -445,15 +445,9 @@ private fun AddDomainDialog(
                 }
             }
             else -> {
-                // Basic domain validation
-                if (domain.text.contains(" ")) {
-                    Toast.makeText(context, "Domain cannot contain spaces", Toast.LENGTH_SHORT).show()
-                } else if (!domain.text.matches(Regex("^[a-zA-Z0-9.-]+$")) || !domain.text.contains(".")) {
-                    Toast.makeText(context, "Invalid domain format", Toast.LENGTH_SHORT).show()
-                } else {
-                    onDomainAdded(domain.text, description.text, false)
-                    onDismiss()
-                }
+                // Let ViewModel handle URL extraction and validation
+                onDomainAdded(domain.text, description.text, false)
+                onDismiss()
             }
         }
     }

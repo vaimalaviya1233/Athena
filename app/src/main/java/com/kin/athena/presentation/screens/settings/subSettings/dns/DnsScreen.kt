@@ -100,6 +100,15 @@ fun DnsScreen(
     val downloadStage by blockListViewModel.downloadStage.collectAsState()
     val currentDownloadingRule by blockListViewModel.currentDownloadingRule.collectAsState()
 
+    // Initialize doneNames with existing URLs from config (for migration support)
+    LaunchedEffect(Unit) {
+        val existingUrls = config.hosts.items.map { it.data }.filter { it.isNotEmpty() }
+        if (existingUrls.isNotEmpty() && doneNames.value.isEmpty()) {
+            RuleDatabaseUpdateWorker.doneNames.value = existingUrls.toMutableList()
+            Logger.info("Initialized doneNames with ${existingUrls.size} URLs from config")
+        }
+    }
+
     // Local dialog state for premium feature choice
     var showPremiumDialog by remember { mutableStateOf(false) }
     
@@ -170,6 +179,17 @@ fun DnsScreen(
 
         // Don't update switch state immediately - only update after successful download/removal
 
+        // Migration: Detect and remove legacy URL if it exists for this list type
+        val legacyUrl = when (listKey) {
+            "MALWARE_PROTECTION" -> AppConstants.DnsBlockLists.Legacy.MALWARE_PROTECTION
+            "AD_PROTECTION" -> AppConstants.DnsBlockLists.Legacy.AD_PROTECTION
+            "PRIVACY_PROTECTION" -> AppConstants.DnsBlockLists.Legacy.PRIVACY_PROTECTION
+            "GAMBLING_PROTECTION" -> AppConstants.DnsBlockLists.Legacy.GAMBLING_PROTECTION
+            "ADULT_PROTECTION" -> AppConstants.DnsBlockLists.Legacy.ADULT_PROTECTION
+            "SOCIAL_PROTECTION" -> AppConstants.DnsBlockLists.Legacy.SOCIAL_PROTECTION
+            else -> null
+        }
+
         val useRootMode = settings.settings.value.useRootMode == true
         var canUpdateHosts = true
 
@@ -208,6 +228,16 @@ fun DnsScreen(
                 try {
                     withContext(Dispatchers.Main) {
                         isDomainUpdateInProgress = true
+                    }
+
+                    // Migration: Remove legacy URL if present (applies to both enable and disable)
+                    if (legacyUrl != null && legacyUrl in doneNames.value) {
+                        Logger.info("Migration: Removing legacy URL: $legacyUrl")
+                        config.removeURL(legacyUrl)
+                        RuleDatabaseUpdateWorker.doneNames.value =
+                            RuleDatabaseUpdateWorker.doneNames.value
+                                .filter { it != legacyUrl }
+                                .toMutableList()
                     }
 
                     if (enabled) {
@@ -425,7 +455,8 @@ fun DnsScreen(
                 icon = IconType.VectorIcon(Icons.Rounded.Security),
                 actionType = SettingType.SWITCH,
                 variable = localSwitchStates["MALWARE_PROTECTION"]
-                    ?: (AppConstants.DnsBlockLists.MALWARE_PROTECTION.any { it in doneNames.value }),
+                    ?: (AppConstants.DnsBlockLists.MALWARE_PROTECTION.any { it in doneNames.value }
+                        || AppConstants.DnsBlockLists.Legacy.MALWARE_PROTECTION in doneNames.value),
                 onSwitchEnabled = {
                     updateList(it, AppConstants.DnsBlockLists.MALWARE_PROTECTION, "MALWARE_PROTECTION")
                 }
@@ -436,7 +467,8 @@ fun DnsScreen(
                 icon = IconType.VectorIcon(Icons.Rounded.AdsClick),
                 actionType = SettingType.SWITCH,
                 variable = localSwitchStates["AD_PROTECTION"]
-                    ?: (AppConstants.DnsBlockLists.AD_PROTECTION.any { it in doneNames.value }),
+                    ?: (AppConstants.DnsBlockLists.AD_PROTECTION.any { it in doneNames.value }
+                        || AppConstants.DnsBlockLists.Legacy.AD_PROTECTION in doneNames.value),
                 onSwitchEnabled = {
                     if (!it) {
                         // If disabling ads protection, also disable ads extreme
@@ -449,7 +481,8 @@ fun DnsScreen(
             
             // Ads Extreme setting - only show when Ad Protection is enabled
             val isAdProtectionEnabled = localSwitchStates["AD_PROTECTION"]
-                ?: (AppConstants.DnsBlockLists.AD_PROTECTION.any { it in doneNames.value })
+                ?: (AppConstants.DnsBlockLists.AD_PROTECTION.any { it in doneNames.value }
+                    || AppConstants.DnsBlockLists.Legacy.AD_PROTECTION in doneNames.value)
             
             if (isAdProtectionEnabled) {
                 SettingsBox(
@@ -470,7 +503,8 @@ fun DnsScreen(
                 icon = IconType.VectorIcon(Icons.Rounded.RemoveRedEye),
                 actionType = SettingType.SWITCH,
                 variable = localSwitchStates["PRIVACY_PROTECTION"]
-                    ?: (AppConstants.DnsBlockLists.PRIVACY_PROTECTION.any { it in doneNames.value }),
+                    ?: (AppConstants.DnsBlockLists.PRIVACY_PROTECTION.any { it in doneNames.value }
+                        || AppConstants.DnsBlockLists.Legacy.PRIVACY_PROTECTION in doneNames.value),
                 onSwitchEnabled = {
                     updateList(it, AppConstants.DnsBlockLists.PRIVACY_PROTECTION, "PRIVACY_PROTECTION")
                 }
@@ -483,7 +517,8 @@ fun DnsScreen(
                 icon = IconType.VectorIcon(Icons.AutoMirrored.Rounded.Message),
                 actionType = SettingType.SWITCH,
                 variable = localSwitchStates["SOCIAL_PROTECTION"]
-                    ?: (AppConstants.DnsBlockLists.SOCIAL_PROTECTION.any { it in doneNames.value }),
+                    ?: (AppConstants.DnsBlockLists.SOCIAL_PROTECTION.any { it in doneNames.value }
+                        || AppConstants.DnsBlockLists.Legacy.SOCIAL_PROTECTION in doneNames.value),
                 onSwitchEnabled = {
                     updateList(it, AppConstants.DnsBlockLists.SOCIAL_PROTECTION, "SOCIAL_PROTECTION")
                 }
@@ -494,7 +529,8 @@ fun DnsScreen(
                 icon = IconType.VectorIcon(Icons.Rounded.Man),
                 actionType = SettingType.SWITCH,
                 variable = localSwitchStates["ADULT_PROTECTION"]
-                    ?: (AppConstants.DnsBlockLists.ADULT_PROTECTION.any { it in doneNames.value }),
+                    ?: (AppConstants.DnsBlockLists.ADULT_PROTECTION.any { it in doneNames.value }
+                        || AppConstants.DnsBlockLists.Legacy.ADULT_PROTECTION in doneNames.value),
                 onSwitchEnabled = {
                     updateList(it, AppConstants.DnsBlockLists.ADULT_PROTECTION, "ADULT_PROTECTION")
                 }
@@ -505,7 +541,8 @@ fun DnsScreen(
                 icon = IconType.VectorIcon(Icons.Rounded.Games),
                 actionType = SettingType.SWITCH,
                 variable = localSwitchStates["GAMBLING_PROTECTION"]
-                    ?: (AppConstants.DnsBlockLists.GAMBLING_PROTECTION.any { it in doneNames.value }),
+                    ?: (AppConstants.DnsBlockLists.GAMBLING_PROTECTION.any { it in doneNames.value }
+                        || AppConstants.DnsBlockLists.Legacy.GAMBLING_PROTECTION in doneNames.value),
                 onSwitchEnabled = {
                     updateList(it, AppConstants.DnsBlockLists.GAMBLING_PROTECTION, "GAMBLING_PROTECTION")
                 }
