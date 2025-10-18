@@ -651,7 +651,7 @@
 
     <!-- Magisk/Systemless -->
     <string name="magisk_title">Magisk Module</string>
-    <string name="magisk_steps">Follow these steps to install the Magisk module</string>
+    <string name="magisk_steps">1. Download the Athena Magisk module from the releases page\n\n2. Open the Magisk app\n\n3. Go to Modules tab\n\n4. Tap "Install from storage"\n\n5. Select the downloaded Athena module zip file\n\n6. Wait for installation to complete\n\n7. Reboot your device\n\n8. Enable DNS blocking in Athena after reboot</string>
 
     <!-- Rule Database -->
     <string name="rule_invalid_url">Invalid URL: %s</string>

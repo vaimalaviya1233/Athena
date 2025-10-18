@@ -36,7 +36,12 @@ import androidx.compose.ui.unit.dp
 import com.kin.athena.R
 import com.kin.athena.core.utils.extensions.requestDisableBatteryOptimization
 import com.kin.athena.core.utils.isDeviceRooted
+import com.kin.athena.core.utils.isRootGranted
 import com.kin.athena.service.utils.manager.VpnManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,13 +104,25 @@ fun ComprehensivePermissionModal(
                                 currentStep = PermissionStep.VPN_PERMISSION
                             },
                             onRootSelected = {
-                                selectedMethod = false
-                                // Root method - skip VPN permission, go straight to notifications
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                    notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                } else {
-                                    context.requestDisableBatteryOptimization()
-                                    onPermissionsComplete(false) // Root method
+                                // Check if root permission is actually granted
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    val rootGranted = isRootGranted()
+                                    withContext(Dispatchers.Main) {
+                                        if (rootGranted) {
+                                            selectedMethod = false
+                                            // Root method - skip VPN permission, go straight to notifications
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                                notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                            } else {
+                                                context.requestDisableBatteryOptimization()
+                                                onPermissionsComplete(false) // Root method
+                                            }
+                                        } else {
+                                            // Root denied - fall back to VPN mode
+                                            selectedMethod = true
+                                            currentStep = PermissionStep.VPN_PERMISSION
+                                        }
+                                    }
                                 }
                             }
                         )

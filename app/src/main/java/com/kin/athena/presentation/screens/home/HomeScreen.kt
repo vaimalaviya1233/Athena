@@ -218,6 +218,9 @@ fun HomeScreen(
     if (homeViewModel.magiskError.value) {
         MagiskSystemlessHostsDialog {
             homeViewModel.updateMagiskError(false)
+            // Disable root mode when user dismisses the Magisk dialog
+            // since they cannot use root mode without Magisk systemless hosts
+            settingsViewModel.update(settingsViewModel.settings.value.copy(useRootMode = false))
         }
     }
 
