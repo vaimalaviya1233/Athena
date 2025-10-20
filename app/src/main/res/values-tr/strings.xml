@@ -318,5 +318,20 @@
     <string name="stats_session_duration_no_time">Güvenlik duvarı başlatıldığından beri</string>
     <string name="startup_on_boot">Açılışta başlat</string>
     <string name="startup_on_boot_description">Cihaz açıldığında güvenlik duvarını da başlat</string>
-    <string name="behavior_notify_install">Yeni uygulama kurulumunda bildir</string>
+    <string name="behavior_notify_install">Yeni uygulama kurulduğunda bildir</string>
+    <string name="behavior_notify_install_desc">Yeni bir uygulama kurulduğu zaman bildirim göster</string>
+    <string name="behavior_use_root">Kök İzni Kullan</string>
+    <string name="behavior_use_root_desc">Güvenlik duvarı için kök izni kullan</string>
+    <string name="behavior_root_disabled_message">Kök izni ayarlarını değiştirmek için önce güvenlik duvarını devre dışı bırakın.</string>
+    <string name="behavior_logs_desc">Bağlantıları günlükle</string>
+    <string name="behavior_show_system_apps">Sistem Uygulamalarını Göster</string>
+    <string name="behavior_show_system_apps_desc">Uygulama listesinde sistem uygulamalarını göster</string>
+    <string name="behavior_show_offline_apps">Çevrimdışı Uygulamaları Göster</string>
+    <string name="behavior_show_offline_apps_desc">İnternete ihtiyaç duymayan uygulamaları göster</string>
+    <string name="behavior_block_wifi_default">Varsayılan olarak Wi-Fi\'yi engelle</string>
+    <string name="behavior_block_wifi_default_desc">Yeni kurulan uygulamalar için Wi-Fi\'yi engelle</string>
+    <string name="behavior_block_cellular_default">Varsayılan olarak hücresel veriyi engelle</string>
+    <string name="behavior_block_cellular_default_desc">Yeni kurulan uygulamalar için hücresel veriyi engelle</string>
+    <string name="behavior_start_on_boot">Cihaz Açılışında Başlat</string>
+    <string name="behavior_start_on_boot_desc">Cihaz açıldıktan sonra güvenlik duvarını otomatik olarak başlat</string>
 </resources>
