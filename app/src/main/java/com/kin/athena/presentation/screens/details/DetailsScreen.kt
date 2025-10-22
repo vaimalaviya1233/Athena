@@ -207,9 +207,10 @@ private fun PackageDetails(
                     Spacer(modifier = Modifier.width(1.dp))
                 }
 
-                // Only show VPN bypass option when NOT in root mode
+                // Only show VPN bypass option when NOT in root mode and NOT in Shizuku mode
                 val isRootMode = settings.settings.value.useRootMode == true
-                if (!isRootMode) {
+                val isShizukuMode = settings.settings.value.useShizukuMode == true
+                if (!isRootMode && !isShizukuMode) {
                     NetworkOption(
                         icon = Icons.Rounded.VpnLock,
                         label = stringResource(id = R.string.network_bypass_vpn),

@@ -94,6 +94,7 @@ import com.kin.athena.R
 import com.kin.athena.core.utils.extensions.*
 import com.kin.athena.core.utils.isDeviceRooted
 import com.kin.athena.core.utils.isRootGranted
+import com.kin.athena.core.utils.ShizukuUtils
 import com.kin.athena.domain.model.Application
 import com.kin.athena.presentation.components.PermissionModal
 import com.kin.athena.presentation.components.ComprehensivePermissionModal
@@ -337,8 +338,9 @@ fun HomeScreen(
         }
     )
 
-    // Progress dialog overlay - appears on top of everything
-    if (isFirewallManager.value.name() == FirewallStatus.LOADING().name()) {
+    // Progress dialog overlay - appears on top of everything (but not in Shizuku mode)
+    val isShizukuMode = settingsViewModel.settings.value.useShizukuMode == true
+    if (isFirewallManager.value.name() == FirewallStatus.LOADING().name() && !isShizukuMode) {
         MaterialYouProgressDialog(
             progress = isFirewallManager.value.getRulesLoaded(),
             onDismiss = { /* Cannot dismiss during loading */ }
@@ -583,7 +585,8 @@ private fun ProfessionalApplicationItem(
             customButton = {
                 AccessControlButtons(
                     packageEntity = application,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    settingsViewModel = settingsViewModel
                 )
             },
             customAction = { onApplicationClicked(application.packageID) },
@@ -595,7 +598,8 @@ private fun ProfessionalApplicationItem(
 @Composable
 private fun AccessControlButtons(
     packageEntity: Application,
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
+    settingsViewModel: SettingsViewModel
 ) {
     var wifiAccess by remember(packageEntity.packageID, packageEntity.internetAccess) {
         mutableStateOf(packageEntity.internetAccess)
@@ -606,6 +610,7 @@ private fun AccessControlButtons(
 
     // Check if app is bypassing VPN
     val isBypassed = packageEntity.bypassVpn
+    val isShizukuMode = settingsViewModel.settings.value.useShizukuMode == true
 
     if (isBypassed) {
         // Show only VPN bypass icon for bypassed apps
@@ -616,6 +621,20 @@ private fun AccessControlButtons(
             modifier = Modifier
                 .padding(horizontal = 12.dp)
                 .size(24.dp)
+        )
+    } else if (isShizukuMode) {
+        // Show WiFi icon for Shizuku mode (can't control cellular and wifi separately)
+        Icon(
+            imageVector = Icons.Rounded.Wifi,
+            contentDescription = null,
+            tint = getAccessControlTint(wifiAccess),
+            modifier = Modifier
+                .padding(horizontal = 12.dp)
+                .size(24.dp)
+                .clickable {
+                    wifiAccess = !wifiAccess
+                    viewModel.updatePackage(packageEntity.copy(internetAccess = wifiAccess, cellularAccess = wifiAccess), updateUI = true)
+                }
         )
     } else {
         // Show normal wifi/cellular controls
@@ -658,9 +677,29 @@ private fun getFirewallColor(isFirewallActive: FirewallStatus?): Color {
 
 private fun handleFirewallClick(homeViewModel: HomeViewModel, context: Context, settingsViewModel: SettingsViewModel, isFirewallManager: FirewallStatus) {
     val isEnabling = isFirewallManager != FirewallStatus.ONLINE
-
-    when (settingsViewModel.settings.value.useRootMode) {
-        true -> {
+    val settings = settingsViewModel.settings.value
+    
+    when {
+        settings.useShizukuMode == true -> {
+            // Shizuku mode
+            if (isEnabling) {
+                // Check if Shizuku is available and has permissions
+                if (ShizukuUtils.isShizukuReady()) {
+                    homeViewModel.updateFirewallStatus(FirewallStatus.ONLINE, FirewallMode.SHIZUKU)
+                } else if (ShizukuUtils.isShizukuAvailable()) {
+                    // Shizuku is available but needs permission
+                    ShizukuUtils.requestShizukuPermission()
+                    // For now, we'll show VPN permission modal as fallback
+                    homeViewModel.updateVpnPermissionStatus(true)
+                } else {
+                    // Shizuku not available, fallback to VPN
+                    homeViewModel.updateVpnPermissionStatus(true)
+                }
+            } else {
+                homeViewModel.updateFirewallStatus(FirewallStatus.OFFLINE, FirewallMode.SHIZUKU)
+            }
+        }
+        settings.useRootMode == true -> {
             CoroutineScope(Dispatchers.IO).launch {
                 if (isRootGranted()) {
                     val hostManager = HostsManager(context, emptyList()).isHostsWritable()
@@ -674,14 +713,14 @@ private fun handleFirewallClick(homeViewModel: HomeViewModel, context: Context, 
                 }
             }
         }
-        false -> {
+        settings.useRootMode == false -> {
             if (isEnabling) {
                 homeViewModel.updateVpnPermissionStatus(true)
             } else {
                 homeViewModel.updateFirewallStatus(FirewallStatus.OFFLINE, FirewallMode.VPN)
             }
         }
-        null -> {
+        settings.useRootMode == null -> {
             if (VpnManager.permissionChecker(context)) {
                 homeViewModel.updateFirewallStatus(isFirewallManager.not(), FirewallMode.VPN)
             } else {
@@ -706,17 +745,22 @@ private fun HandleComprehensivePermissions(homeViewModel: HomeViewModel, context
         ComprehensivePermissionModal(
             context = context,
             sheetState = comprehensiveSheetState,
-            onPermissionsComplete = { useVpn ->
+            onPermissionsComplete = { useVpn, useShizuku ->
                 // Update settings based on selected method
                 settingsViewModel.update(
                     settingsViewModel.settings.value.copy(
-                        useRootMode = if (useVpn) null else true,
+                        useRootMode = if (useVpn == true) null else if (useShizuku == true) null else true,
+                        useShizukuMode = useShizuku,
                         isFirstTimeRunning = false
                     )
                 )
                 
                 // Start the firewall with the appropriate mode
-                val mode = if (useVpn) FirewallMode.VPN else FirewallMode.ROOT
+                val mode = when {
+                    useVpn == true -> FirewallMode.VPN
+                    useShizuku == true -> FirewallMode.SHIZUKU
+                    else -> FirewallMode.ROOT
+                }
                 homeViewModel.updateFirewallStatus(FirewallStatus.ONLINE, mode)
                 
                 // Reset permission state

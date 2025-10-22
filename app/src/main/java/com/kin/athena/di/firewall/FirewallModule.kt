@@ -25,6 +25,7 @@ import com.kin.athena.domain.usecase.preferences.PreferencesUseCases
 import com.kin.athena.service.firewall.handler.RuleHandler
 import com.kin.athena.service.root.nflog.NflogManager
 import com.kin.athena.service.root.service.RootConnectionService
+import com.kin.athena.service.shizuku.ShizukuConnectionService
 import com.kin.athena.service.utils.manager.FirewallManager
 import com.kin.athena.service.utils.manager.FirewallStateManager
 import com.kin.athena.service.vpn.service.VpnConnectionClient
@@ -80,12 +81,32 @@ object FirewallModule {
 
     @Provides
     @Singleton
+    fun provideShizukuService(
+        applicationUseCases: ApplicationUseCases,
+        preferencesUseCases: PreferencesUseCases,
+        @ApplicationContext context: Context,
+        networkFilterUseCases: com.kin.athena.domain.usecase.networkFilter.NetworkFilterUseCases
+    ): ShizukuConnectionService {
+        return ShizukuConnectionService().apply {
+            this.applicationUseCases = applicationUseCases
+            this.preferencesUseCases = preferencesUseCases
+            this.appContext = context
+            this.networkFilterUseCases = networkFilterUseCases
+        }
+    }
+
+
+    @Provides
+    @Singleton
     fun provideFirewallManager(
         firewallStateManager: FirewallStateManager,
         @ApplicationContext context: Context,
         rootService: RootConnectionService,
-        vpnService: VpnConnectionServer
+        vpnService: VpnConnectionServer,
+        shizukuService: ShizukuConnectionService
     ): FirewallManager {
-        return FirewallManager(firewallStateManager, context, rootService, vpnService)
+        val firewallManager = FirewallManager(firewallStateManager, context, rootService, vpnService, shizukuService)
+        shizukuService.firewallManager = firewallManager
+        return firewallManager
     }
 }

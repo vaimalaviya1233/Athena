@@ -58,6 +58,9 @@ data class Settings(
 
     //Root
     val useRootMode: Boolean? = null,
+    
+    //Shizuku
+    val useShizukuMode: Boolean? = null,
 
     // Themes
     val automaticTheme: Boolean = true,

@@ -34,20 +34,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kin.athena.R
+import com.kin.athena.core.logging.Logger
 import com.kin.athena.core.utils.extensions.requestDisableBatteryOptimization
 import com.kin.athena.core.utils.isDeviceRooted
-import com.kin.athena.service.utils.manager.VpnManager
+import com.kin.athena.core.utils.ShizukuUtils
+import rikka.shizuku.Shizuku
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ComprehensivePermissionModal(
     context: Context,
     sheetState: SheetState,
-    onPermissionsComplete: (useVpn: Boolean) -> Unit,
+    onPermissionsComplete: (useVpn: Boolean?, useShizuku: Boolean?) -> Unit,
     onDismiss: () -> Unit
 ) {
     var currentStep by remember { mutableStateOf(PermissionStep.VPN_METHOD) }
-    var selectedMethod by remember { mutableStateOf<Boolean?>(null) } // true = VPN, false = Root
+    var selectedMethod by remember { mutableStateOf<String?>(null) } // "vpn", "root", "shizuku"
     
     val notificationLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -55,8 +57,10 @@ fun ComprehensivePermissionModal(
         // Proceed to battery optimization regardless of notification permission result
         context.requestDisableBatteryOptimization()
         // Complete the flow
-        selectedMethod?.let { useVpn ->
-            onPermissionsComplete(useVpn)
+        when (selectedMethod) {
+            "vpn" -> onPermissionsComplete(true, false)
+            "root" -> onPermissionsComplete(false, false)
+            "shizuku" -> onPermissionsComplete(false, true)
         }
     }
     
@@ -69,7 +73,34 @@ fun ComprehensivePermissionModal(
         } else {
             // Skip notification request on older versions
             context.requestDisableBatteryOptimization()
-            onPermissionsComplete(true) // VPN method
+            onPermissionsComplete(true, false) // VPN method
+        }
+    }
+    
+    // Shizuku permission listener
+    val shizukuPermissionListener = object : Shizuku.OnRequestPermissionResultListener {
+        override fun onRequestPermissionResult(requestCode: Int, grantResult: Int) {
+            Logger.debug("Shizuku permission result: $grantResult")
+            if (grantResult == 0) {
+                // Permission granted, proceed to notifications
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    context.requestDisableBatteryOptimization()
+                    onPermissionsComplete(false, true) // Shizuku method
+                }
+            } else {
+                // Permission denied, show error or fallback
+                Logger.warn("Shizuku permission denied")
+                onDismiss()
+            }
+        }
+    }
+    
+    DisposableEffect(Unit) {
+        Shizuku.addRequestPermissionResultListener(shizukuPermissionListener)
+        onDispose {
+            Shizuku.removeRequestPermissionResultListener(shizukuPermissionListener)
         }
     }
 
@@ -95,18 +126,22 @@ fun ComprehensivePermissionModal(
                         VpnMethodSelection(
                             context = context,
                             onVpnSelected = { 
-                                selectedMethod = true
+                                selectedMethod = "vpn"
                                 currentStep = PermissionStep.VPN_PERMISSION
                             },
                             onRootSelected = {
-                                selectedMethod = false
+                                selectedMethod = "root"
                                 // Root method - skip VPN permission, go straight to notifications
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                     notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                                 } else {
                                     context.requestDisableBatteryOptimization()
-                                    onPermissionsComplete(false) // Root method
+                                    onPermissionsComplete(false, false) // Root method
                                 }
+                            },
+                            onShizukuSelected = {
+                                selectedMethod = "shizuku"
+                                currentStep = PermissionStep.SHIZUKU_PERMISSION
                             }
                         )
                     }
@@ -115,6 +150,9 @@ fun ComprehensivePermissionModal(
                             context = context,
                             vpnLauncher = vpnLauncher
                         )
+                    }
+                    PermissionStep.SHIZUKU_PERMISSION -> {
+                        ShizukuPermissionRequest()
                     }
                 }
             }
@@ -126,9 +164,11 @@ fun ComprehensivePermissionModal(
 private fun VpnMethodSelection(
     context: Context,
     onVpnSelected: () -> Unit,
-    onRootSelected: () -> Unit
+    onRootSelected: () -> Unit,
+    onShizukuSelected: () -> Unit
 ) {
     val isRooted = isDeviceRooted(context)
+    val isShizukuAvailable = ShizukuUtils.isShizukuAvailable()
     
     Column(
         modifier = Modifier
@@ -179,6 +219,24 @@ private fun VpnMethodSelection(
             }
         }
         
+        if (isShizukuAvailable) {
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Button(
+                onClick = onShizukuSelected,
+                colors = ButtonDefaults.buttonColors().copy(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    contentColor = MaterialTheme.colorScheme.outline
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = stringResource(R.string.permissions_use_shizuku_method),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+        
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
@@ -193,10 +251,7 @@ private fun VpnPermissionRequest(
         if (intent != null) {
             vpnLauncher.launch(intent)
         } else {
-            // VPN already permitted, proceed to next step
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                // Will be handled by the launcher callback
-            }
+            // VPN already permitted, proceed to next step - will be handled by launcher callback
         }
     }
     
@@ -233,7 +288,52 @@ private fun VpnPermissionRequest(
     }
 }
 
+@Composable
+private fun ShizukuPermissionRequest() {
+    LaunchedEffect(Unit) {
+        if (ShizukuUtils.isShizukuReady()) {
+            // Already has permission, no need to request
+            Logger.debug("Shizuku permission already granted")
+        } else {
+            ShizukuUtils.requestShizukuPermission()
+        }
+    }
+    
+    Column(
+        modifier = Modifier
+            .padding(24.dp)
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(48.dp),
+            color = MaterialTheme.colorScheme.primary,
+            strokeWidth = 4.dp
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Text(
+            text = stringResource(R.string.permissions_setup),
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            text = stringResource(R.string.permissions_grant_shizuku),
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
 private enum class PermissionStep {
     VPN_METHOD,
-    VPN_PERMISSION
+    VPN_PERMISSION,
+    SHIZUKU_PERMISSION
 }

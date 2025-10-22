@@ -37,6 +37,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.kin.athena.R
 import com.kin.athena.core.utils.grantRootAccess
+import com.kin.athena.core.utils.ShizukuUtils
+import androidx.compose.material.icons.rounded.Android
 import com.kin.athena.presentation.screens.settings.components.IconType
 import com.kin.athena.presentation.screens.settings.components.SettingType
 import com.kin.athena.presentation.screens.settings.components.SettingsBox
@@ -95,6 +97,7 @@ fun BehaviorScreen(
                 description = stringResource(id = R.string.behavior_use_root_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.Key),
                 actionType = SettingType.SWITCH,
+                isEnabled = !isFirewallOnline,
                 isUsable = !isFirewallOnline,
                 onNotUsableClicked = {
                     behaviorViewModel.showRootDisabledMessage()
@@ -109,6 +112,29 @@ fun BehaviorScreen(
                         }
                     } else {
                         settings.update(settings.settings.value.copy(useRootMode = null))
+                    }
+                }
+            )
+            SettingsBox(
+                title = stringResource(id = R.string.behavior_use_shizuku),
+                description = stringResource(id = R.string.behavior_use_shizuku_desc),
+                icon = IconType.VectorIcon(Icons.Rounded.Android),
+                actionType = SettingType.SWITCH,
+                isEnabled = !isFirewallOnline && ShizukuUtils.isShizukuAvailable(),
+                isUsable = !isFirewallOnline && ShizukuUtils.isShizukuAvailable(),
+                onNotUsableClicked = {
+                    behaviorViewModel.showRootDisabledMessage()
+                },
+                variable = settings.settings.value.useShizukuMode == true,
+                onSwitchEnabled = {
+                    if (settings.settings.value.useShizukuMode == null) {
+                        if (ShizukuUtils.isShizukuReady()) {
+                            settings.update(settings.settings.value.copy(useShizukuMode = true, useRootMode = null))
+                        } else {
+                            ShizukuUtils.requestShizukuPermission()
+                        }
+                    } else {
+                        settings.update(settings.settings.value.copy(useShizukuMode = null))
                     }
                 }
             )

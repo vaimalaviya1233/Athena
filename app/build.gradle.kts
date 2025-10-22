@@ -15,7 +15,7 @@ android {
 
     defaultConfig {
         applicationId = "com.kin.athena"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 36
         versionCode = 104
         versionName = "1.1"
@@ -68,11 +68,9 @@ android {
             )
             signingConfig = signingConfigs.getByName("debug")
             isDebuggable = true
-            applicationIdSuffix = ".debug"
         }
     }
     
-    // Make all build variants depend on Go libraries
     tasks.whenTaskAdded {
         if (name.startsWith("merge") && name.contains("JniLibFolders")) {
             dependsOn("buildGoLibraries")
@@ -90,6 +88,7 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        aidl = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -208,4 +207,8 @@ dependencies {
 
     //Billing (Play Store only)
     "playstoreImplementation"(libs.billing)
+
+    // Shizuku
+    implementation(libs.shizuku.api)
+    implementation(libs.shizuku.provider)
 }

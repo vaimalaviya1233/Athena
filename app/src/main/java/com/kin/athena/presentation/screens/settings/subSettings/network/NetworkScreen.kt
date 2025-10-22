@@ -52,6 +52,10 @@ import com.kin.athena.presentation.screens.settings.subSettings.network.viewMode
 import com.kin.athena.presentation.screens.settings.viewModel.SettingsViewModel
 import com.kin.athena.service.utils.manager.FirewallManager
 import com.kin.athena.service.utils.manager.NetworkSpeedManager
+import com.kin.athena.core.utils.isDeviceRooted
+import com.kin.athena.core.utils.ShizukuUtils
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import kotlinx.coroutines.runBlocking
 
 @Composable
@@ -60,7 +64,6 @@ fun NetworkScreen(
     settings: SettingsViewModel,
 ) {
     val context = LocalContext.current
-    
     val networkViewModel = hiltViewModel<IpDialogViewModel>().apply {
         updateIpv4DialogText(TextFieldValue(settings.settings.value.ipv4 ?: ""))
         updateIpv6DialogText(TextFieldValue(settings.settings.value.ipv6 ?: ""))

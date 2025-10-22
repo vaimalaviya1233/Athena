@@ -28,6 +28,7 @@ import com.kin.athena.core.logging.Logger
 import com.kin.athena.domain.model.Application
 import com.kin.athena.service.firewall.utils.FirewallStatus
 import com.kin.athena.service.root.service.RootConnectionService
+import com.kin.athena.service.shizuku.ShizukuConnectionService
 import com.kin.athena.service.vpn.service.VpnConnectionServer
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +40,7 @@ import javax.inject.Singleton
 enum class FirewallMode {
     ROOT,
     VPN,
+    SHIZUKU,
 }
 
 interface FirewallService {
@@ -63,7 +65,8 @@ class FirewallManager @Inject constructor(
     private val firewallStateManager: FirewallStateManager,
     @ApplicationContext private val context: Context,
     private val rootService: FirewallService,
-    private val vpnService: FirewallService
+    private val vpnService: FirewallService,
+    private val shizukuService: FirewallService
 ) {
 
     private val _rulesLoaded: MutableStateFlow<FirewallStatus> = MutableStateFlow(FirewallStatus.OFFLINE)
@@ -82,6 +85,7 @@ class FirewallManager @Inject constructor(
         currentService.value = when(firewallStateManager.mode) {
             FirewallMode.ROOT -> rootService
             FirewallMode.VPN -> vpnService
+            FirewallMode.SHIZUKU -> shizukuService
         }
     }
 
@@ -92,6 +96,7 @@ class FirewallManager @Inject constructor(
             currentService.value = when (firewallStateManager.mode) {
                 FirewallMode.ROOT -> rootService
                 FirewallMode.VPN -> vpnService
+                FirewallMode.SHIZUKU -> shizukuService
             }
             isServiceBound = true
         }
@@ -126,6 +131,7 @@ class FirewallManager @Inject constructor(
             val intent = when (firewallStateManager.mode) {
                 FirewallMode.ROOT -> Intent(context, RootConnectionService::class.java)
                 FirewallMode.VPN -> Intent(context, VpnConnectionServer::class.java)
+                FirewallMode.SHIZUKU -> Intent(context, ShizukuConnectionService::class.java)
             }
             context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
         } catch (e: IllegalArgumentException) {
