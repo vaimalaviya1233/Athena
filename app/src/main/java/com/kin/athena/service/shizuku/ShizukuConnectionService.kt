@@ -7,7 +7,6 @@ import android.content.ComponentName
 import android.content.ServiceConnection
 import android.os.Binder
 import android.os.IBinder
-import androidx.annotation.RequiresApi
 import com.kin.athena.core.logging.Logger
 import com.kin.athena.domain.model.Application
 import com.kin.athena.domain.usecase.application.ApplicationUseCases
@@ -43,6 +42,9 @@ class ShizukuConnectionService : Service(), CoroutineScope by CoroutineScope(Dis
     private var isLoggingEnabled = false
     private var tcpLoggerJob: kotlinx.coroutines.Job? = null
     private var udpLoggerJob: kotlinx.coroutines.Job? = null
+    
+    // Track logged connections to avoid duplicates
+    private val loggedConnections = mutableSetOf<String>()
 
     private val binder = LocalBinder()
 
@@ -67,20 +69,36 @@ class ShizukuConnectionService : Service(), CoroutineScope by CoroutineScope(Dis
 
             // Once bound, ensure the firewall chain is enabled
             enableFirewallChainSafely()
+            
+            // Start logging if it was enabled before service was bound
+            if (isLoggingEnabled) {
+                Logger.debug("ShizukuConnectionService: Starting deferred packet logging")
+                startPacketLogging()
+            }
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
             Logger.warn("ShizukuConnectionService: Shizuku user service disconnected")
             shizukuFirewallService = null
             isServiceBound = false
+            // Stop logging jobs since service is disconnected
+            stopPacketLogging()
         }
     }
 
     override fun onBind(intent: Intent?): IBinder = binder
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Logger.info("ShizukuConnectionService: onStartCommand called")
+        return START_STICKY
+    }
+
     override fun onCreate() {
         super.onCreate()
         Logger.info("ShizukuConnectionService: onCreate")
+        // Log to verify dependencies are injected
+        Logger.debug("ShizukuConnectionService: logUseCases initialized: ${::logUseCases.isInitialized}")
+        Logger.debug("ShizukuConnectionService: firewallManager initialized: ${::firewallManager.isInitialized}")
         firewallManager.update(FirewallStatus.OFFLINE)
     }
 
@@ -248,14 +266,36 @@ class ShizukuConnectionService : Service(), CoroutineScope by CoroutineScope(Dis
         }
         // mark fully online
         firewallManager.update(FirewallStatus.ONLINE)
+        
+        // Start logging automatically like root service does
+        installedApplications?.let {
+            // Ensure all dependencies are initialized before starting logging
+            if (::logUseCases.isInitialized) {
+                launch { 
+                    isLoggingEnabled = true
+                    startPacketLogging() 
+                }
+            } else {
+                Logger.error("ShizukuConnectionService: Cannot start logging - logUseCases not initialized!")
+            }
+        }
     }
 
     private fun startPacketLogging() {
         if (!isLoggingEnabled) return
         
+        // Cancel any existing jobs first
+        stopPacketLogging()
+        
+        // Check if service is bound before starting
+        if (!isServiceBound || shizukuFirewallService == null) {
+            Logger.warn("Cannot start packet logging: Shizuku service not bound yet")
+            return
+        }
+        
         tcpLoggerJob = launch {
             try {
-                Logger.info("Starting TCP packet logging via ADB")
+                Logger.info("Starting TCP packet logging via Shizuku")
                 monitorNetworkConnections("tcp")
             } catch (e: Exception) {
                 Logger.error("TCP packet logging failed: ${e.message}")
@@ -264,7 +304,7 @@ class ShizukuConnectionService : Service(), CoroutineScope by CoroutineScope(Dis
         
         udpLoggerJob = launch {
             try {
-                Logger.info("Starting UDP packet logging via ADB") 
+                Logger.info("Starting UDP packet logging via Shizuku") 
                 monitorNetworkConnections("udp")
             } catch (e: Exception) {
                 Logger.error("UDP packet logging failed: ${e.message}")
@@ -277,23 +317,34 @@ class ShizukuConnectionService : Service(), CoroutineScope by CoroutineScope(Dis
         udpLoggerJob?.cancel()
         tcpLoggerJob = null
         udpLoggerJob = null
+        loggedConnections.clear()
         Logger.info("Stopped packet logging")
     }
     
     private suspend fun monitorNetworkConnections(protocol: String) {
-        val svc = shizukuFirewallService ?: return
-        
         while (isLoggingEnabled && isServiceBound) {
             try {
+                val svc = shizukuFirewallService
+                if (svc == null) {
+                    Logger.warn("Shizuku service became null during $protocol monitoring")
+                    kotlinx.coroutines.delay(1000)
+                    continue
+                }
+                
                 val result = svc.executeCommand("cat /proc/net/$protocol")
-                Logger.info("Raw $protocol data:\n$result")
-                parseNetworkConnections(result, protocol.uppercase())
+                if (result.isNotEmpty()) {
+                    Logger.debug("Received $protocol data: ${result.lines().size} lines")
+                    parseNetworkConnections(result, protocol.uppercase())
+                } else {
+                    Logger.warn("Empty result from /proc/net/$protocol")
+                }
                 kotlinx.coroutines.delay(1000)
             } catch (e: Exception) {
                 Logger.error("Error monitoring $protocol connections: ${e.message}")
                 kotlinx.coroutines.delay(5000)
             }
         }
+        Logger.info("Stopped monitoring $protocol connections")
     }
     
     private fun parseNetworkConnections(data: String, protocol: String) {
@@ -325,15 +376,27 @@ class ShizukuConnectionService : Service(), CoroutineScope by CoroutineScope(Dis
             val (destIP, destPort) = parseAddress(remoteAddress)
             
             if (destIP != "0.0.0.0" && destPort != "0") {
+                // Create unique key for this connection to avoid duplicates
+                val connectionKey = "$protocol:$uid:$destIP:$destPort"
+                
+                // Skip if already logged
+                if (loggedConnections.contains(connectionKey)) {
+                    return
+                }
+                
                 val app = installedApplications?.firstOrNull { it.uid == uid }
-                val isAllowed = app?.internetAccess == true && app.cellularAccess == true
+                // Check if app has internet access enabled
+                // For Shizuku firewall, we primarily check internetAccess flag
+                val isAllowed = app?.internetAccess ?: true
+                
+                Logger.debug("Logging connection: $protocol UID=$uid $destIP:$destPort (allowed=$isAllowed)")
                 
                 val log = Log(
                     time = System.currentTimeMillis(),
                     protocol = protocol,
                     packageID = uid,
                     sourceIP = sourceIP,
-                    destinationAddress = destIP,
+                    destinationAddress = null,
                     sourcePort = sourcePort,
                     destinationIP = destIP,
                     destinationPort = destPort,
@@ -341,7 +404,21 @@ class ShizukuConnectionService : Service(), CoroutineScope by CoroutineScope(Dis
                 )
                 
                 launch {
-                    logUseCases.addLog.execute(log)
+                    if (::logUseCases.isInitialized) {
+                        val result = logUseCases.addLog.execute(log)
+                        result.fold(
+                            ifSuccess = {
+                                // Mark connection as logged only after successful save
+                                loggedConnections.add(connectionKey)
+                                Logger.debug("Successfully logged connection: $connectionKey")
+                            },
+                            ifFailure = { error ->
+                                Logger.error("Failed to log connection: ${error.message}")
+                            }
+                        )
+                    } else {
+                        Logger.warn("Cannot log connection: logUseCases not initialized yet")
+                    }
                 }
             }
         } catch (e: Exception) {

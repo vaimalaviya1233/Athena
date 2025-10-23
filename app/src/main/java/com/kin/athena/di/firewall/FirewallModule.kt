@@ -85,13 +85,15 @@ object FirewallModule {
         applicationUseCases: ApplicationUseCases,
         preferencesUseCases: PreferencesUseCases,
         @ApplicationContext context: Context,
-        networkFilterUseCases: com.kin.athena.domain.usecase.networkFilter.NetworkFilterUseCases
+        networkFilterUseCases: com.kin.athena.domain.usecase.networkFilter.NetworkFilterUseCases,
+        logUseCases: com.kin.athena.domain.usecase.log.LogUseCases
     ): ShizukuConnectionService {
         return ShizukuConnectionService().apply {
             this.applicationUseCases = applicationUseCases
             this.preferencesUseCases = preferencesUseCases
             this.appContext = context
             this.networkFilterUseCases = networkFilterUseCases
+            this.logUseCases = logUseCases
         }
     }
 

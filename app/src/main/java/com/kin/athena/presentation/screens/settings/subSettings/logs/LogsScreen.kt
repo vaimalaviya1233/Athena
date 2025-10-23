@@ -248,13 +248,9 @@ fun PacketsSection(
     context: Context,
     navController: NavController
 ) {
-    // Filter logs to show packets with resolved domain names
+    // Show all packets regardless of whether destinationAddress is null
     val packetsWithDomains = remember(logs) {
-        logs.map { logGroup ->
-            logGroup.filter { log ->
-                log.destinationAddress != null && log.destinationAddress.isNotBlank()
-            }
-        }.filter { it.isNotEmpty() }
+        logs.filter { it.isNotEmpty() }
     }
 
     Column(

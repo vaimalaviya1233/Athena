@@ -36,7 +36,7 @@ data class Settings(
     val lockImmediately: Boolean = true,
 
     //Behaviour
-    val logs: Boolean = false,
+    val logs: Boolean = true,
     val showSystemPackages: Boolean = false,
     val showOfflinePackages: Boolean = false,
     val wiFiDefault: Boolean = true,
@@ -81,7 +81,7 @@ data class Settings(
     val adBlocker: Boolean = false,
     val trackerProtection: Boolean = false,
     val autoUpdateInterval: Long = 24 * 60 * 60 * 1000L,
-    val premiumUnlocked: Boolean = false,
+    val premiumUnlocked: Boolean = true,
 
     val dontShowHelp: Boolean = false
 )
