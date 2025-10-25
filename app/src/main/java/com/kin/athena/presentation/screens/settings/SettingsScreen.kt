@@ -67,11 +67,7 @@ fun SettingsScreen(
                     originalPrice = originalPrice,
                     salePrice = null,
                     onAction = {
-                        settings.showFeatureChoiceDialog(
-                            featureName = context.getString(R.string.settings_all_premium),
-                            featureDescription = context.getString(R.string.settings_fdroid_premium),
-                            productId = "all_features"
-                        ) {
+                        settings.startBilling("all_features") {
                             settings.update(settings.settings.value.copy(premiumUnlocked = true))
                         }
                     }
