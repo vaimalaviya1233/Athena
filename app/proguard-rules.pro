@@ -76,6 +76,52 @@
 -keep class com.kin.athena.data.local.database.** { *; }
 -keep class com.kin.athena.domain.model.** { *; }
 
+# Shizuku rules - prevent R8 from breaking Shizuku services and AIDL interfaces
+-keep class moe.shizuku.** { *; }
+-keep class rikka.shizuku.** { *; }
+-keep interface rikka.shizuku.** { *; }
+-keepclassmembers class * implements rikka.shizuku.** {
+    *;
+}
+
+# AIDL interface preservation
+-keep class * extends android.os.Binder { *; }
+-keep class * implements android.os.IInterface { *; }
+-keep class **$Stub { *; }
+-keep class **$Stub$Proxy { *; }
+
+# Shizuku service classes
+-keep class com.kin.athena.service.shizuku.** { *; }
+-keep interface com.kin.athena.service.shizuku.** { *; }
+-keep class com.kin.athena.di.firewall.** { *; }
+
+# AIDL generated classes and interfaces
+-keep class com.kin.athena.service.shizuku.IShizukuFirewallService { *; }
+-keep class com.kin.athena.service.shizuku.IShizukuFirewallService$Stub { *; }
+-keep class com.kin.athena.service.shizuku.IShizukuFirewallService$Stub$Proxy { *; }
+
+# Preserve Shizuku UserService args and binding
+-keepclassmembers class rikka.shizuku.Shizuku$UserServiceArgs {
+    *;
+}
+-keep class android.content.ServiceConnection { *; }
+-keepclassmembers class * implements android.content.ServiceConnection {
+    *;
+}
+
+# Preserve reflection-based method calls used by Shizuku
+-keepclassmembers class * {
+    @rikka.shizuku.** *;
+}
+
+# Keep Shizuku permission and version checking methods
+-keepclassmembers class rikka.shizuku.Shizuku {
+    public static boolean pingBinder();
+    public static int checkSelfPermission();
+    public static void requestPermission(int);
+    public static int getVersion();
+}
+
 # Enhanced optimization rules for smaller APK size
 -allowaccessmodification
 -repackageclasses ''

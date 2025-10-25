@@ -110,7 +110,7 @@ fun NetworkScreen(
                         settings.showFeatureChoiceDialog(
                             featureName = speedMonitorTitle,
                             featureDescription = speedMonitorDescription,
-                            productId = "speed_notification "
+                            productId = "speed_notification"
                         ) {
                             settings.update(settings.settings.value.copy(networkSpeedMonitor = enabled))
                             if (enabled) {
