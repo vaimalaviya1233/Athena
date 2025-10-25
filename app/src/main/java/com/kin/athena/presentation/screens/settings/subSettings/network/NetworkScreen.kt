@@ -92,8 +92,8 @@ fun NetworkScreen(
                 variable = settings.settings.value.allowLocal,
                 onSwitchEnabled = { settings.update(settings.settings.value.copy(allowLocal = it)) },
             )
-            val speedMonitorTitle = stringResource(id = R.string.network_speed_monitor)
-            val speedMonitorDescription = stringResource(id = R.string.network_speed_monitor_desc)
+            val speedMonitorTitle = stringResource(id = R.string.notification_install_channel)
+            val speedMonitorDescription = stringResource(id = R.string.notification_network_speed_channel_desc)
             
             SettingsBox(
                 title = speedMonitorTitle + " " + stringResource(id = R.string.premium_feature_indicator),

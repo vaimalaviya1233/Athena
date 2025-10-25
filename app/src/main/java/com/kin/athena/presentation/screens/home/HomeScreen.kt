@@ -233,7 +233,7 @@ fun HomeScreen(
                     if (settingsViewModel.settings.value.logs) {
                         MaterialButton(
                             imageVector = Icons.Rounded.MoreVert,
-                            contentDescription = stringResource(R.string.home_open_menu)
+                            contentDescription = "",
                         ) {
                             if (homeViewModel.menuStatus.value) {
                                 onMenuClosed()
@@ -244,7 +244,7 @@ fun HomeScreen(
                     } else {
                         MaterialButton(
                             imageVector = Icons.Rounded.Settings,
-                            contentDescription = stringResource(R.string.common_settings)
+                            contentDescription = "",
                         ) {
                             onSettingsClicked()
                         }

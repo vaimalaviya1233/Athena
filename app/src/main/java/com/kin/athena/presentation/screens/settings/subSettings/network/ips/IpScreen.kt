@@ -182,7 +182,7 @@ private fun IpCard(
             ) {
                 Icon(
                     Icons.Rounded.Delete,
-                    contentDescription = stringResource(R.string.common_delete),
+                    contentDescription = "",
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(18.dp)
                 )

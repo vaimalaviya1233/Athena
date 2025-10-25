@@ -151,7 +151,7 @@ fun DomainManagementTopBar(
             onClearClick = onClearSearch,
             button = {
                 IconButton(onClick = onAddDomain) {
-                    Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.dns_add_domain))
+                    Icon(Icons.Rounded.Add, contentDescription = "")
                 }
             },
             onBackClicked = onBackClicked
@@ -349,7 +349,7 @@ private fun DomainCard(
             ) {
                 Icon(
                     Icons.Rounded.Delete,
-                    contentDescription = stringResource(R.string.common_delete),
+                    contentDescription = "",
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(18.dp)
                 )

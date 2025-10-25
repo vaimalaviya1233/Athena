@@ -99,13 +99,13 @@ fun SearchBar(
                         } ?: Modifier,
                         onClick = { onFirewallClicked() }
                     ) {
-                        Icon(Icons.Rounded.Security, tint = firewallColor, contentDescription = stringResource(R.string.search_bar_firewall_desc))
+                        Icon(Icons.Rounded.Security, tint = firewallColor, contentDescription = "")
                     }
                 }
             } else {
                 if (onBackClicked != null) {
                     IconButton(onClick = {onBackClicked() }) {
-                        Icon(Icons.Rounded.ArrowBackIosNew, contentDescription = stringResource(R.string.misc_back_description), modifier = Modifier.scale(0.8f))
+                        Icon(Icons.Rounded.ArrowBackIosNew, contentDescription = "", modifier = Modifier.scale(0.8f))
                     }
                 }
             }
@@ -143,7 +143,7 @@ fun SearchBar(
                 ) {
                     MaterialButton(
                         imageVector = Icons.Rounded.Close,
-                        contentDescription = stringResource(R.string.misc_close_description)
+                        contentDescription = ""
                     ) {
                         onClearClick()
                     }

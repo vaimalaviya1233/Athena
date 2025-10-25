@@ -118,7 +118,7 @@ fun DownloadDialog(
                     ) {
                         Icon(
                             Icons.Rounded.CloudDownload,
-                            contentDescription = stringResource(R.string.download_downloading),
+                            contentDescription = "",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
                                 .size(40.dp)
@@ -183,14 +183,14 @@ fun DownloadDialog(
                     ) {
                         Icon(
                             Icons.Rounded.CheckCircle,
-                            contentDescription = stringResource(R.string.download_success),
+                            contentDescription = "",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(40.dp)
                         )
                     }
                     
                     Text(
-                        text = stringResource(R.string.download_success_message),
+                        text = stringResource(R.string.download_success),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -215,7 +215,7 @@ fun DownloadDialog(
                     ) {
                         Icon(
                             Icons.Rounded.Close,
-                            contentDescription = stringResource(R.string.download_network_error),
+                            contentDescription = "",
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(40.dp)
                         )
@@ -247,7 +247,7 @@ fun DownloadDialog(
                     ) {
                         Icon(
                             Icons.Rounded.Close,
-                            contentDescription = stringResource(R.string.tile_error),
+                            contentDescription = "",
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(40.dp)
                         )

@@ -221,7 +221,7 @@ fun CustomBlocklistManagementScreen(
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Add,
-                    contentDescription = stringResource(R.string.blocklist_custom)
+                    contentDescription = ""
                 )
             }
         }
@@ -460,7 +460,7 @@ private fun ImprovedBlocklistTile(
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.DeleteOutline,
-                            contentDescription = stringResource(R.string.common_delete),
+                            contentDescription = "",
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -495,7 +495,7 @@ private fun ImprovedBlocklistTile(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Delete,
-                        contentDescription = stringResource(R.string.common_delete),
+                        contentDescription = "",
                         tint = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.padding(8.dp)
                     )

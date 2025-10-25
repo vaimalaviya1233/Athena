@@ -60,7 +60,7 @@ fun SettingsScreen(
                 val originalPrice = settings.calculateOriginalPrice(currentPrice)
 
                 SettingBoxSmall(
-                    title = stringResource(R.string.settings_premium),
+                    title = stringResource(R.string.premium_lifetime),
                     description = currentPrice?.let {
                         stringResource(R.string.settings_support_dev, it)
                     } ?: stringResource(R.string.settings_support_dev, "Loading..."),
@@ -85,8 +85,8 @@ fun SettingsScreen(
                         title = stringResource(id = R.string.settings_colors),
                         features = listOf(
                             stringResource(id = R.string.settings_colors_option_theme),
-                            stringResource(id = R.string.settings_colors_option_radius),
-                            stringResource(id = R.string.settings_colors_option_sort)
+                            stringResource(id = R.string.colors_dynamic_icons),
+                            stringResource(id = R.string.colors_language)
                         ),
                         icon = Icons.Rounded.Palette,
                         onClick = { navController.safeNavigate(SettingRoutes.Colors.route) }
@@ -111,7 +111,7 @@ fun SettingsScreen(
                         title = stringResource(id = R.string.settings_network),
                         features = listOf(
                             stringResource(id = R.string.settings_network_option_lockdown),
-                            stringResource(id = R.string.settings_network_option_calling)
+                            stringResource(id = R.string.network_kill_switch)
                         ),
                         icon = Icons.Rounded.Wifi,
                         onClick = { navController.safeNavigate(SettingRoutes.Network.route) }

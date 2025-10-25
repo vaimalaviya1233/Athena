@@ -124,7 +124,7 @@ class DnsQuickSettingsTile : TileService() {
             // Fallback state
             tile.state = Tile.STATE_UNAVAILABLE
             tile.label = getString(R.string.dns_blocking_title)
-            tile.subtitle = getString(R.string.tile_status_error)
+            tile.subtitle = getString(R.string.tile_error)
             tile.icon = Icon.createWithResource(applicationContext, R.drawable.ic_shield_off)
             tile.updateTile()
         }

@@ -118,7 +118,7 @@ fun PremiumFeatureChoiceDialog(
                         },
                         customButton = {
                             Text(
-                                text = singleFeaturePrice ?: stringResource(R.string.common_loading),
+                                text = singleFeaturePrice ?: "",
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -126,7 +126,7 @@ fun PremiumFeatureChoiceDialog(
                     )
                     SettingsBox(
                         title = stringResource(R.string.premium_lifetime),
-                        description = stringResource(R.string.premium_all_features),
+                        description = stringResource(R.string.settings_all_premium),
                         icon = IconType.VectorIcon(Icons.Rounded.Star),
                         actionType = SettingType.CUSTOM,
                         customAction = { _ ->
@@ -136,7 +136,7 @@ fun PremiumFeatureChoiceDialog(
                         circleWrapperColor = MaterialTheme.colorScheme.primaryContainer,
                         customButton = {
                             Text(
-                                text = fullPremiumPrice ?: stringResource(R.string.common_loading),
+                                text = fullPremiumPrice ?: "",
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -146,7 +146,7 @@ fun PremiumFeatureChoiceDialog(
                     // F-Droid: Only show Ko-fi option
                     SettingsBox(
                         title = stringResource(R.string.premium_kofi_support),
-                        description = stringResource(R.string.premium_all_features),
+                        description = stringResource(R.string.settings_all_premium),
                         icon = IconType.VectorIcon(Icons.Rounded.Star),
                         actionType = SettingType.CUSTOM,
                         customAction = { _ ->
