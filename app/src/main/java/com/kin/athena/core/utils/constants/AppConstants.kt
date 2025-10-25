@@ -37,6 +37,16 @@ object AppConstants {
     }
 
     object DnsBlockLists {
+        // Old blocklist URLs (for migration from v1.4 and earlier)
+        object Legacy {
+            const val MALWARE_PROTECTION = "https://raw.githubusercontent.com/DandelionSprout/adfilt/master/Alternate%20versions%20Anti-Malware%20List/AntiMalwareHosts.txt"
+            const val AD_PROTECTION = "https://adaway.org/hosts.txt"
+            const val PRIVACY_PROTECTION = "https://hostfiles.frogeye.fr/firstparty-trackers-hosts.txt"
+            const val GAMBLING_PROTECTION = "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/gambling-only/hosts"
+            const val ADULT_PROTECTION = "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts"
+            const val SOCIAL_PROTECTION = "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/social-only/hosts"
+        }
+
         val MALWARE_PROTECTION = listOf(
             // DandelionSprout: solid anti-malware coverage
             "https://raw.githubusercontent.com/DandelionSprout/adfilt/master/Alternate%20versions%20Anti-Malware%20List/AntiMalwareHosts.txt",

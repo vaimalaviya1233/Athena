@@ -191,7 +191,8 @@ class RootConnectionService : Service(), CoroutineScope by CoroutineScope(Dispat
     }
 
     override suspend fun updateDomains(progressCallback: (suspend (Int) -> Unit)?) {
-
+        Logger.info("RootConnectionService: updateDomains() called - reloading domains")
+        loadAndApplyDomains()
     }
 
     override fun updateHttpSettings() {
