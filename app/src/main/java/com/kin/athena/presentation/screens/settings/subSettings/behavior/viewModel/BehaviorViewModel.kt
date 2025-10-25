@@ -67,4 +67,12 @@ class BehaviorViewModel @Inject constructor(
             Toast.LENGTH_LONG
         ).show()
     }
+    
+    fun showFirewallDisableMessage() {
+        Toast.makeText(
+            context, 
+            context.getString(com.kin.athena.R.string.home_firewall_disable), 
+            Toast.LENGTH_LONG
+        ).show()
+    }
 }

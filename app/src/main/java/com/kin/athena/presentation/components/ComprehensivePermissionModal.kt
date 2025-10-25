@@ -37,8 +37,10 @@ import com.kin.athena.R
 import com.kin.athena.core.logging.Logger
 import com.kin.athena.core.utils.extensions.requestDisableBatteryOptimization
 import com.kin.athena.core.utils.isDeviceRooted
+import com.kin.athena.core.utils.grantRootAccess
 import com.kin.athena.core.utils.ShizukuUtils
 import rikka.shizuku.Shizuku
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,13 +133,7 @@ fun ComprehensivePermissionModal(
                             },
                             onRootSelected = {
                                 selectedMethod = "root"
-                                // Root method - skip VPN permission, go straight to notifications
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                    notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                } else {
-                                    context.requestDisableBatteryOptimization()
-                                    onPermissionsComplete(false, false) // Root method
-                                }
+                                currentStep = PermissionStep.ROOT_PERMISSION
                             },
                             onShizukuSelected = {
                                 selectedMethod = "shizuku"
@@ -151,8 +147,35 @@ fun ComprehensivePermissionModal(
                             vpnLauncher = vpnLauncher
                         )
                     }
+                    PermissionStep.ROOT_PERMISSION -> {
+                        RootPermissionRequest(
+                            onPermissionGranted = {
+                                // Root permission granted, proceed to notifications
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                } else {
+                                    context.requestDisableBatteryOptimization()
+                                    onPermissionsComplete(false, false) // Root method
+                                }
+                            },
+                            onPermissionDenied = {
+                                // Root permission denied, go back to method selection
+                                currentStep = PermissionStep.VPN_METHOD
+                            }
+                        )
+                    }
                     PermissionStep.SHIZUKU_PERMISSION -> {
-                        ShizukuPermissionRequest()
+                        ShizukuPermissionRequest(
+                            onPermissionGranted = {
+                                // Permission granted, proceed to notifications
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                } else {
+                                    context.requestDisableBatteryOptimization()
+                                    onPermissionsComplete(false, true) // Shizuku method
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -289,14 +312,65 @@ private fun VpnPermissionRequest(
 }
 
 @Composable
-private fun ShizukuPermissionRequest() {
+private fun RootPermissionRequest(
+    onPermissionGranted: () -> Unit,
+    onPermissionDenied: () -> Unit
+) {
+    val coroutineScope = rememberCoroutineScope()
+    
     LaunchedEffect(Unit) {
-        if (ShizukuUtils.isShizukuReady()) {
-            // Already has permission, no need to request
-            Logger.debug("Shizuku permission already granted")
-        } else {
-            ShizukuUtils.requestShizukuPermission()
+        coroutineScope.launch {
+            try {
+                val granted = grantRootAccess()
+                if (granted) {
+                    onPermissionGranted()
+                } else {
+                    onPermissionDenied()
+                }
+            } catch (e: Exception) {
+                Logger.error("Root permission request failed: ${e.message}")
+                onPermissionDenied()
+            }
         }
+    }
+    
+    Column(
+        modifier = Modifier
+            .padding(24.dp)
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(48.dp),
+            color = MaterialTheme.colorScheme.primary,
+            strokeWidth = 4.dp
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Text(
+            text = stringResource(R.string.permissions_setup),
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            text = stringResource(R.string.permissions_grant_required),
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun ShizukuPermissionRequest(onPermissionGranted: () -> Unit) {
+    LaunchedEffect(Unit) {
+        ShizukuUtils.requestShizukuPermission(onPermissionGranted)
     }
     
     Column(
@@ -335,5 +409,6 @@ private fun ShizukuPermissionRequest() {
 private enum class PermissionStep {
     VPN_METHOD,
     VPN_PERMISSION,
+    ROOT_PERMISSION,
     SHIZUKU_PERMISSION
 }

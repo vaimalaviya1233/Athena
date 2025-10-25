@@ -63,84 +63,11 @@ fun BehaviorScreen(
         title = stringResource(id = R.string.settings_behavior),
         onBackNavClicked = { navController.navigateUp() }
     ) {
+        // Logs section - on top
         settingsContainer {
-            val notificationTitle = stringResource(id = R.string.behavior_notify_install)
-            val notificationDescription = stringResource(id = R.string.behavior_notify_install_desc)
-            
-            SettingsBox(
-                title = notificationTitle + " " + stringResource(id = R.string.premium_feature_indicator),
-                description = notificationDescription,
-                icon = IconType.VectorIcon(Icons.Rounded.InstallMobile),
-                actionType = SettingType.SWITCH,
-                variable = settings.settings.value.sendNotificationOnInstall,
-                onSwitchEnabled = {
-                    if (!settings.settings.value.premiumUnlocked) {
-                        settings.showFeatureChoiceDialog(
-                            featureName = notificationTitle,
-                            featureDescription = notificationDescription,
-                            productId = "notify_on_install"
-                        ) {
-                            settings.update(settings.settings.value.copy(sendNotificationOnInstall = it))
-                        }
-                    } else {
-                        settings.update(settings.settings.value.copy(sendNotificationOnInstall = it))
-                    }
-                }
-            )
-        }
-        settingsContainer {
-            val firewallStatus by behaviorViewModel.firewallManager.rulesLoaded.collectAsState()
-            val isFirewallOnline = firewallStatus.name() == FirewallStatus.ONLINE.name()
-            
-            SettingsBox(
-                title = stringResource(id = R.string.behavior_use_root),
-                description = stringResource(id = R.string.behavior_use_root_desc),
-                icon = IconType.VectorIcon(Icons.Rounded.Key),
-                actionType = SettingType.SWITCH,
-                isEnabled = !isFirewallOnline,
-                isUsable = !isFirewallOnline,
-                onNotUsableClicked = {
-                    behaviorViewModel.showRootDisabledMessage()
-                },
-                variable = settings.settings.value.useRootMode == true,
-                onSwitchEnabled = {
-                    if (settings.settings.value.useRootMode == null) {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            if (grantRootAccess()) {
-                                settings.update(settings.settings.value.copy(useRootMode = true))
-                            }
-                        }
-                    } else {
-                        settings.update(settings.settings.value.copy(useRootMode = null))
-                    }
-                }
-            )
-            SettingsBox(
-                title = stringResource(id = R.string.behavior_use_shizuku),
-                description = stringResource(id = R.string.behavior_use_shizuku_desc),
-                icon = IconType.VectorIcon(Icons.Rounded.Android),
-                actionType = SettingType.SWITCH,
-                isEnabled = !isFirewallOnline && ShizukuUtils.isShizukuAvailable(),
-                isUsable = !isFirewallOnline && ShizukuUtils.isShizukuAvailable(),
-                onNotUsableClicked = {
-                    behaviorViewModel.showRootDisabledMessage()
-                },
-                variable = settings.settings.value.useShizukuMode == true,
-                onSwitchEnabled = {
-                    if (settings.settings.value.useShizukuMode == null) {
-                        if (ShizukuUtils.isShizukuReady()) {
-                            settings.update(settings.settings.value.copy(useShizukuMode = true, useRootMode = null))
-                        } else {
-                            ShizukuUtils.requestShizukuPermission()
-                        }
-                    } else {
-                        settings.update(settings.settings.value.copy(useShizukuMode = null))
-                    }
-                }
-            )
             val logsTitle = stringResource(id = R.string.common_logs)
             val logsDescription = stringResource(id = R.string.behavior_logs_desc)
-            
+
             SettingsBox(
                 title = logsTitle + " " + stringResource(id = R.string.premium_feature_indicator),
                 description = logsDescription,
@@ -161,6 +88,128 @@ fun BehaviorScreen(
                         settings.update(settings.settings.value.copy(logs = it))
                         behaviorViewModel.updateLogs(it)
                     }
+                }
+            )
+        }
+
+        // Protection Method section - underneath  
+        settingsContainer {
+            val firewallStatus by behaviorViewModel.firewallManager.rulesLoaded.collectAsState()
+            val isFirewallOnline = firewallStatus.name() == FirewallStatus.ONLINE.name()
+
+            SettingsBox(
+                title = stringResource(id = R.string.behavior_use_root),
+                description = stringResource(id = R.string.behavior_use_root_desc),
+                icon = IconType.VectorIcon(Icons.Rounded.Key),
+                actionType = SettingType.SWITCH,
+                isEnabled = true, // Always show, but darkened when firewall is online
+                isUsable = !isFirewallOnline,
+                onNotUsableClicked = {
+                    behaviorViewModel.showFirewallDisableMessage()
+                },
+                variable = settings.settings.value.useRootMode == true,
+                onSwitchEnabled = {
+                    if (isFirewallOnline) {
+                        behaviorViewModel.showFirewallDisableMessage()
+                    } else {
+                        if (settings.settings.value.useRootMode == null) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                if (grantRootAccess()) {
+                                    settings.update(settings.settings.value.copy(
+                                        useRootMode = true,
+                                        useShizukuMode = null
+                                    ))
+                                }
+                            }
+                        } else {
+                            settings.update(settings.settings.value.copy(useRootMode = null))
+                        }
+                    }
+                }
+            )
+            
+            SettingsBox(
+                title = stringResource(id = R.string.behavior_use_shizuku),
+                description = stringResource(id = R.string.behavior_use_shizuku_desc),
+                icon = IconType.VectorIcon(Icons.Rounded.Android),
+                actionType = SettingType.SWITCH,
+                isEnabled = true, // Always show, but darkened when firewall is online
+                isUsable = !isFirewallOnline && ShizukuUtils.isShizukuAvailable(),
+                onNotUsableClicked = {
+                    if (isFirewallOnline) {
+                        behaviorViewModel.showFirewallDisableMessage()
+                    } else {
+                        behaviorViewModel.showRootDisabledMessage()
+                    }
+                },
+                variable = settings.settings.value.useShizukuMode == true,
+                onSwitchEnabled = {
+                    if (isFirewallOnline) {
+                        behaviorViewModel.showFirewallDisableMessage()
+                    } else {
+                        if (settings.settings.value.useShizukuMode == null) {
+                            if (ShizukuUtils.isShizukuReady()) {
+                                settings.update(
+                                    settings.settings.value.copy(
+                                        useShizukuMode = true,
+                                        useRootMode = null
+                                    )
+                                )
+                            } else {
+                                ShizukuUtils.requestShizukuPermission {
+                                    settings.update(
+                                        settings.settings.value.copy(
+                                            useShizukuMode = true,
+                                            useRootMode = null
+                                        )
+                                    )
+                                }
+                            }
+                        } else {
+                            settings.update(settings.settings.value.copy(useShizukuMode = null))
+                        }
+                    }
+                }
+            )
+
+            SettingsBox(
+                title = stringResource(id = R.string.method_use_vpn),
+                description = stringResource(id = R.string.vpn_permission_description),
+                icon = IconType.VectorIcon(Icons.Rounded.SignalWifiBad),
+                actionType = SettingType.SWITCH,
+                isEnabled = true, // Always show, but darkened when firewall is online
+                isUsable = !isFirewallOnline,
+                onNotUsableClicked = {
+                    behaviorViewModel.showFirewallDisableMessage()
+                },
+                variable = settings.settings.value.useRootMode == null && settings.settings.value.useShizukuMode == null,
+                onSwitchEnabled = {
+                    if (isFirewallOnline) {
+                        behaviorViewModel.showFirewallDisableMessage()
+                    } else {
+                        if (it) {
+                            settings.update(
+                                settings.settings.value.copy(
+                                    useRootMode = null,
+                                    useShizukuMode = null
+                                )
+                            )
+                        }
+                    }
+                }
+            )
+        }
+
+        // Other settings section
+        settingsContainer {
+            SettingsBox(
+                title = stringResource(id = R.string.behavior_start_on_boot),
+                description = stringResource(id = R.string.behavior_start_on_boot_desc),
+                icon = IconType.VectorIcon(Icons.Rounded.RestartAlt),
+                actionType = SettingType.SWITCH,
+                variable = settings.settings.value.startOnBoot,
+                onSwitchEnabled = {
+                    settings.update(settings.settings.value.copy(startOnBoot = it))
                 }
             )
         }
@@ -215,28 +264,6 @@ fun BehaviorScreen(
                         settings.settings.value.cellularDefault,
                         settings.settings.value.showSystemPackages
                     )
-                }
-            )
-        }
-        settingsContainer {
-            SettingsBox(
-                title = stringResource(id = R.string.behavior_start_on_boot),
-                description = stringResource(id = R.string.behavior_start_on_boot_desc),
-                icon = IconType.VectorIcon(Icons.Rounded.RestartAlt),
-                actionType = SettingType.SWITCH,
-                variable = settings.settings.value.startOnBoot,
-                onSwitchEnabled = {
-                    settings.update(settings.settings.value.copy(startOnBoot = it))
-                }
-            )
-            SettingsBox(
-                title = stringResource(id = R.string.behavior_permanent_notification),
-                description = stringResource(id = R.string.behavior_permanent_notification_desc),
-                icon = IconType.VectorIcon(Icons.Rounded.Timer),
-                actionType = SettingType.SWITCH,
-                variable = !settings.settings.value.permanentNotification,
-                onSwitchEnabled = {
-                    settings.update(settings.settings.value.copy(permanentNotification = !it))
                 }
             )
         }

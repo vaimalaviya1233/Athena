@@ -684,20 +684,9 @@ private fun handleFirewallClick(homeViewModel: HomeViewModel, context: Context, 
     
     when {
         settings.useShizukuMode == true -> {
-            // Shizuku mode
+            // Shizuku mode - start firewall instantly
             if (isEnabling) {
-                // Check if Shizuku is available and has permissions
-                if (ShizukuUtils.isShizukuReady()) {
-                    homeViewModel.updateFirewallStatus(FirewallStatus.ONLINE, FirewallMode.SHIZUKU)
-                } else if (ShizukuUtils.isShizukuAvailable()) {
-                    // Shizuku is available but needs permission
-                    ShizukuUtils.requestShizukuPermission()
-                    // For now, we'll show VPN permission modal as fallback
-                    homeViewModel.updateVpnPermissionStatus(true)
-                } else {
-                    // Shizuku not available, fallback to VPN
-                    homeViewModel.updateVpnPermissionStatus(true)
-                }
+                homeViewModel.updateFirewallStatus(FirewallStatus.ONLINE, FirewallMode.SHIZUKU)
             } else {
                 homeViewModel.updateFirewallStatus(FirewallStatus.OFFLINE, FirewallMode.SHIZUKU)
             }

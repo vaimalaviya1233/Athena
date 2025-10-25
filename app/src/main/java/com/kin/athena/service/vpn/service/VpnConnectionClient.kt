@@ -160,11 +160,7 @@ class VpnConnectionClient : VpnService() {
     private fun stopVpnService(fd: Int) {
         try {
             val intent = createServiceIntent(fd, NetworkConstants.ACTION_STOP_VPN)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                ContextCompat.startForegroundService(this, intent)
-            } else {
-                startService(intent)
-            }
+            stopService(intent)
         } catch (e: Exception) {
             Logger.error("Failed to stop VPN service: ${e.message}", e)
         }

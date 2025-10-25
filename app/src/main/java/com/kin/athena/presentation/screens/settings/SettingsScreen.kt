@@ -86,7 +86,6 @@ fun SettingsScreen(
                         features = listOf(
                             stringResource(id = R.string.settings_colors_option_theme),
                             stringResource(id = R.string.colors_dynamic_icons),
-                            stringResource(id = R.string.colors_language)
                         ),
                         icon = Icons.Rounded.Palette,
                         onClick = { navController.safeNavigate(SettingRoutes.Colors.route) }
@@ -94,9 +93,8 @@ fun SettingsScreen(
                     SettingSection(
                         title = stringResource(id = R.string.settings_behavior),
                         features = listOf(
+                            stringResource(id = R.string.common_logs),
                             stringResource(id = R.string.settings_behavior_option_system),
-                            stringResource(id = R.string.settings_behavior_option_rules),
-                            stringResource(id = R.string.settings_behavior_option_logging)
                         ),
                         icon = Icons.Rounded.RuleFolder,
                         onClick = { navController.safeNavigate(SettingRoutes.Behavior.route) }
@@ -105,8 +103,9 @@ fun SettingsScreen(
             )
         }
         item {
-            SectionBlock(
-                listOf(
+            val isShizukuMode = settings.settings.value.useShizukuMode == true
+            val sections = buildList {
+                add(
                     SettingSection(
                         title = stringResource(id = R.string.settings_network),
                         features = listOf(
@@ -115,19 +114,24 @@ fun SettingsScreen(
                         ),
                         icon = Icons.Rounded.Wifi,
                         onClick = { navController.safeNavigate(SettingRoutes.Network.route) }
-                    ),
-                    SettingSection(
-                        title = stringResource(id = R.string.settings_dns),
-                        features = listOf(
-                            stringResource(id = R.string.settings_dns_option_block),
-                            stringResource(id = R.string.settings_dns_option_hostname),
-                            stringResource(id = R.string.settings_dns_option_updates)
-                        ),
-                        icon = Icons.Rounded.Dns,
-                        onClick = { navController.safeNavigate(SettingRoutes.Dns.route) }
                     )
                 )
-            )
+                if (!isShizukuMode) {
+                    add(
+                        SettingSection(
+                            title = stringResource(id = R.string.settings_dns),
+                            features = listOf(
+                                stringResource(id = R.string.settings_dns_option_block),
+                                stringResource(id = R.string.settings_dns_option_hostname),
+                                stringResource(id = R.string.settings_dns_option_updates)
+                            ),
+                            icon = Icons.Rounded.Dns,
+                            onClick = { navController.safeNavigate(SettingRoutes.Dns.route) }
+                        )
+                    )
+                }
+            }
+            SectionBlock(sections)
         }
         item {
             SectionBlock(
@@ -137,11 +141,25 @@ fun SettingsScreen(
                         features = listOf(
                             stringResource(id = R.string.settings_privacy_option_lock),
                             stringResource(id = R.string.settings_privacy_option_hide),
-                            stringResource(id = R.string.settings_privacy)
                         ),
                         icon = ImageVector.vectorResource(id = R.drawable.incognito),
                         onClick = { navController.safeNavigate(SettingRoutes.Privacy.route) }
                     ),
+                    SettingSection(
+                        title = stringResource(id = R.string.settings_notifications),
+                        features = listOf(
+                            stringResource(id = R.string.settings_notifications_install_alerts),
+                            stringResource(id = R.string.settings_notifications_activity),
+                        ),
+                        icon = Icons.Rounded.Notifications,
+                        onClick = { navController.safeNavigate(SettingRoutes.Notifications.route) }
+                    )
+                )
+            )
+        }
+        item {
+            SectionBlock(
+                listOf(
                     SettingSection(
                         title = stringResource(id = R.string.about_title),
                         features = listOf(

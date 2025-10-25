@@ -74,25 +74,29 @@ fun NetworkScreen(
         title = stringResource(id = R.string.settings_network),
         onBackNavClicked = { navController.navigateUp() }
     ) {
+        val isShizukuMode = settings.settings.value.useShizukuMode == true
+        
         settingsContainer {
-            SettingsBox(
-                title = stringResource(id = R.string.network_manage_ips),
-                description = stringResource(id = R.string.network_manage_ips_desc),
-                icon = IconType.VectorIcon(Icons.Filled.MultipleStop),
-                actionType = SettingType.CUSTOM,
-                customAction = {
-                    navController.safeNavigate(LogRoutes.Ips.route)
-                },
-            )
-            SettingsBox(
-                title = stringResource(id = R.string.network_always_allow),
-                description = stringResource(id = R.string.network_always_allow_desc),
-                icon = IconType.VectorIcon(Icons.AutoMirrored.Filled.CallMissedOutgoing),
-                actionType = SettingType.SWITCH,
-                variable = settings.settings.value.allowLocal,
-                onSwitchEnabled = { settings.update(settings.settings.value.copy(allowLocal = it)) },
-            )
-            val speedMonitorTitle = stringResource(id = R.string.notification_install_channel)
+            if (!isShizukuMode) {
+                SettingsBox(
+                    title = stringResource(id = R.string.network_manage_ips),
+                    description = stringResource(id = R.string.network_manage_ips_desc),
+                    icon = IconType.VectorIcon(Icons.Filled.MultipleStop),
+                    actionType = SettingType.CUSTOM,
+                    customAction = {
+                        navController.safeNavigate(LogRoutes.Ips.route)
+                    },
+                )
+                SettingsBox(
+                    title = stringResource(id = R.string.network_always_allow),
+                    description = stringResource(id = R.string.network_always_allow_desc),
+                    icon = IconType.VectorIcon(Icons.AutoMirrored.Filled.CallMissedOutgoing),
+                    actionType = SettingType.SWITCH,
+                    variable = settings.settings.value.allowLocal,
+                    onSwitchEnabled = { settings.update(settings.settings.value.copy(allowLocal = it)) },
+                )
+            }
+            val speedMonitorTitle = stringResource(id = R.string.notification_network_speed_channel)
             val speedMonitorDescription = stringResource(id = R.string.notification_network_speed_channel_desc)
             
             SettingsBox(
@@ -126,9 +130,10 @@ fun NetworkScreen(
                 },
             )
         }
-        settingsContainer {
-            SettingsBox(
-                title = stringResource(R.string.network_interface_ipv4),
+        if (!isShizukuMode) {
+            settingsContainer {
+                SettingsBox(
+                    title = stringResource(R.string.network_interface_ipv4),
                 description = stringResource(R.string.network_interface_ipv4_desc),
                 icon = IconType.VectorIcon(Icons.Rounded.ArrowDropUp),
                 actionType = SettingType.CUSTOM,
@@ -184,10 +189,10 @@ fun NetworkScreen(
                     )
                 }
             )
-        }
-        settingsContainer {
-            SettingsBox(
-                title = stringResource(R.string.network_block_wifi_screen_off),
+            }
+            settingsContainer {
+                SettingsBox(
+                    title = stringResource(R.string.network_block_wifi_screen_off),
                 description = stringResource(R.string.network_block_wifi_screen_off_desc),
                 icon = IconType.VectorIcon(Icons.Filled.WifiOff),
                 actionType = SettingType.SWITCH,
@@ -216,10 +221,10 @@ fun NetworkScreen(
                     }
                 },
             )
-        }
-        settingsContainer {
-            SettingsBox(
-                title = stringResource(R.string.network_kill_switch),
+            }
+            settingsContainer {
+                SettingsBox(
+                    title = stringResource(R.string.network_kill_switch),
                 description = stringResource(R.string.network_kill_switch_desc),
                 icon = IconType.VectorIcon(Icons.Filled.StopCircle),
                 actionType = SettingType.CUSTOM,
@@ -229,6 +234,7 @@ fun NetworkScreen(
                     LocalContext.current.startActivity(intent)
                 }
             )
+            }
         }
     }
 }

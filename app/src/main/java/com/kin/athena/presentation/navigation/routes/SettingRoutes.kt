@@ -27,6 +27,7 @@ import com.kin.athena.presentation.screens.settings.subSettings.dns.DnsScreen
 import com.kin.athena.presentation.screens.settings.subSettings.dns.CustomBlocklistManagementScreen
 import com.kin.athena.presentation.screens.settings.subSettings.dns.DomainManagementScreen
 import com.kin.athena.presentation.screens.settings.subSettings.network.NetworkScreen
+import com.kin.athena.presentation.screens.settings.subSettings.notifications.NotificationsScreen
 import com.kin.athena.presentation.screens.settings.subSettings.privacy.PrivacyScreen
 import com.kin.athena.presentation.screens.settings.subSettings.proxy.ProxyScreen
 import com.kin.athena.presentation.screens.settings.SettingsScreen
@@ -38,6 +39,7 @@ sealed class SettingRoutes(val route: String) {
     data object Colors : SettingRoutes("subSettings/colors")
     data object Behavior: SettingRoutes("subSettings/behavior")
     data object Network: SettingRoutes("subSettings/network")
+    data object Notifications: SettingRoutes("subSettings/notifications")
     data object Proxy: SettingRoutes("subSettings/proxy")
     data object Dns: SettingRoutes("subSettings/dns")
     data object CustomBlocklist: SettingRoutes("subSettings/dns/customBlocklist")
@@ -54,6 +56,7 @@ val settingScreens = mapOf<String, @Composable (settingsViewModel: SettingsViewM
     SettingRoutes.Colors.route to { settingsViewModel, navController, homeViewModel -> ColorsScreen(navController, settingsViewModel, homeViewModel) },
     SettingRoutes.Behavior.route to { settingsViewModel, navController, homeViewModel -> BehaviorScreen(navController, settingsViewModel) },
     SettingRoutes.Network.route to { settingsViewModel, navController, homeViewModel -> NetworkScreen(navController, settingsViewModel) },
+    SettingRoutes.Notifications.route to { settingsViewModel, navController, homeViewModel -> NotificationsScreen(navController, settingsViewModel) },
     SettingRoutes.Proxy.route to { settingsViewModel, navController, homeViewModel -> ProxyScreen(navController, settingsViewModel) },
     SettingRoutes.Dns.route to { settingsViewModel, navController, homeViewModel -> DnsScreen(navController, settingsViewModel) },
     SettingRoutes.CustomBlocklist.route to { settingsViewModel, navController, homeViewModel -> CustomBlocklistManagementScreen(navController, settingsViewModel) },

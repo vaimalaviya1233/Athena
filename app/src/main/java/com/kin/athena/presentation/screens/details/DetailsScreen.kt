@@ -191,57 +191,83 @@ private fun PackageDetails(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                if (!packageEntity.bypassVpn) {
-                    // Show WiFi button only if not bypassing VPN
-                    NetworkOption(
-                        icon = Icons.Rounded.Wifi,
-                        label = stringResource(id = R.string.network_wifi),
-                        cornerShape = RoundedCornerShape(topStart = 32.dp, bottomStart = 32.dp),
-                        onClick = {
-                            val updated = packageEntity.copy(internetAccess = !packageEntity.internetAccess)
-                            viewModel.updatePackage(updated)
-                            homeViewModel.updatePackage(updated, updateUI = true)
-                        },
-                        color = if (packageEntity.internetAccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                    )
-                    Spacer(modifier = Modifier.width(1.dp))
-                }
-
-                // Only show VPN bypass option when NOT in root mode and NOT in Shizuku mode
+                // Check protection mode
                 val isRootMode = settings.settings.value.useRootMode == true
                 val isShizukuMode = settings.settings.value.useShizukuMode == true
-                if (!isRootMode && !isShizukuMode) {
-                    NetworkOption(
-                        icon = Icons.Rounded.VpnLock,
-                        label = stringResource(id = R.string.network_bypass_vpn),
-                        cornerShape = if (packageEntity.bypassVpn) {
-                            RoundedCornerShape(32.dp)
-                        } else {
-                            RoundedCornerShape(0.dp)
-                        },
-                        onClick = {
-                            val updated = packageEntity.copy(bypassVpn = !packageEntity.bypassVpn)
-                            viewModel.updatePackage(updated)
-                            homeViewModel.updatePackage(updated, updateUI = true)
-                        },
-                        color = if (packageEntity.bypassVpn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                    )
-                }
+                
+                if (isShizukuMode) {
+                    // In Shizuku mode, show only one "Network" button
+                    if (!packageEntity.bypassVpn) {
+                        NetworkOption(
+                            icon = Icons.Rounded.Wifi,
+                            label = stringResource(id = R.string.settings_network),
+                            cornerShape = RoundedCornerShape(32.dp),
+                            onClick = {
+                                // Toggle both WiFi and Cellular access together
+                                val newAccess = !(packageEntity.internetAccess && packageEntity.cellularAccess)
+                                val updated = packageEntity.copy(
+                                    internetAccess = newAccess,
+                                    cellularAccess = newAccess
+                                )
+                                viewModel.updatePackage(updated)
+                                homeViewModel.updatePackage(updated, updateUI = true)
+                            },
+                            color = if (packageEntity.internetAccess && packageEntity.cellularAccess) 
+                                MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                        )
+                    }
+                } else {
+                    // Normal mode - show WiFi and Cellular buttons separately
+                    if (!packageEntity.bypassVpn) {
+                        // Show WiFi button only if not bypassing VPN
+                        NetworkOption(
+                            icon = Icons.Rounded.Wifi,
+                            label = stringResource(id = R.string.network_wifi),
+                            cornerShape = RoundedCornerShape(topStart = 32.dp, bottomStart = 32.dp),
+                            onClick = {
+                                val updated = packageEntity.copy(internetAccess = !packageEntity.internetAccess)
+                                viewModel.updatePackage(updated)
+                                homeViewModel.updatePackage(updated, updateUI = true)
+                            },
+                            color = if (packageEntity.internetAccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                        )
+                        Spacer(modifier = Modifier.width(1.dp))
+                    }
 
-                if (!packageEntity.bypassVpn) {
-                    // Show Cellular button only if not bypassing VPN
-                    Spacer(modifier = Modifier.width(1.dp))
-                    NetworkOption(
-                        icon = Icons.Rounded.SignalCellularAlt,
-                        label = stringResource(id = R.string.network_cellular),
-                        cornerShape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp),
-                        onClick = {
-                            val updated = packageEntity.copy(cellularAccess = !packageEntity.cellularAccess)
-                            viewModel.updatePackage(updated)
-                            homeViewModel.updatePackage(updated, updateUI = true)
-                        },
-                        color = if (packageEntity.cellularAccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                    )
+                    // Only show VPN bypass option when NOT in root mode and NOT in Shizuku mode
+                    if (!isRootMode && !isShizukuMode) {
+                        NetworkOption(
+                            icon = Icons.Rounded.VpnLock,
+                            label = stringResource(id = R.string.network_bypass_vpn),
+                            cornerShape = if (packageEntity.bypassVpn) {
+                                RoundedCornerShape(32.dp)
+                            } else {
+                                RoundedCornerShape(0.dp)
+                            },
+                            onClick = {
+                                val updated = packageEntity.copy(bypassVpn = !packageEntity.bypassVpn)
+                                viewModel.updatePackage(updated)
+                                homeViewModel.updatePackage(updated, updateUI = true)
+                            },
+                            color = if (packageEntity.bypassVpn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                        )
+                    }
+
+                    if (!packageEntity.bypassVpn) {
+                        // Show Cellular button only if not bypassing VPN
+                        Spacer(modifier = Modifier.width(1.dp))
+                        NetworkOption(
+                            icon = Icons.Rounded.SignalCellularAlt,
+                            label = stringResource(id = R.string.network_cellular),
+                            cornerShape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp),
+                            onClick = {
+                                val updated = packageEntity.copy(cellularAccess = !packageEntity.cellularAccess)
+                                viewModel.updatePackage(updated)
+                                homeViewModel.updatePackage(updated, updateUI = true)
+                            },
+                            color = if (packageEntity.cellularAccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                        )
+                    }
                 }
             }
         }

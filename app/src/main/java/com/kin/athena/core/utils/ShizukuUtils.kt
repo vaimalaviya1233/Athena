@@ -42,13 +42,32 @@ object ShizukuUtils {
         }
     }
     
-    fun requestShizukuPermission() {
+    fun requestShizukuPermission(onPermissionGranted: (() -> Unit)? = null) {
         try {
             if (isShizukuAvailable() && !isShizukuPermissionGranted()) {
                 Logger.debug("Requesting Shizuku permission")
+                
+                // Add a one-time listener for permission result
+                val listener = object : Shizuku.OnRequestPermissionResultListener {
+                    override fun onRequestPermissionResult(requestCode: Int, grantResult: Int) {
+                        if (requestCode == 0) {
+                            Logger.debug("Shizuku permission result: $grantResult")
+                            if (grantResult == 0) { // Permission granted
+                                onPermissionGranted?.invoke()
+                            }
+                            // Remove the listener after handling the result
+                            Shizuku.removeRequestPermissionResultListener(this)
+                        }
+                    }
+                }
+                
+                Shizuku.addRequestPermissionResultListener(listener)
                 Shizuku.requestPermission(0)
             } else {
                 Logger.debug("Shizuku permission request not needed. Available: ${isShizukuAvailable()}, Granted: ${isShizukuPermissionGranted()}")
+                if (isShizukuPermissionGranted()) {
+                    onPermissionGranted?.invoke()
+                }
             }
         } catch (e: Exception) {
             Logger.error("Failed to request Shizuku permission: ${e.message}")
