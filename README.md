@@ -74,7 +74,7 @@
 
 ## 🎉 Features
 - 📝 Sleek, Minimalistic Material3 Design  
-- 🌟 Root / VPN Support  
+- 🌟 Root / VPN / Shizuku Support  
 - 🔒 DNS Ads / Malware Blocking  
 - 🚫 Custom Domains Blocklist  
 - 📶 App Wi-Fi / Cellular Control  
