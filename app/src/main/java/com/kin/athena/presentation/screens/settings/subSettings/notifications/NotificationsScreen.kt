@@ -56,7 +56,7 @@ fun NotificationsScreen(
                         settings.showFeatureChoiceDialog(
                             featureName = notificationTitle,
                             featureDescription = notificationDescription,
-                            productId = "notification_install"
+                            productId = "notify_on_install"
                         ) {
                             settings.update(settings.settings.value.copy(sendNotificationOnInstall = it))
                         }
