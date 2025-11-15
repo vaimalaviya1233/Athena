@@ -53,8 +53,8 @@ jobs:
       - name: Build Play Store Release APK
         run: ./gradlew assemblePlaystoreRelease
 
-      - name: Rename APK
-        run: mv app/build/outputs/apk/playstore/release/app-release.apk Athena-nightly.apk
+      #- name: Rename APK
+      #  run: mv app/build/outputs/apk/playstore/release/app-release.apk Athena-nightly.apk
 
       - name: Upload APK directory
         uses: actions/upload-artifact@v4
