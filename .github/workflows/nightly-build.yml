@@ -53,18 +53,6 @@ jobs:
       - name: Build Play Store Release APK
         run: ./gradlew assemblePlaystoreRelease
 
-      - name: Sign app APK
-        uses: r0adkll/sign-android-release@v1
-        id: sign_app
-        with:
-          releaseDirectory: app/build/outputs/apk/playstore/release
-          signingKeyBase64: ${{ secrets.KEY_BASE64 }}
-          alias: ${{ secrets.KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASS }}
-          keyPassword: ${{ secrets.KEYSTORE_PASS }}
-        env:
-          BUILD_TOOLS_VERSION: "34.0.0"
-
       - name: Rename APK
         run: mv app/build/outputs/apk/playstore/release/app-playstore-release-signed.apk Athena-nightly.apk
 
