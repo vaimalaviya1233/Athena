@@ -56,15 +56,16 @@ jobs:
       - name: Rename APK
         run: mv app/build/outputs/apk/playstore/release/app-release.apk Athena-nightly.apk
 
-      - name: Upload the APK
-        uses: actions/upload-artifact@v4.6.0
+      - name: Upload APK directory
+        uses: actions/upload-artifact@v4
         with:
-          name: Athena-Nightly
-          path: Athena-nightly.apk
+          name: Athena-APKs
+          path: app/build/outputs/apk/
 
-      - name: Update nightly release
-        uses: eine/tip@master
-        with:
-         tag: Nightly
-         token: ${{ secrets.TOKEN }}
-         files: Athena-nightly.apk
+
+      # - name: Update nightly release
+      #   uses: eine/tip@master
+      #   with:
+      #    tag: Nightly
+      #    token: ${{ secrets.TOKEN }}
+      #    files: Athena-nightly.apk
